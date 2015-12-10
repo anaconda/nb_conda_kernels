@@ -1,0 +1,18 @@
+package: nb_conda_kernels
+
+platform:
+  - linux-64
+  - osx-64
+
+engine:
+  - python=2.7
+  - python=3.4
+
+install:
+  - conda build conda.recipe
+  - conda install nb_conda_kernels --use-local -c anaconda-notebook
+
+script:
+  - conda build --no-test ./conda.recipe/ -c anaconda-notebook
+
+build_targets: conda
