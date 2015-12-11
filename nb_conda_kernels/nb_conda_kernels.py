@@ -6,7 +6,7 @@ import sys
 
 from os.path import exists, join, split
 
-from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NoSuchKernel
+from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
 
 class CondaKernelSpecManager(KernelSpecManager):
     """A custom KernelSpecManager able to search for conda environments and
@@ -99,7 +99,6 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         Additionally, conda kernelspecs are generated on the fly accordingly
         with the detected envitonments.
-        Raises :exc:`NoSuchKernel` if the given kernel name is not found.
         """
         if kernel_name in self._conda_kspecs():
             return self._conda_kspecs()[kernel_name]
