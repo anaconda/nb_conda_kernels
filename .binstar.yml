@@ -7,12 +7,12 @@ platform:
 engine:
   - python=2.7
   - python=3.4
+  - python=3.5
 
 install:
-  - conda build conda.recipe
-  - conda install nb_conda_kernels --use-local -c anaconda-notebook
+  - conda config --add channels anaconda-notebook
 
 script:
-  - conda build --no-test ./conda.recipe/ -c anaconda-notebook
+  - conda build --quiet conda.recipe
 
 build_targets: conda
