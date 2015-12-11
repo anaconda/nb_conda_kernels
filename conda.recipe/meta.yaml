@@ -12,6 +12,8 @@ requirements:
   run:
     - python
     - nbwrapper
+    # Beta solving a py2 bug on last traitlets
+    - traitlets ==4.1.0b1
 
 source:
   path: ../
