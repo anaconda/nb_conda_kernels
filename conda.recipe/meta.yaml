@@ -19,5 +19,7 @@ source:
   path: ../
 
 about:
-  home: https://github.com/Anaconda-Server/anaconda-notebook
-  license: TBD
+  home: https://github.com/Anaconda-Server/nb_conda_kernels
+  license: BSD
+  license_file: LICENSE
+
