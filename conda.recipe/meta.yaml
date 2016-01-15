@@ -11,7 +11,7 @@ requirements:
     - python
   run:
     - python
-    - nbwrapper
+    - nb_config_manager
     # Beta solving a py2 bug on last traitlets
     - traitlets ==4.1.0b1
 
@@ -22,4 +22,3 @@ about:
   home: https://github.com/Anaconda-Server/nb_conda_kernels
   license: BSD
   license_file: LICENSE
-
