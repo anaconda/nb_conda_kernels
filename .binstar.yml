@@ -2,9 +2,9 @@ package: nb_conda_kernels
 
 platform:
   - linux-64
-  - linux-32
   - osx-64
   - win-64
+  - linux-32
   - win-32
 
 engine:
@@ -13,7 +13,7 @@ engine:
   - python=3.5
 
 install:
-  - conda config --add channels anaconda-notebook
+  - conda config --add channels anaconda-nb-extensions
 
 script:
   - conda build --quiet conda.recipe
