@@ -12,8 +12,7 @@ requirements:
   run:
     - python
     - nb_config_manager
-    # Beta solving a py2 bug on last traitlets
-    - traitlets ==4.1.0b1
+    - traitlets >=4.1.0
 
 source:
   path: ../
