@@ -11,6 +11,7 @@ requirements:
     - python
   run:
     - python
+    - notebook
     - traitlets >=4.1.0
 
 source:
