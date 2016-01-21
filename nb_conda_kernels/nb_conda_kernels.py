@@ -113,7 +113,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             kspecs.pop("R")
 
         # add conda envs kernelspecs
-        kspecs.update(self._all_executablecutable())
+        kspecs.update(self._all_executable())
 
         return kspecs
 
