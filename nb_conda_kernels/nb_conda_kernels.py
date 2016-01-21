@@ -4,7 +4,7 @@ import json
 import subprocess
 import sys
 
-from os.path import exists, join, split
+from os.path import exists, join, split, dirname, abspath
 
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
 
@@ -76,7 +76,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         # We also add the root prefix into the soup
         root_prefix = join(conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
-            all_exe.update({"root": join(conda_info["root_prefix"], python)})
+            all_exe.update({"Root": join(conda_info["root_prefix"], python)})
 
         return all_exe
 
@@ -88,12 +88,14 @@ class CondaKernelSpecManager(KernelSpecManager):
                 kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
                           "display_name": name,
                           "language": "python",
-                          "env": {}}
+                          "env": {},
+                          "resource_dir": join(dirname(abspath(__file__)), "logos", "python")}
             elif executable.endswith("R"):
                 kspec =  {"argv": [executable, "--quiet", "-e","IRkernel::main()","--args","{connection_file}"],
                           "display_name": name,
                           "language": "R",
-                          "env": {}}
+                          "env": {},
+                          "resource_dir": join(dirname(abspath(__file__)), "logos", "r")}
             kspecs.update({name: KernelSpec(**kspec)})
 
         return kspecs
