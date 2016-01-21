@@ -11,7 +11,6 @@ requirements:
     - python
   run:
     - python
-    - nb_config_manager
     - traitlets >=4.1.0
 
 source:
