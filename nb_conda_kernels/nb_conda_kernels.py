@@ -55,21 +55,22 @@ class CondaKernelSpecManager(KernelSpecManager):
             r = join("bin", "R")
             jupyter = join("bin", "jupyter")
 
-        def get_paths_by_exe(language, envs):
+        def get_paths_by_exe(prefix, language, envs):
             "Get a dict with name_env:path for agnostic executable"
-            language_exe = {split(base)[1]: join(base, language)
-                            for base in envs if exists(join(base, jupyter))}
+            language_exe = {prefix + split(base)[1]: join(base, language)
+                            for base in envs if exists(join(base, jupyter))
+                            and exists(join(base, language))}
             return language_exe
 
         # Collect all the executables in one dict
         all_exe = {}
 
         # Get the python executables
-        python_exe = get_paths_by_exe(python, conda_info["envs"])
+        python_exe = get_paths_by_exe("Py-", python, conda_info["envs"])
         all_exe.update(python_exe)
 
         # Get the R executables
-        r_exe = get_paths_by_exe(r, conda_info["envs"])
+        r_exe = get_paths_by_exe("R-", r, conda_info["envs"])
         all_exe.update(r_exe)
 
         # We also add the root prefix into the soup
@@ -85,12 +86,12 @@ class CondaKernelSpecManager(KernelSpecManager):
         for name, executable in self._all_executable().items():
             if executable.endswith("python"):
                 kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
-                          "display_name": "Py-" + name,
+                          "display_name": name,
                           "language": "python",
                           "env": {}}
             elif executable.endswith("R"):
                 kspec =  {"argv": [executable, "--quiet", "-e","IRkernel::main()","--args","{connection_file}"],
-                          "display_name": "R-" + name,
+                          "display_name": name,
                           "language": "R",
                           "env": {}}
             kspecs.update({name: KernelSpec(**kspec)})
