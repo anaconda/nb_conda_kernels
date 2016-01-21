@@ -7,6 +7,6 @@ notebook, you can choose a kernel corresponding to the environment
 you wish to run within. This will allow you to have different versions
 of python, libraries, etc. for different notebooks.
 
-To install: `conda install -c anaconda-notebook nb_conda_kernels`
+To install: `conda install -c anaconda-nb-extensions nb_conda_kernels`
 
 

@@ -64,7 +64,10 @@ if 'develop' in sys.argv or any(bdist in sys.argv for bdist in ['bdist_wheel', '
 
 setuptools_args = {}
 
-REQUIRES = []
+REQUIRES = [
+    'nb_config_manager',
+    'traitlets>=4.1.0',
+]
 
 install_requires = setuptools_args['install_requires'] = REQUIRES
 
