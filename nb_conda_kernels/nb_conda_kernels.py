@@ -83,9 +83,16 @@ class CondaKernelSpecManager(KernelSpecManager):
         "Create a kernelspec for each of the envs where jupyter is installed"
         kspecs = {}
         for name, executable in self._all_executable().items():
-            kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
-                      "display_name": name,
-                      "env": {}}
+            if executable.endswith("python"):
+                kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
+                          "display_name": "Py-" + name,
+                          "language": "python",
+                          "env": {}}
+            elif executable.endswith("R"):
+                kspec =  {"argv": [executable, "--quiet", "-e","IRkernel::main()","--args","{connection_file}"],
+                          "display_name": "R-" + name,
+                          "language": "R",
+                          "env": {}}
             kspecs.update({name: KernelSpec(**kspec)})
 
         return kspecs
@@ -102,6 +109,8 @@ class CondaKernelSpecManager(KernelSpecManager):
             kspecs.pop("python3")
         elif "python2" in kspecs:
             kspecs.pop("python2")
+        elif "R" in kspecs:
+            kspecs.pop("R")
 
         # add conda envs kernelspecs
         kspecs.update(self._all_executablecutable())
