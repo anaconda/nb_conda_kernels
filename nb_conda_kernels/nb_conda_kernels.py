@@ -3,6 +3,7 @@
 import json
 import subprocess
 import sys
+import re
 
 from os.path import exists, join, split, dirname, abspath
 
@@ -47,9 +48,9 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         # play safe with windows
         if sys.platform.startswith('win'):
-            python = join("Scripts", "python")
-            r = join("Scripts", "R")
-            jupyter = join("Scripts", "jupyter")
+            python = join("python.exe")
+            r = join("Scripts", "R.exe")
+            jupyter = join("Scripts", "jupyter.exe")
         else:
             python = join("bin", "python")
             r = join("bin", "R")
@@ -84,13 +85,13 @@ class CondaKernelSpecManager(KernelSpecManager):
         "Create a kernelspec for each of the envs where jupyter is installed"
         kspecs = {}
         for name, executable in self._all_executable().items():
-            if executable.endswith("python"):
+            if re.search(r'python(\.exe)?$', executable):
                 kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
                           "display_name": name,
                           "language": "python",
                           "env": {},
                           "resource_dir": join(dirname(abspath(__file__)), "logos", "python")}
-            elif executable.endswith("R"):
+            elif re.search(r'R(\.exe)?$', executable):
                 kspec =  {"argv": [executable, "--quiet", "-e","IRkernel::main()","--args","{connection_file}"],
                           "display_name": name,
                           "language": "R",
