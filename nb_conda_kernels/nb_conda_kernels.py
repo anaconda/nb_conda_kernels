@@ -58,7 +58,7 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         def get_paths_by_exe(prefix, language, envs):
             "Get a dict with name_env:path for agnostic executable"
-            language_exe = {prefix + split(base)[1]: join(base, language)
+            language_exe = {prefix + "[{}]".format(split(base)[1]): join(base, language)
                             for base in envs if exists(join(base, jupyter))
                             and exists(join(base, language))}
             return language_exe
@@ -67,17 +67,17 @@ class CondaKernelSpecManager(KernelSpecManager):
         all_exe = {}
 
         # Get the python executables
-        python_exe = get_paths_by_exe("Py-", python, conda_info["envs"])
+        python_exe = get_paths_by_exe("Python ", python, conda_info["envs"])
         all_exe.update(python_exe)
 
         # Get the R executables
-        r_exe = get_paths_by_exe("R-", r, conda_info["envs"])
+        r_exe = get_paths_by_exe("R ", r, conda_info["envs"])
         all_exe.update(r_exe)
 
         # We also add the root prefix into the soup
         root_prefix = join(conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
-            all_exe.update({"Root": join(conda_info["root_prefix"], python)})
+            all_exe.update({"Python [Root]": join(conda_info["root_prefix"], python)})
 
         return all_exe
 
