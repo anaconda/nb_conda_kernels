@@ -3,8 +3,9 @@
 import json
 import subprocess
 import sys
+import re
 
-from os.path import exists, join, split
+from os.path import exists, join, split, dirname, abspath
 
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
 
@@ -27,10 +28,10 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         return conda_info
 
-    def _python_executable(self):
-        """Find the python executable for each env where jupyter is installed.
+    def _all_executable(self):
+        """Find the all the executables for each env where jupyter is installed.
 
-        Returns a dict with the envs names as keys and the paths to the python
+        Returns a dict with the envs names as keys and the paths to the lang
         exectuable in each env as value if jupyter is installed in that env.
         """
         # First time we load the conda info from the __init__
@@ -47,31 +48,55 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         # play safe with windows
         if sys.platform.startswith('win'):
-            python = join("Scripts", "python")
-            jupyter = join("Scripts", "jupyter")
+            python = join("python.exe")
+            r = join("Scripts", "R.exe")
+            jupyter = join("Scripts", "jupyter.exe")
         else:
             python = join("bin", "python")
+            r = join("bin", "R")
             jupyter = join("bin", "jupyter")
 
-        # python_exe = {name_env: python_path_env}
-        python_exe = {split(base)[1]: join(base, python)
-                      for base in conda_info["envs"]
-                      if exists(join(base, jupyter))}
+        def get_paths_by_exe(prefix, language, envs):
+            "Get a dict with name_env:path for agnostic executable"
+            language_exe = {prefix + "[{}]".format(split(base)[1]): join(base, language)
+                            for base in envs if exists(join(base, jupyter))
+                            and exists(join(base, language))}
+            return language_exe
+
+        # Collect all the executables in one dict
+        all_exe = {}
+
+        # Get the python executables
+        python_exe = get_paths_by_exe("Python ", python, conda_info["envs"])
+        all_exe.update(python_exe)
+
+        # Get the R executables
+        r_exe = get_paths_by_exe("R ", r, conda_info["envs"])
+        all_exe.update(r_exe)
 
         # We also add the root prefix into the soup
         root_prefix = join(conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
-            python_exe.update({"root": join(conda_info["root_prefix"], python)})
+            all_exe.update({"Python [Root]": join(conda_info["root_prefix"], python)})
 
-        return python_exe
+        return all_exe
 
     def _conda_kspecs(self):
         "Create a kernelspec for each of the envs where jupyter is installed"
         kspecs = {}
-        for name, executable in self._python_executable().items():
-            kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
-                      "display_name": name,
-                      "env": {}}
+        for name, executable in self._all_executable().items():
+            if re.search(r'python(\.exe)?$', executable):
+                kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
+                          "display_name": name,
+                          "language": "python",
+                          "env": {},
+                          "resource_dir": join(dirname(abspath(__file__)), "logos", "python")}
+            elif re.search(r'R(\.exe)?$', executable):
+                kspec =  {"argv": [executable, "--quiet", "-e","IRkernel::main()","--args","{connection_file}"],
+                          "display_name": name,
+                          "language": "R",
+                          "env": {},
+                          "resource_dir": join(dirname(abspath(__file__)), "logos", "r")}
             kspecs.update({name: KernelSpec(**kspec)})
 
         return kspecs
@@ -88,9 +113,11 @@ class CondaKernelSpecManager(KernelSpecManager):
             kspecs.pop("python3")
         elif "python2" in kspecs:
             kspecs.pop("python2")
+        elif "R" in kspecs:
+            kspecs.pop("R")
 
         # add conda envs kernelspecs
-        kspecs.update(self._python_executable())
+        kspecs.update(self._all_executable())
 
         return kspecs
 

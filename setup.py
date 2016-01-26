@@ -38,6 +38,9 @@ for d, _, _ in os.walk(pjoin(here, name)):
     if os.path.exists(pjoin(d, '__init__.py')):
         packages.append(d[len(here)+1:].replace(os.path.sep, '.'))
 
+package_data = {'nb_conda_kernels': [pjoin('logos', 'python', '*'),
+                                     pjoin('logos', 'r', '*')]}
+
 version_ns = {}
 with open(pjoin(here, name, '_version.py')) as f:
     exec(f.read(), {}, version_ns)
@@ -46,6 +49,7 @@ setup_args = dict(
     name            = name,
     version         = version_ns['__version__'],
     packages        = packages,
+    package_data    = package_data,
     #description     = "",
     #long_description= """
     #""",
@@ -65,7 +69,7 @@ if 'develop' in sys.argv or any(bdist in sys.argv for bdist in ['bdist_wheel', '
 setuptools_args = {}
 
 REQUIRES = [
-    'nb_config_manager',
+    'notebook',
     'traitlets>=4.1.0',
 ]
 

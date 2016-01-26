@@ -11,8 +11,18 @@ requirements:
     - python
   run:
     - python
-    - nb_config_manager
+    - notebook
     - traitlets >=4.1.0
+
+test:
+  requires:
+    - notebook
+    - python
+    - requests
+    - nose
+
+  commands:
+    - nosetests -w ${SRC_DIR}
 
 source:
   path: ../

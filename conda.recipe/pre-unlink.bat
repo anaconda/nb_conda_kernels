@@ -1,1 +1,1 @@
-"%PREFIX%\bin\python" -m nb_conda_kernels.install --disable --prefix="%PREFIX%"
+"%PYTHON%" -m nb_conda_kernels.install --disable --prefix="%PREFIX%"
