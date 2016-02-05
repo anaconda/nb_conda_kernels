@@ -19,3 +19,10 @@ script:
   - conda build --quiet conda.recipe
 
 build_targets: conda
+
+---
+
+platform:
+  - win-32
+engine: python=2.7
+exclude: true
