@@ -1,1 +1,1 @@
-"%PYTHON%" -m nb_conda_kernels.install --disable --prefix="%PREFIX%"
+"%PYTHON%\python.exe" -m nb_conda_kernels.install --disable --prefix="%PREFIX%"
