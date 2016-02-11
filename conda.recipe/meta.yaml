@@ -21,9 +21,6 @@ test:
     - requests
     - nose
 
-  commands:
-    - nosetests -w ${SRC_DIR}
-
 source:
   path: ../
 
