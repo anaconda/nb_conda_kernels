@@ -3,9 +3,9 @@ package: nb_conda_kernels
 platform:
   - linux-64
   - osx-64
-  - win-64
+  #- win-64
   - linux-32
-  - win-32
+  #- win-32
 
 engine:
   - python=2.7
@@ -19,10 +19,3 @@ script:
   - conda build --quiet conda.recipe
 
 build_targets: conda
-
----
-
-platform:
-  - win-32
-engine: python=2.7
-exclude: true
