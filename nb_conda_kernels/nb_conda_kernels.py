@@ -9,14 +9,11 @@ from os.path import exists, join, split, dirname, abspath
 
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
 
+
 class CondaKernelSpecManager(KernelSpecManager):
     """A custom KernelSpecManager able to search for conda environments and
     create kernelspecs for them.
     """
-    # at /tree all the kernelspec are loaded... we need to get conda_info at
-    # the very beginning to avoid a large loading time
-    first_read = True
-
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
         self.conda_info = self._conda_info()
@@ -34,17 +31,8 @@ class CondaKernelSpecManager(KernelSpecManager):
         Returns a dict with the envs names as keys and the paths to the lang
         exectuable in each env as value if jupyter is installed in that env.
         """
-        # First time we load the conda info from the __init__
-        if self.first_read:
-            conda_info = self.conda_info
-            first_read = False
-        # but after that, we check if there is not a new env
-        else:
-            update_conda_info = self._conda_info()
-            if update_conda_info["envs"] == self.conda_info["envs"]:
-                conda_info = self.conda_info
-            else:
-                conda_info = update_conda_info
+        # First, we load the conda info
+        conda_info = self.conda_info
 
         # play safe with windows
         if sys.platform.startswith('win'):
@@ -115,6 +103,9 @@ class CondaKernelSpecManager(KernelSpecManager):
             kspecs.pop("python2")
         elif "R" in kspecs:
             kspecs.pop("R")
+
+        # update conda info
+        self.conda_info = self._conda_info()
 
         # add conda envs kernelspecs
         kspecs.update(self._all_executable())
