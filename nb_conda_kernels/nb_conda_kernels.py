@@ -16,7 +16,7 @@ class CondaKernelSpecManager(KernelSpecManager):
     """
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
-        self.conda_info = self._conda_info()
+        self.conda_info = None
 
     def _conda_info(self):
         "Get and parse the whole conda information"
@@ -31,9 +31,6 @@ class CondaKernelSpecManager(KernelSpecManager):
         Returns a dict with the envs names as keys and the paths to the lang
         exectuable in each env as value if jupyter is installed in that env.
         """
-        # First, we load the conda info
-        conda_info = self.conda_info
-
         # play safe with windows
         if sys.platform.startswith('win'):
             python = join("python.exe")
@@ -55,17 +52,17 @@ class CondaKernelSpecManager(KernelSpecManager):
         all_exe = {}
 
         # Get the python executables
-        python_exe = get_paths_by_exe("Python ", python, conda_info["envs"])
+        python_exe = get_paths_by_exe("Python ", python, self.conda_info["envs"])
         all_exe.update(python_exe)
 
         # Get the R executables
-        r_exe = get_paths_by_exe("R ", r, conda_info["envs"])
+        r_exe = get_paths_by_exe("R ", r, self.conda_info["envs"])
         all_exe.update(r_exe)
 
         # We also add the root prefix into the soup
         root_prefix = join(conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
-            all_exe.update({"Python [Root]": join(conda_info["root_prefix"], python)})
+            all_exe.update({"Python [Root]": join(self.conda_info["root_prefix"], python)})
 
         return all_exe
 
