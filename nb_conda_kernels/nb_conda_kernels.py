@@ -60,7 +60,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         all_exe.update(r_exe)
 
         # We also add the root prefix into the soup
-        root_prefix = join(conda_info["root_prefix"], jupyter)
+        root_prefix = join(self.conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
             all_exe.update({"Python [Root]": join(self.conda_info["root_prefix"], python)})
 
