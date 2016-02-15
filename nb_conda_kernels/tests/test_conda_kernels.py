@@ -64,7 +64,7 @@ def test_kernel_specs_update():
     updated_py_env = "Python [{}]".format("_test_nb_conda_kernels")
     assert updated_py_env not in kspecs
 
-    subprocess.Popen(["conda", "create", "-n", "_test_nb_conda_kernels", "ipykernel", "--yes"])
+    subprocess.check_call(["conda", "create", "-n", "_test_nb_conda_kernels", "ipykernel", "--yes"])
 
     _refresh()
 
@@ -73,7 +73,6 @@ def test_kernel_specs_update():
     print("kspecs", kspecs)
     assert updated_py_env in kspecs
 
-    subprocess.Popen(["conda", "env", "remove",  "-n", "_test_nb_conda_kernels", "--yes"])
-    time.sleep(5)
+    subprocess.check_call(["conda", "env", "remove",  "-n", "_test_nb_conda_kernels", "--yes"])
 
     nb.kill()

@@ -115,7 +115,8 @@ class CondaKernelSpecManager(KernelSpecManager):
         Additionally, conda kernelspecs are generated on the fly accordingly
         with the detected envitonments.
         """
-        if kernel_name in self._conda_kspecs():
-            return self._conda_kspecs()[kernel_name]
+        conda_kspecs = self._conda_kspecs()
+        if kernel_name in conda_kspecs:
+            return conda_kspecs[kernel_name]
         else:
             return super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name)
