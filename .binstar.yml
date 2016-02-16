@@ -16,6 +16,6 @@ install:
   - conda config --add channels anaconda-nb-extensions
 
 script:
-  - conda build --quiet conda.recipe --no-tests
+  - conda build --quiet conda.recipe --no-test
 
 build_targets: conda
