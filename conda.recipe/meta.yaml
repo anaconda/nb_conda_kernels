@@ -23,7 +23,7 @@ test:
     - selenium
 
 source:
-  path: ../
+  git_url: ../
 
 about:
   home: https://github.com/Anaconda-Server/nb_conda_kernels
