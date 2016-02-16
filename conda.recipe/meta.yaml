@@ -1,6 +1,6 @@
 package:
   name: nb_conda_kernels
-  version: "0.1.1"
+  version: "0.1.2"
 
 build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
@@ -23,7 +23,7 @@ test:
     - selenium
 
 source:
-  path: ../
+  git_url: ../
 
 about:
   home: https://github.com/Anaconda-Server/nb_conda_kernels
