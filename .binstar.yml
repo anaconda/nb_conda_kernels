@@ -12,13 +12,12 @@ engine:
   - python=3.4
   - python=3.5
 
-env:
-  - ANE_RELEASE=0
-
 install:
   - conda config --add channels anaconda-nb-extensions
 
 script:
+  - python scripts/signal.py
+  - python -c "import os; print(os.environ.get('ANE_RELEASE', 'nop'))"
   - conda build --quiet conda.recipe --no-test
 
 build_targets: conda
