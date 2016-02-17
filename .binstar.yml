@@ -12,6 +12,9 @@ engine:
   - python=3.4
   - python=3.5
 
+env:
+  - ANE_RELEASE=0
+
 install:
   - conda config --add channels anaconda-nb-extensions
 
