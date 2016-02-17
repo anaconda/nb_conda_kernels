@@ -3,10 +3,10 @@ package:
   version: {{ environ.get('GIT_DESCRIBE_TAG', '')}}
 
 build:
-  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
-  string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', '0') }}
   script_env:
    - ANE_RELEASE
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  string: py{{ environ.get('PY_VER').replace('.', '') }}_{% if environ.get('ANE_RELEASE', '0') == '1' %}0{% else %}{{ environ.get('GIT_BUILD_STR', '0') }}{% endif %}
 
 requirements:
   build:
@@ -25,8 +25,7 @@ test:
     - selenium
 
 source:
-  {% if environ.get('ANE_RELEASE', '0') == '1' %}path: ../
-  {% else %}git_url: ../{% endif %}
+  git_url: ../
 
 about:
   home: https://github.com/Anaconda-Server/nb_conda_kernels
