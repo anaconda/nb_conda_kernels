@@ -1,6 +1,6 @@
 package:
   name: nb_conda_kernels
-  version: "0.1.2"
+  version: "1.0.0"
 
 build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
@@ -11,7 +11,7 @@ requirements:
     - python
   run:
     - python
-    - notebook
+    - notebook >4.1
     - traitlets >=4.1.0
 
 test:
