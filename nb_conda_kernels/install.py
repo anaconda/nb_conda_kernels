@@ -20,7 +20,7 @@ def install(enable=False, disable=False, prefix=None):
     disable: bool
         Disable nb_conda_kernels on every notebook launch
     """
-    from notebook.services.config import ConfigManager
+    from traitlets.config.manager import BaseJSONConfigManager
 
     if enable:
         if prefix is not None:
@@ -31,7 +31,7 @@ def install(enable=False, disable=False, prefix=None):
         else:
             path = jupyter_config_dir()
 
-        cm = ConfigManager(config_dir=path)
+        cm = BaseJSONConfigManager(config_dir=path)
         print("Enabling nb_conda_kernels in", cm.config_dir)
         cfg = cm.get("jupyter_notebook_config")
         print("Existing config...")
@@ -51,7 +51,7 @@ def install(enable=False, disable=False, prefix=None):
         else:
             path = jupyter_config_dir()
 
-        cm = ConfigManager(config_dir=path)
+        cm = BaseJSONConfigManager(config_dir=path)
         print("Disabling nb_conda_kernels in", cm.config_dir)
         cfg = cm.get("jupyter_notebook_config")
         print("Existing config...")
