@@ -16,8 +16,12 @@ class CondaKernelSpecManager(KernelSpecManager):
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
         self.conda_info = None
-        self.log.info("[nb_conda_kernels] enabled, found:\n{}".format(
-            "\n".join((self.find_kernel_specs() or {}).keys())
+        specs = self.find_kernel_specs() or {}
+        self.log.info("[nb_conda_kernels] enabled, {} kernels found".format(
+            len(specs)
+        ))
+        self.log.debug("\n{}".format(
+            "\n".join(["- {}: {}".format(*spec) for spec in specs.items()])
         ))
 
     def _conda_info(self):
