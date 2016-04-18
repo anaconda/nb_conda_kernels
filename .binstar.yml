@@ -15,8 +15,9 @@ engine:
 script:
   - >
     conda build conda.recipe
-    -c bokeh
-    -c r
     -c anaconda-nb-extensions/label/dev
+    -c bokeh
+    -c javascript
+    -c r
 
 build_targets: conda

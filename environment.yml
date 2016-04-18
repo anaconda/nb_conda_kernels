@@ -2,7 +2,6 @@ name: nb_conda_kernels
 channels:
   - javascript
   - anaconda-nb-extensions/label/dev
-  - bokeh
   - r
 dependencies:
   - anaconda-client
@@ -12,6 +11,4 @@ dependencies:
   - nodejs
   - nose
   - notebook
-  - pyyaml
-  - selenium
   - r-essentials
