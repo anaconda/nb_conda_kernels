@@ -57,3 +57,5 @@ docs/_build/
 target/
 .ipynb_checkpoints/
 node_modules/
+screenshots/
+*.xunit.xml

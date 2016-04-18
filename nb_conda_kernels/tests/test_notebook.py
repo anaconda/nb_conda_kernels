@@ -11,7 +11,7 @@ except ImportError:
 from notebook import jstest
 
 import platform
-import nb_conda_kernels
+import nb_conda_kernels.install
 
 IS_WIN = "Windows" in platform.system()
 
@@ -132,9 +132,11 @@ class NBCondaKernelsTestController(jstest.JSController):
 
         # ensure the system-of-interest is installed and enabled!
         with patch.dict(os.environ, self.env):
-            nb_conda_kernels.install(
+            nb_conda_kernels.install.install(
                 prefix=os.environ.get("CONDA_ENV_PATH",
-                                      os.environ.get("CONDA_DEFAULT_ENV")))
+                                      os.environ.get("CONDA_DEFAULT_ENV")),
+                enable=True,
+                verbose=True)
 
     def cleanup(self):
         if hasattr(self, "stream_capturer"):
