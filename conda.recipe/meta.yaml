@@ -25,6 +25,7 @@ test:
     - requests
     - selenium
     - traitlets >=4.1.0
+    - r-essentials
 
 source:
   git_url: ../

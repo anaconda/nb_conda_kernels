@@ -13,6 +13,10 @@ engine:
   - python=3.5
 
 script:
-  - conda build conda.recipe -c anaconda-nb-extensions/label/dev -c bokeh
+  - >
+    conda build conda.recipe
+    -c bokeh
+    -c r
+    -c anaconda-nb-extensions/label/dev
 
 build_targets: conda
