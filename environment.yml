@@ -1,0 +1,13 @@
+name: nb_conda_kernels
+channels:
+  - javascript
+  - anaconda-nb-extensions/label/dev
+dependencies:
+  - anaconda-client
+  - coverage
+  - flake8
+  - mock
+  - nodejs
+  - nose
+  - notebook
+  - pyyaml
