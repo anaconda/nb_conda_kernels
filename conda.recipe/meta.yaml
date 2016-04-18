@@ -9,7 +9,9 @@ build:
 
 requirements:
   build:
+    - notebook >=4.2.0
     - python
+    - traitlets >=4.1.0
   run:
     - notebook >=4.2.0
     - python
