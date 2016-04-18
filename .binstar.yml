@@ -12,10 +12,7 @@ engine:
   - python=3.4
   - python=3.5
 
-install:
-  - conda config --add channels anaconda-nb-extensions
-
 script:
-  - conda build --quiet conda.recipe --no-test
+  - conda build conda.recipe --c anaconda-nb-extensions/label/dev
 
 build_targets: conda
