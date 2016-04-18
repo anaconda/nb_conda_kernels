@@ -22,7 +22,8 @@ def _setup():
 
 def _notebook():
     """Start the notebook server"""
-    nb = subprocess.Popen(["jupyter", "notebook", "--no-browser", "--port=8999"])
+    nb = subprocess.Popen([
+        "jupyter", "notebook", "--no-browser", "--port=8999"])
     time.sleep(5)
 
     return nb
@@ -64,7 +65,8 @@ def test_kernel_specs_update():
     updated_py_env = "Python [{}]".format("_test_nb_conda_kernels")
     assert updated_py_env not in kspecs
 
-    subprocess.check_call(["conda", "create", "-n", "_test_nb_conda_kernels", "ipykernel", "--yes"])
+    subprocess.check_call([
+        "conda", "create", "-yn", "_test_nb_conda_kernels", "ipykernel"])
 
     _refresh()
 
@@ -73,6 +75,7 @@ def test_kernel_specs_update():
     print("kspecs", kspecs)
     assert updated_py_env in kspecs
 
-    subprocess.check_call(["conda", "env", "remove",  "-n", "_test_nb_conda_kernels", "--yes"])
+    subprocess.check_call([
+        "conda", "env", "remove",  "-yn", "_test_nb_conda_kernels"])
 
     nb.kill()

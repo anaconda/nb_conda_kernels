@@ -1,0 +1,12 @@
+include LICENSE
+include *.rst
+include *.md
+include package.json
+
+recursive-include nb_conda_kernels *
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude node_modules *.*
+recursive-exclude * node_modules
+recursive-exclude * .git

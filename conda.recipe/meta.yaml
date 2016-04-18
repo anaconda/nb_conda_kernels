@@ -11,17 +11,18 @@ requirements:
   build:
     - python
   run:
-    - python
     - notebook >=4.2.0
+    - python
     - traitlets >=4.1.0
 
 test:
   requires:
+    - nose
     - notebook >=4.2.0
     - python
     - requests
-    - nose
     - selenium
+    - traitlets >=4.1.0
 
 source:
   git_url: ../
