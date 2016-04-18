@@ -98,7 +98,7 @@ def install(enable=False, disable=False, prefix=None, verbose=False):
     else:
         assert KSMC not in cfg["NotebookApp"]
 
-    log.info("nb_conda_kernels installed!")
+    log.info("{}abled nb_conda_kernels".format("En" if enable else "Dis"))
 
 
 if __name__ == '__main__':
