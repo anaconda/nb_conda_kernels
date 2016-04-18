@@ -3,6 +3,7 @@ channels:
   - javascript
   - anaconda-nb-extensions/label/dev
   - bokeh
+  - r
 dependencies:
   - anaconda-client
   - coverage
@@ -13,3 +14,4 @@ dependencies:
   - notebook
   - pyyaml
   - selenium
+  - r-essentials

@@ -6,7 +6,7 @@
 import argparse
 import os
 from os.path import exists, join
-from pprint import pformat
+import json
 import logging
 
 from traitlets.config.manager import BaseJSONConfigManager
@@ -15,6 +15,8 @@ from jupyter_core.paths import jupyter_config_dir
 
 
 log = logging.getLogger(__name__)
+log.addHandler(logging.StreamHandler())
+log.setLevel(logging.INFO)
 
 # Arguments for command line
 parser = argparse.ArgumentParser(
@@ -31,9 +33,20 @@ parser.add_argument(
     "-p", "--prefix",
     help="prefix where to load nb_conda_kernels config",
     action="store")
+parser.add_argument(
+    "-v", "--verbose",
+    help="Show more output",
+    action="store_true"
+)
+
+CKSM = "nb_conda_kernels.CondaKernelSpecManager"
+KSMC = "kernel_spec_manager_class"
 
 
-def install(enable=False, disable=False, prefix=None):
+def pretty(it): return json.dumps(it, indent=2)
+
+
+def install(enable=False, disable=False, prefix=None, verbose=False):
     """Install the nb_conda_kernels config piece.
 
     Parameters
@@ -43,46 +56,49 @@ def install(enable=False, disable=False, prefix=None):
     disable: bool
         Disable nb_conda_kernels on every notebook launch
     """
-    if not (enable or disable):
-        raise Exception("Please provide --enable or --disable")
+    if verbose:
+        log.setLevel(logging.DEBUG)
+
+    if enable == disable:
+        log.error("Please provide (one of) --enable or --disable")
+        raise ValueError(enable, disable)
+
+    log.info("{}abling nb_conda_kernels...".format("En" if enable else "Dis"))
+
+    path = jupyter_config_dir()
 
     if prefix is not None:
         path = join(prefix, "etc", "jupyter")
         if not exists(path):
-            print("Making directory", path)
+            log.debug("Making directory {}...".format(path))
             os.makedirs(path)
-    else:
-        path = jupyter_config_dir()
 
     cm = BaseJSONConfigManager(config_dir=path)
+    cfg = cm.get("jupyter_notebook_config")
+
+    log.debug("Existing config in {}...\n{}".format(path, pretty(cfg)))
+
+    nb_app = cfg.setdefault("NotebookApp", {})
 
     if enable:
-        log.info("Enabling nb_conda_kernels in {}".format(cm.config_dir))
-        cfg = cm.get("jupyter_notebook_config")
-        log.info("Existing config...\n{}".format(
-                 pformat(cfg)))
+        nb_app.update({KSMC: CKSM})
+    elif disable and nb_app.get(KSMC, None) == CKSM:
+        nb_app.pop(KSMC)
 
-        notebook_app = (cfg.setdefault("NotebookApp", {}))
-        if "kernel_spec_manager_class" not in notebook_app:
-            cfg["NotebookApp"].set(
-                "kernel_spec_manager_class",
-                "nb_conda_kernels.CondaKernelSpecManager")
+    log.debug("Writing config in {}...".format(path))
 
-        cm.update("jupyter_notebook_config", cfg)
-        log.info("New config...\n {}".format(
-              pformat(cm.get("jupyter_notebook_config"))))
-    elif disable:
-        log.info("Disabling nb_conda_kernels in {}".format(cm.config_dir))
-        cfg = cm.get("jupyter_notebook_config")
-        log.info("Existing config...\n{}".format(pformat(cfg)))
-        kernel_spec_manager = cfg["NotebookApp"]["kernel_spec_manager_class"]
+    cm.set("jupyter_notebook_config", cfg)
 
-        if "nb_conda_kernels.CondaKernelSpecManager" == kernel_spec_manager:
-            cfg["NotebookApp"].pop("kernel_spec_manager_class")
+    cfg = cm.get("jupyter_notebook_config")
 
-        cm.set("jupyter_notebook_config", cfg)
-        log.info("New config...\n{}".format(
-                 pformat(cm.get("jupyter_notebook_config"))))
+    log.debug("Verifying config in {}...\n{}".format(path, pretty(cfg)))
+
+    if enable:
+        assert cfg["NotebookApp"][KSMC] == CKSM
+    else:
+        assert KSMC not in cfg["NotebookApp"]
+
+    log.info("nb_conda_kernels installed!")
 
 
 if __name__ == '__main__':
