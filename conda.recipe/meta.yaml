@@ -20,11 +20,11 @@ requirements:
 test:
   files:
     - package.json
+    - setup.cfg
   requires:
     - coverage
     - flake8
     - freetype
-    - mock
     - nodejs
     - nose
     - notebook >=4.2.0
@@ -34,6 +34,7 @@ test:
     - npm # [linux32]
     - npm # [win32]
     - fontconfig # [linux]
+    - mock # [py2k]
 
 about:
   summary: Launch Jupyter kernels for any installed conda environment
