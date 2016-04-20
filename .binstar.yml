@@ -11,10 +11,6 @@ engine:
   - python=3.5
 
 script:
-  - >
-    conda build conda.recipe
-    -c bokeh
-    -c javascript
-    -c r
+  - conda build conda.recipe -c javascript -c r
 
 build_targets: conda
