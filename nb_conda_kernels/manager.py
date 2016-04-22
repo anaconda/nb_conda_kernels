@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import json
 import subprocess
 import sys
@@ -17,10 +16,18 @@ class CondaKernelSpecManager(KernelSpecManager):
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
         self.conda_info = None
+        specs = self.find_kernel_specs() or {}
+        self.log.info("[nb_conda_kernels] enabled, {} kernels found".format(
+            len(specs)
+        ))
+        self.log.debug("\n{}".format(
+            "\n".join(["- {}: {}".format(*spec) for spec in specs.items()])
+        ))
 
     def _conda_info(self):
         "Get and parse the whole conda information"
-        p = subprocess.check_output(["conda", "info", "--json"]).decode("utf-8")
+        p = subprocess.check_output(["conda", "info", "--json"]
+                                    ).decode("utf-8")
         conda_info = json.loads(p)
 
         return conda_info
@@ -43,16 +50,19 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         def get_paths_by_exe(prefix, language, envs):
             "Get a dict with name_env:path for agnostic executable"
-            language_exe = {prefix + "[{}]".format(split(base)[1]): join(base, language)
-                            for base in envs if exists(join(base, jupyter))
-                            and exists(join(base, language))}
+            language_exe = {
+                prefix + "[{}]".format(split(base)[1]): join(base, language)
+                for base in envs
+                if exists(join(base, jupyter)) and exists(join(base, language))
+            }
             return language_exe
 
         # Collect all the executables in one dict
         all_exe = {}
 
         # Get the python executables
-        python_exe = get_paths_by_exe("Python ", python, self.conda_info["envs"])
+        python_exe = get_paths_by_exe("Python ", python,
+                                      self.conda_info["envs"])
         all_exe.update(python_exe)
 
         # Get the R executables
@@ -62,7 +72,9 @@ class CondaKernelSpecManager(KernelSpecManager):
         # We also add the root prefix into the soup
         root_prefix = join(self.conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
-            all_exe.update({"Python [Root]": join(self.conda_info["root_prefix"], python)})
+            all_exe.update({
+                "Python [Root]": join(self.conda_info["root_prefix"], python)
+            })
 
         return all_exe
 
@@ -71,25 +83,37 @@ class CondaKernelSpecManager(KernelSpecManager):
         kspecs = {}
         for name, executable in self._all_executable().items():
             if re.search(r'python(\.exe)?$', executable):
-                kspec =  {"argv": [executable, "-m", "ipykernel", "-f", "{connection_file}"],
-                          "display_name": name,
-                          "language": "python",
-                          "env": {},
-                          "resource_dir": join(dirname(abspath(__file__)), "logos", "python")}
+                kspec = {
+                    "argv": [executable, "-m", "ipykernel", "-f",
+                             "{connection_file}"],
+                    "display_name": name,
+                    "language": "python",
+                    "env": {},
+                    "resource_dir": join(dirname(abspath(__file__)), "logos",
+                                         "python")
+                 }
             elif re.search(r'R(\.exe)?$', executable):
-                kspec =  {"argv": [executable, "--quiet", "-e","IRkernel::main()","--args","{connection_file}"],
-                          "display_name": name,
-                          "language": "R",
-                          "env": {},
-                          "resource_dir": join(dirname(abspath(__file__)), "logos", "r")}
-            kspecs.update({name: KernelSpec(**kspec)})
+                kspec = {
+                    "argv": [executable, "--quiet", "-e", "IRkernel::main()",
+                             "--args", "{connection_file}"],
+                    "display_name": name,
+                    "language": "R",
+                    "env": {},
+                    "resource_dir": join(dirname(abspath(__file__)), "logos",
+                                         "r")
+                }
+
+            kspecs.update({
+                name: KernelSpec(**kspec)
+            })
 
         return kspecs
 
     def find_kernel_specs(self):
         """Returns a dict mapping kernel names to resource directories.
 
-        The update process also add the resource dir for the conda environments.
+        The update process also add the resource dir for the conda
+        environments.
         """
         kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
 
@@ -119,4 +143,5 @@ class CondaKernelSpecManager(KernelSpecManager):
         if kernel_name in conda_kspecs:
             return conda_kspecs[kernel_name]
         else:
-            return super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name)
+            return super(CondaKernelSpecManager, self).get_kernel_spec(
+                kernel_name)

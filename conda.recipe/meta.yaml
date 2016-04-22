@@ -1,30 +1,43 @@
 package:
   name: nb_conda_kernels
-  version: "0.1.2"
+  version: {{ environ.get('GIT_DESCRIBE_TAG', '') }}
+
+source:
+  git_url: ../
 
 build:
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
-  string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', '0') }}
+  {% if environ.get('GIT_DESCRIBE_NUMBER', '0') == '0' %}string: py{{ environ.get('PY_VER').replace('.', '') }}_0
+  {% else %}string: py{{ environ.get('PY_VER').replace('.', '') }}_{{ environ.get('GIT_BUILD_STR', 'GIT_STUB') }}{% endif %}
 
 requirements:
   build:
     - python
   run:
+    - notebook >=4.2.0
     - python
-    - notebook
-    - traitlets >=4.1.0
 
 test:
+  files:
+    - package.json
+    - setup.cfg
   requires:
-    - notebook
-    - python
-    - requests
+    - coverage
+    - flake8
+    - freetype
+    - nodejs
     - nose
-    - selenium
-
-source:
-  git_url: ../
+    - notebook >=4.2.0
+    - python
+    - r-essentials
+    - requests
+    - npm # [linux32]
+    - npm # [win32]
+    - fontconfig # [linux]
+    - mock # [py2k]
 
 about:
-  home: https://github.com/Anaconda-Server/nb_conda_kernels
-  license: BSD
+  summary: Launch Jupyter kernels for any installed conda environment
+  home: https://github.com/Anaconda-Platform/nb_conda_kernels
+  license_file: LICENSE
+  license: BSD License

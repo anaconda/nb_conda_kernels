@@ -1,0 +1,15 @@
+{
+  "name": "nb_conda_kernels-conda-test",
+  "version": "1.0.0",
+  "description": "Test utilities for nb_conda_kernels",
+  "main": "index.js",
+  "scripts": {
+    "test": "python -m nose nb_conda_kernels"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "casperjs": "1.1.0-beta5",
+    "phantomjs": "<2"
+  }
+}

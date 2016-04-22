@@ -8,3 +8,9 @@ you wish to run within. This will allow you to have different versions
 of python, libraries, etc. for different notebooks.
 
 To install: `conda install -c anaconda-nb-extensions nb_conda_kernels`
+
+
+## Changelog
+
+### 1.0.0
+- update to notebook 4.2

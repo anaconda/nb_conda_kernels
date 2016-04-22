@@ -4,18 +4,13 @@ platform:
   - linux-64
   - osx-64
   - win-64
-  - linux-32
-  - win-32
 
 engine:
   - python=2.7
   - python=3.4
   - python=3.5
 
-install:
-  - conda config --add channels anaconda-nb-extensions
-
 script:
-  - conda build --quiet conda.recipe --no-test
+  - conda build conda.recipe -c javascript -c r
 
 build_targets: conda
