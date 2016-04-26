@@ -31,8 +31,6 @@ test:
     - python
     - r-essentials
     - requests
-    - npm # [linux32]
-    - npm # [win32]
     - fontconfig # [linux]
     - mock # [py2k]
 
