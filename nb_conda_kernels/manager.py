@@ -80,6 +80,10 @@ class CondaKernelSpecManager(KernelSpecManager):
 
     def _conda_kspecs(self):
         "Create a kernelspec for each of the envs where jupyter is installed"
+        def slugify_kernel_name(name):
+            name = re.sub('[^\w\s-]', '', name).strip().lower()
+            return re.sub('[-\s]+', '_', name)
+
         kspecs = {}
         for name, executable in self._all_executable().items():
             if re.search(r'python(\.exe)?$', executable):
@@ -104,7 +108,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                 }
 
             kspecs.update({
-                name: KernelSpec(**kspec)
+                slugify_kernel_name(name): KernelSpec(**kspec)
             })
 
         return kspecs
