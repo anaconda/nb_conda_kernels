@@ -12,10 +12,10 @@ build:
 
 requirements:
   build:
-    - python
+    - python 2.7*|3.4*|3.5*
   run:
     - notebook >=4.2.0
-    - python
+    - python 2.7*|3.4*|3.5*
 
 test:
   files:
@@ -28,7 +28,7 @@ test:
     - nodejs
     - nose
     - notebook >=4.2.0
-    - python
+    - python 2.7*|3.4*|3.5*
     - r-essentials
     - requests
     - fontconfig # [linux]
