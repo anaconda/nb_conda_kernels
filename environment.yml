@@ -1,7 +1,6 @@
 name: nb_conda_kernels
 channels:
-  - javascript
-  - anaconda-nb-extensions/label/dev
+  - conda-forge
   - r
 dependencies:
   - anaconda-client
