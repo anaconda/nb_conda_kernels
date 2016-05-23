@@ -1,6 +1,6 @@
 {
   "name": "nb_conda_kernels",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Launch Jupyter kernels for any installed conda environment",
   "main": "index.js",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "nb_conda_kernels-conda-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Test utilities for nb_conda_kernels",
   "main": "index.js",
   "scripts": {

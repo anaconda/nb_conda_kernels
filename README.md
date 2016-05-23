@@ -12,5 +12,9 @@ To install: `conda install -c anaconda-nb-extensions nb_conda_kernels`
 
 ## Changelog
 
+
+### 1.0.1
+- minor build changes
+
 ### 1.0.0
 - update to notebook 4.2
