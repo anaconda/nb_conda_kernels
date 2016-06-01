@@ -1,0 +1,38 @@
+language: python
+
+sudo: true
+
+python:
+  # We don't actually use the Travis Python, but this keeps it organized.
+  - "2.7"
+  - "3.4"
+  - "3.5"
+
+install:
+  - sudo apt-get update
+  - sudo apt-get install -y libfreetype6-dev libfontconfig1-dev
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
+  - conda update -q conda
+  - conda info -a
+  - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
+  - conda env update
+  - source activate nb_conda_kernels
+  - conda install python-coveralls
+  - npm install
+
+script:
+  - python setup.py develop
+  - python -m nb_conda_kernels.install --enable --prefix="${CONDA_ENV_PATH}"
+  - npm run test
+
+after_success:
+  - coveralls
