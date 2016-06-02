@@ -96,9 +96,9 @@
     this.execute_cell_then(idx);
   }
 
-  casper.notebook_test_kernel = function(kernel_name, test) {
+  casper.notebook_test_kernel = function(kernel_prefix, test) {
     // Wrap a notebook test to reduce boilerplate.
-    this.open_new_notebook_kernel(kernel_name);
+    this.open_new_notebook_kernel(kernel_prefix);
 
     // Echo whether or not we are running this test using SlimerJS
     if (this.evaluate(function(){
@@ -144,14 +144,16 @@
     var baseUrl = this.get_notebook_server();
     this.start(baseUrl);
     this.waitFor(this.page_loaded);
-
     this.waitForSelector('#new-menu li[id*="kernel-' + kernel_prefix + '"] a');
     this.thenClick('#new-menu li[id*="kernel-' + kernel_prefix + '"] a');
 
     this.waitForPopup('');
+
+    this.withPopup('', function () {this.waitForSelector('.CodeMirror-code');});
     this.then(function () {
         this.open(this.popups[0].url);
     });
+    this.waitFor(this.page_loaded);
 
     // Hook the log and error methods of the console, forcing them to
     // serialize their arguments before printing.  This allows the
