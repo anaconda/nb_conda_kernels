@@ -6,8 +6,8 @@ casper.dashboard_test(function(){
 });
 
 function basic_test(){
-  var pysel = '#new-menu li[id*=Python]',
-    rsel = '#new-menu li[id*=R ]';
+  var pysel = '#new-menu li[id*=kernel-Python]',
+    rsel = '#new-menu li[id*=kernel-R ]';
 
   return this.canSeeAndClick(
       "the kernel selector", "#new-buttons > .dropdown-toggle"
