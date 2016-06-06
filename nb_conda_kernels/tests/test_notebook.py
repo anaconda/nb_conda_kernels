@@ -170,7 +170,11 @@ class NBCondaKernelsTestController(jstest.JSController):
                     self.server_command))
                 fp.write(captured)
 
-        super(NBCondaKernelsTestController, self).cleanup()
+        try:
+            super(NBCondaKernelsTestController, self).cleanup()
+        except Exception as err:
+            print("Some issue cleaning up:")
+            print(err)
 
 
 def prepare_controllers(options):
