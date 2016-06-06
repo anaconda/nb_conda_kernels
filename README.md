@@ -37,6 +37,9 @@ npm run test
 
 ## Changelog
 
+### 1.0.3
+- ignore build cleanup on windows due to poorly-behaved PhantomJS processes
+
 ### 1.0.2
 - use [Travis-CI](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels) for continuous integration
 - use [Coveralls](https://coveralls.io/github/Anaconda-Platform/nb_conda_kernels) for code coverage
