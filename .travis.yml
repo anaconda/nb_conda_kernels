@@ -35,7 +35,7 @@ install:
 
 script:
   - python setup.py develop
-  - python -m nb_conda_kernels.install --enable --prefix="${CONDA_ENV_PATH}"
+  - python -m nb_conda_kernels.install --enable --sys-prefix
   - npm run test
 
 after_success:

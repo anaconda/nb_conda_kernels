@@ -17,11 +17,10 @@ conda install -c conda-forge nb_conda_kernels
 You'll need conda installed, either from [Anaconda](https://www.continuum.io/downloads) or [miniconda](http://conda.pydata.org/miniconda.html). You can create a Python development environment named `nb_conda_kernels` from `./environment.yml`.
 
 ```shell
-conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
-conda update env
+conda env update
 source activate nb_conda_kernels
 python setup.py develop
-python -m nb_conda_kernels.install --enable --prefix="${CONDA_ENV_PATH}"
+python -m nb_conda_kernels.install --enable --sys-prefix
 ```
 
 We _still_ use `npm` for testing things, so then run:
@@ -36,6 +35,10 @@ npm run test
 
 
 ## Changelog
+
+### 2.0.0
+- use kernel metadata for storing environment information
+- use new `CONDA_PREFIX` throughout
 
 ### 1.0.3
 - ignore build cleanup on windows due to poorly-behaved PhantomJS processes
