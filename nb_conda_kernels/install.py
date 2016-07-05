@@ -36,12 +36,12 @@ parser.add_argument(
 
 parser.add_argument(
     "--user",
-    help="use HOME/.jupyter to update nb_user_sessions config",
+    help="use HOME/.jupyter to update nb_conda_kernels config",
     action="store_true",
     default=False)
 parser.add_argument(
     "--sys-prefix",
-    help="use sys.prefix to update nb_user_sessions config",
+    help="use sys.prefix to update nb_conda_kernels config",
     action="store_true",
     default=False)
 
