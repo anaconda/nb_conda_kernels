@@ -11,7 +11,11 @@ import logging
 
 from traitlets.config.manager import BaseJSONConfigManager
 
-from jupyter_core.paths import jupyter_config_dir
+from jupyter_core.paths import (
+    jupyter_config_dir,
+    ENV_CONFIG_PATH,
+    SYSTEM_CONFIG_PATH,
+)
 
 
 log = logging.getLogger(__name__)
@@ -29,10 +33,18 @@ parser.add_argument(
     "-d", "--disable",
     help="Remove nb_conda_kernels from config on notebook launch",
     action="store_true")
+
 parser.add_argument(
-    "-p", "--prefix",
-    help="prefix where to load nb_conda_kernels config",
-    action="store")
+    "--user",
+    help="use HOME/.jupyter to update nb_user_sessions config",
+    action="store_true",
+    default=False)
+parser.add_argument(
+    "--sys-prefix",
+    help="use sys.prefix to update nb_user_sessions config",
+    action="store_true",
+    default=False)
+
 parser.add_argument(
     "-v", "--verbose",
     help="Show more output",
@@ -43,10 +55,38 @@ CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 KSMC = "kernel_spec_manager_class"
 
 
+class ArgumentConflict(ValueError):
+    pass
+
+
 def pretty(it): return json.dumps(it, indent=2)
 
 
-def install(enable=False, disable=False, prefix=None, verbose=False):
+def _get_config_dir(user=False, sys_prefix=False):
+    """Get the location of config files for the current context
+    Returns the string to the enviornment
+    Parameters
+    ----------
+    user : bool [default: False]
+        Get the user's .jupyter config directory
+    sys_prefix : bool [default: False]
+        Get sys.prefix, i.e. ~/.envs/my-env/etc/jupyter
+    """
+    user = False if sys_prefix else user
+    if user and sys_prefix:
+        raise ArgumentConflict("Cannot specify more than one of user or"
+                               " sys_prefix")
+    if user:
+        nbext = jupyter_config_dir()
+    elif sys_prefix:
+        nbext = ENV_CONFIG_PATH[0]
+    else:
+        nbext = SYSTEM_CONFIG_PATH[0]
+    return nbext
+
+
+def install(enable=False, disable=False, user=False, sys_prefix=False,
+            verbose=False):
     """Install the nb_conda_kernels config piece.
 
     Parameters
@@ -65,13 +105,11 @@ def install(enable=False, disable=False, prefix=None, verbose=False):
 
     log.info("{}abling nb_conda_kernels...".format("En" if enable else "Dis"))
 
-    path = jupyter_config_dir()
+    path = _get_config_dir(user, sys_prefix)
 
-    if prefix is not None:
-        path = join(prefix, "etc", "jupyter")
-        if not exists(path):
-            log.debug("Making directory {}...".format(path))
-            os.makedirs(path)
+    if not exists(path):
+        log.debug("Making directory {}...".format(path))
+        os.makedirs(path)
 
     cm = BaseJSONConfigManager(config_dir=path)
     cfg = cm.get("jupyter_notebook_config")

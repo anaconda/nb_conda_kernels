@@ -69,5 +69,5 @@ build: off
 
 test_script:
     - cmd: python setup.py develop
-    - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_DEFAULT_ENV%"
+    - cmd: python -m nb_conda_kernels.install --enable --sys-prefix
     - cmd: npm run test
