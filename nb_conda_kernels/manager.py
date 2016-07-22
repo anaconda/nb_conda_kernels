@@ -6,7 +6,7 @@ import re
 
 from os.path import exists, join, split, dirname, abspath
 
-from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
+from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NATIVE_KERNEL_NAME
 
 
 class CondaKernelSpecManager(KernelSpecManager):
@@ -75,6 +75,11 @@ class CondaKernelSpecManager(KernelSpecManager):
             all_exe.update({
                 "Python [Root]": join(self.conda_info["root_prefix"], python)
             })
+        # Use Jupyter's default kernel name ('python2' or 'python3') for current env
+        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix, python)):
+            all_exe.update({
+                NATIVE_KERNEL_NAME: join(sys.prefix, python)
+            })
 
         return all_exe
 
@@ -83,10 +88,14 @@ class CondaKernelSpecManager(KernelSpecManager):
         kspecs = {}
         for name, executable in self._all_executable().items():
             if re.search(r'python(\.exe)?$', executable):
+                if name == NATIVE_KERNEL_NAME:
+                    display_name = 'Python [default]'
+                else:
+                    display_name = name
                 kspec = {
                     "argv": [executable, "-m", "ipykernel", "-f",
                              "{connection_file}"],
-                    "display_name": name,
+                    "display_name": display_name,
                     "language": "python",
                     "env": {},
                     "resource_dir": join(dirname(abspath(__file__)), "logos",
@@ -116,14 +125,6 @@ class CondaKernelSpecManager(KernelSpecManager):
         environments.
         """
         kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
-
-        # remove native kernels because it is provided by the env name
-        if "python3" in kspecs:
-            kspecs.pop("python3")
-        elif "python2" in kspecs:
-            kspecs.pop("python2")
-        elif "R" in kspecs:
-            kspecs.pop("R")
 
         # update conda info
         self.conda_info = self._conda_info()
