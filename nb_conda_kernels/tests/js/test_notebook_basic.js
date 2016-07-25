@@ -6,13 +6,19 @@ casper.dashboard_test(function(){
 });
 
 function basic_test(){
-  var pysel = '#new-menu li[id*=kernel-Python]',
-    rsel = '#new-menu li[id*=kernel-R ]';
+  var default_py = '#new-menu li[id^=kernel-python]',
+    default_r = '#new-menu li[id=kernel-ir]',
+    root_py = '#new-menu li[id=kernel-conda-root-py]',
+    env_py = '#new-menu li[id^=kernel-conda-env-][id$=-py]',
+    env_r = '#new-menu li[id^=kernel-conda-env-][id$=-r]';
 
   return this.canSeeAndClick(
       "the kernel selector", "#new-buttons > .dropdown-toggle"
     )
-    .canSee("a python kernel", pysel)
-    .canSee("an r kernel", rsel)
+    .canSee("the default python kernel", default_py)
+    .canSee("a conda env python kernel", env_py)
+    .canSee("a conda root python kernel", root_py)
+    .canSee("the default r kernel", default_r)
+    .canSee("an r kernel", env_r)
     .canSeeAndClick("fin", "body");
 }

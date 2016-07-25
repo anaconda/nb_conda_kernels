@@ -96,9 +96,9 @@
     this.execute_cell_then(idx);
   }
 
-  casper.notebook_test_kernel = function(kernel_prefix, test) {
+  casper.notebook_test_kernel = function(kernel_prefix, kernel_suffix, test) {
     // Wrap a notebook test to reduce boilerplate.
-    this.open_new_notebook_kernel(kernel_prefix);
+    this.open_new_notebook_kernel(kernel_prefix, kernel_suffix);
 
     // Echo whether or not we are running this test using SlimerJS
     if (this.evaluate(function(){
@@ -139,13 +139,25 @@
     });
   };
 
-  root.open_new_notebook_kernel = function (kernel_prefix) {
+  root.open_new_notebook_kernel = function (kernel_prefix, kernel_suffix) {
     // Create and open a new notebook.
     var baseUrl = this.get_notebook_server();
     this.start(baseUrl);
+
     this.waitFor(this.page_loaded);
-    this.waitForSelector('#new-menu li[id*="kernel-' + kernel_prefix + '"] a');
-    this.thenClick('#new-menu li[id*="kernel-' + kernel_prefix + '"] a');
+    this.waitForSelector("#new-buttons > .dropdown-toggle");
+    this.thenClick("#new-buttons > .dropdown-toggle");
+
+    var kernel_li_id = '[id^="kernel-' + kernel_prefix + '"]';
+    if(kernel_suffix){
+      kernel_li_id += '[id$="-' + kernel_suffix + '"]';
+    }
+    var kernel_selector = '#new-menu li' + kernel_li_id + ' a';
+
+    this.waitForSelector(kernel_selector);
+    this.thenClick(kernel_selector);
+
+    this.screenshot("picking kernel");
 
     this.waitForPopup('');
 

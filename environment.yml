@@ -10,4 +10,4 @@ dependencies:
   - nodejs
   - nose
   - notebook
-  - r-essentials
+  - r-irkernel
