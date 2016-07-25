@@ -25,7 +25,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update --yes --quiet conda
-  - conda install -n root conda conda-env
+  - conda install -n root conda conda-env anaconda-client
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
   - conda env update
