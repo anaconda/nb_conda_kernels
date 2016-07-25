@@ -55,7 +55,7 @@ install:
           $env:path="$root;$root\Scripts;$root\Library\bin;$($env:path)"
     - cmd: conda config --set show_channel_urls true
     - cmd: conda config --set always_yes yes --set changeps1 no
-    - cmd: conda install -n root conda conda-env anaconda-client
+    - cmd: conda install -n root conda conda-env anaconda-client notebook
     - cmd: set PYTHONUNBUFFERED=1
     - cmd: conda info -a
     - cmd: conda create -n nb_conda_kernels "%PY_CONDITION%"
