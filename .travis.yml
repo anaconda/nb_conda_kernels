@@ -39,9 +39,10 @@ install:
   - source activate nb_conda_kernels
   - pip install python-coveralls
   - npm install
+  - conda list
+  - npm list
 
 script:
-  - conda info -a
   - python setup.py develop
   - python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
   - npm run test

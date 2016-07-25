@@ -62,12 +62,14 @@ install:
     - cmd: conda install -n nb_conda_kernels --file requirements.txt -c r
     - cmd: activate nb_conda_kernels
     - cmd: npm install
+    - cmd: conda list
+    - cmd: npm list
+
 
 # Skip .NET project specific build phase.
 build: off
 
 test_script:
-    - cmd: conda info -a
     - cmd: python setup.py develop
     - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
     - cmd: npm run test
