@@ -59,7 +59,7 @@ install:
     - cmd: set PYTHONUNBUFFERED=1
     - cmd: conda info -a
     - cmd: conda create -n nb_conda_kernels "%PY_CONDITION%"
-    - cmd: conda install -n nb_conda_kernels --file requirements.txt -c r
+    - cmd: conda install -n nb_conda_kernels --file requirements.txt -c r -c conda-forge
     - cmd: activate nb_conda_kernels
     - cmd: npm install
     - cmd: conda list
