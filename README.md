@@ -21,7 +21,7 @@ conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
 conda update env
 source activate nb_conda_kernels
 python setup.py develop
-python -m nb_conda_kernels.install --enable --prefix="${CONDA_ENV_PATH}"
+python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
 ```
 
 We _still_ use `npm` for testing things, so then run:
@@ -36,6 +36,9 @@ npm run test
 
 
 ## Changelog
+
+### 2.0.0
+- change kernel naming scheme to leave default kernels in place
 
 ### 1.0.3
 - ignore build cleanup on windows due to poorly-behaved PhantomJS processes

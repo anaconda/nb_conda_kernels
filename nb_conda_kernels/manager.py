@@ -52,12 +52,14 @@ class CondaKernelSpecManager(KernelSpecManager):
             "Get a dict with name_env:info for kernel executables"
             language_envs = {}
             for base in envs:
-                if exists(join(base, jupyter)) and exists(join(base, language_exe)):
+                exe_path = join(base, language_exe)
+                if exists(join(base, jupyter)) and exists(exe_path):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
                     language_envs[name] = {
-                        'display_name': '{} [conda env:{}]'.format(display_prefix, env_name),
-                        'executable': language_exe,
+                        'display_name': '{} [conda env:{}]'.format(
+                            display_prefix, env_name),
+                        'executable': exe_path,
                         'language_key': language_key,
                     }
             return language_envs
@@ -67,7 +69,7 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         # Get the python envs
         python_envs = get_paths_by_env("Python", "py", python,
-                                      self.conda_info["envs"])
+                                       self.conda_info["envs"])
         all_envs.update(python_envs)
 
         # Get the R envs
