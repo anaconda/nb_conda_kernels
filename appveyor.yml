@@ -57,7 +57,7 @@ install:
     - cmd: conda config --set always_yes yes --set changeps1 no
     - cmd: conda update --yes --quiet conda
     - cmd: set PYTHONUNBUFFERED=1
-    - cmd: conda info
+    - cmd: conda info -a
     - cmd: conda create -n nb_conda_kernels "%PY_CONDITION%"
     - cmd: conda env update
     - cmd: activate nb_conda_kernels
@@ -67,6 +67,7 @@ install:
 build: off
 
 test_script:
+    - cmd: conda info -a
     - cmd: python setup.py develop
-    - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_DEFAULT_ENV%"
+    - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
     - cmd: npm run test

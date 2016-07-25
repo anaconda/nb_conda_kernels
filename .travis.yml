@@ -24,7 +24,8 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
+  - conda update --yes --quiet conda
+  - conda install -n root conda conda-env
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
   - conda env update
@@ -33,8 +34,9 @@ install:
   - npm install
 
 script:
+  - conda info -a
   - python setup.py develop
-  - python -m nb_conda_kernels.install --enable --prefix="${CONDA_ENV_PATH}"
+  - python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
   - npm run test
 
 after_success:
