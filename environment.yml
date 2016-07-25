@@ -1,6 +1,5 @@
 name: nb_conda_kernels
 channels:
-  - conda-forge
   - r
 dependencies:
   - anaconda-client
