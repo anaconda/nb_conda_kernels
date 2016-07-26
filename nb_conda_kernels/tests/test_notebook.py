@@ -31,7 +31,8 @@ class NBCondaKernelsTestController(jstest.JSController):
     """
     def __init__(self, section, *args, **kwargs):
         extra_args = kwargs.pop('extra_args', None)
-        super(NBCondaKernelsTestController, self).__init__(section, *args, **kwargs)
+        super(NBCondaKernelsTestController, self).__init__(section, *args,
+                                                           **kwargs)
         self.xunit = True
 
         test_cases = glob.glob(os.path.join(here, 'js', 'test_notebook_*.js'))
