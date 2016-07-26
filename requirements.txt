@@ -1,0 +1,8 @@
+anaconda-client
+coverage
+flake8
+mock
+nodejs
+nose
+notebook
+r-irkernel

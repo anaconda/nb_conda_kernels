@@ -6,6 +6,13 @@ branches:
   only:
     - master
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libstdc++-4.9-dev
+
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
@@ -24,18 +31,20 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda config --add channels conda-forge
-  - conda update -q conda
+  - conda update --yes --quiet conda
+  - conda install -n root conda conda-env anaconda-client notebook
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
-  - conda env update
+  - conda install -n nb_conda_kernels --file requirements.txt -c r -c conda-forge
   - source activate nb_conda_kernels
-  - conda install python-coveralls
+  - pip install python-coveralls
   - npm install
+  - conda list
+  - npm list
 
 script:
   - python setup.py develop
-  - python -m nb_conda_kernels.install --enable --prefix="${CONDA_ENV_PATH}"
+  - python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
   - npm run test
 
 after_success:

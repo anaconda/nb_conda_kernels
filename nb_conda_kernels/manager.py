@@ -2,11 +2,10 @@
 import json
 import subprocess
 import sys
-import re
 
 from os.path import exists, join, split, dirname, abspath
 
-from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
+from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NATIVE_KERNEL_NAME
 
 
 class CondaKernelSpecManager(KernelSpecManager):
@@ -32,11 +31,12 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         return conda_info
 
-    def _all_executable(self):
+    def _all_envs(self):
         """Find the all the executables for each env where jupyter is installed.
 
-        Returns a dict with the envs names as keys and the paths to the lang
-        exectuable in each env as value if jupyter is installed in that env.
+        Returns a dict with the env names as keys and info about the kernel specs,
+        including the paths to the lang executable in each env as value if jupyter
+        is installed in that env.
         """
         # play safe with windows
         if sys.platform.startswith('win'):
@@ -48,55 +48,78 @@ class CondaKernelSpecManager(KernelSpecManager):
             r = join("bin", "R")
             jupyter = join("bin", "jupyter")
 
-        def get_paths_by_exe(prefix, language, envs):
-            "Get a dict with name_env:path for agnostic executable"
-            language_exe = {
-                prefix + "[{}]".format(split(base)[1]): join(base, language)
-                for base in envs
-                if exists(join(base, jupyter)) and exists(join(base, language))
-            }
-            return language_exe
+        def get_paths_by_env(display_prefix, language_key, language_exe, envs):
+            "Get a dict with name_env:info for kernel executables"
+            language_envs = {}
+            for base in envs:
+                exe_path = join(base, language_exe)
+                if exists(join(base, jupyter)) and exists(exe_path):
+                    env_name = split(base)[1]
+                    name = 'conda-env-{}-{}'.format(env_name, language_key)
+                    language_envs[name] = {
+                        'display_name': '{} [conda env:{}]'.format(
+                            display_prefix, env_name),
+                        'executable': exe_path,
+                        'language_key': language_key,
+                    }
+            return language_envs
 
-        # Collect all the executables in one dict
-        all_exe = {}
+        # Collect all the envs in one dict
+        all_envs = {}
 
-        # Get the python executables
-        python_exe = get_paths_by_exe("Python ", python,
-                                      self.conda_info["envs"])
-        all_exe.update(python_exe)
+        # Get the python envs
+        python_envs = get_paths_by_env("Python", "py", python,
+                                       self.conda_info["envs"])
+        all_envs.update(python_envs)
 
-        # Get the R executables
-        r_exe = get_paths_by_exe("R ", r, self.conda_info["envs"])
-        all_exe.update(r_exe)
+        # Get the R envs
+        r_envs = get_paths_by_env("R", "r", r, self.conda_info["envs"])
+        all_envs.update(r_envs)
 
         # We also add the root prefix into the soup
         root_prefix = join(self.conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
-            all_exe.update({
-                "Python [Root]": join(self.conda_info["root_prefix"], python)
+            all_envs.update({
+                'conda-root-py': {
+                    'display_name': 'Python [conda root]',
+                    'executable': join(self.conda_info["root_prefix"], python),
+                    'language_key': 'py',
+                }
+            })
+        # Use Jupyter's default kernel name ('python2' or 'python3') for current env
+        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix, python)):
+            all_envs.update({
+                NATIVE_KERNEL_NAME: {
+                    'display_name': 'Python [default]',
+                    'executable': join(sys.prefix, python),
+                    'language_key': 'py',
+                }
             })
 
-        return all_exe
+        return all_envs
 
     def _conda_kspecs(self):
         "Create a kernelspec for each of the envs where jupyter is installed"
         kspecs = {}
-        for name, executable in self._all_executable().items():
-            if re.search(r'python(\.exe)?$', executable):
+        for name, info in self._all_envs().items():
+            executable = info['executable']
+            display_name = info['display_name']
+
+            if info['language_key'] == 'py':
                 kspec = {
                     "argv": [executable, "-m", "ipykernel", "-f",
                              "{connection_file}"],
-                    "display_name": name,
+                    "display_name": display_name,
                     "language": "python",
                     "env": {},
                     "resource_dir": join(dirname(abspath(__file__)), "logos",
                                          "python")
                  }
-            elif re.search(r'R(\.exe)?$', executable):
+            elif info['language_key'] == 'r':
                 kspec = {
                     "argv": [executable, "--quiet", "-e", "IRkernel::main()",
                              "--args", "{connection_file}"],
-                    "display_name": name,
+                    "display_name": display_name,
                     "language": "R",
                     "env": {},
                     "resource_dir": join(dirname(abspath(__file__)), "logos",
@@ -117,19 +140,11 @@ class CondaKernelSpecManager(KernelSpecManager):
         """
         kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
 
-        # remove native kernels because it is provided by the env name
-        if "python3" in kspecs:
-            kspecs.pop("python3")
-        elif "python2" in kspecs:
-            kspecs.pop("python2")
-        elif "R" in kspecs:
-            kspecs.pop("R")
-
         # update conda info
         self.conda_info = self._conda_info()
 
         # add conda envs kernelspecs
-        kspecs.update(self._all_executable())
+        kspecs.update(self._conda_kspecs())
 
         return kspecs
 
