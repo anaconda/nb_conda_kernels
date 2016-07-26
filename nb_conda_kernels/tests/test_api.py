@@ -11,19 +11,19 @@ except ImportError:
 CONDA_INFO_ARGS = ["conda", "info", "--json"]
 
 
-# class APITest(test_kernelspecs_api.APITest):
-#     """ Run all the upstream tests. Assumes:
-#         - ipykernel is installed in the root
-#         - r is installed in the environment under test
-#     """
-#
-#     def test_has_root_py(self):
-#         model = self.ks_api.list().json()
-#         self.assertIn("conda-root-py", model["kernelspecs"].keys())
-#
-#     def test_has_r(self):
-#         model = self.ks_api.list().json()
-#         self.assertIn("ir", model["kernelspecs"].keys())
+class APITest(test_kernelspecs_api.APITest):
+    """ Run all the upstream tests. Assumes:
+        - ipykernel is installed in the root
+        - r is installed in the environment under test
+    """
+
+    def test_has_root_py(self):
+        model = self.ks_api.list().json()
+        self.assertIn("conda-root-py", model["kernelspecs"].keys())
+
+    def test_has_r(self):
+        model = self.ks_api.list().json()
+        self.assertIn("ir", model["kernelspecs"].keys())
 
 
 class BadCondaAPITest(test_kernelspecs_api.APITest):
