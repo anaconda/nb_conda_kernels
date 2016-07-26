@@ -1,11 +1,11 @@
 {
   "name": "nb_conda_kernels",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "Launch Jupyter kernels for any installed conda environment",
   "main": "index.js",
   "scripts": {
     "test": "python -m nose nb_conda_kernels.tests",
-    "lint": "flake8 setup.py nb_conda_kernels"
+    "lint": "npm run lint && flake8 setup.py nb_conda_kernels"
   },
   "repository": {
     "type": "git",
@@ -20,13 +20,5 @@
   "devDependencies": {
     "casperjs": "^1.1.1",
     "phantomjs-prebuilt": "^2.1.7"
-  },
-  "eslintConfig": {
-    "strict": true,
-    "env": {
-      "browser": true,
-      "node": true,
-      "phantomjs": true
-    }
   }
 }
