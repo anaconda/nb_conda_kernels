@@ -14,14 +14,16 @@ conda install -c conda-forge nb_conda_kernels
 
 
 ### Getting Started
-You'll need conda installed, either from [Anaconda](https://www.continuum.io/downloads) or [miniconda](http://conda.pydata.org/miniconda.html). You can create a Python development environment named `nb_conda_kernels` from `./environment.yml`.
+You'll need conda installed, either from [Anaconda](https://www.continuum.io/downloads) or [miniconda](http://conda.pydata.org/miniconda.html). 
 
 ```shell
 conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
-conda update env
+conda install -n nb_conda_kernels --file requirements.txt -c r
 source activate nb_conda_kernels
 python setup.py develop
 python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
+# or on windows
+python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX"
 ```
 
 We _still_ use `npm` for testing things, so then run:
