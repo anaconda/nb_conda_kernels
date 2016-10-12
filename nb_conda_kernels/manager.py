@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 import subprocess
 import sys
 import time
 
 from os.path import exists, join, split, dirname, abspath
+from traitlets import Unicode
 
 from jupyter_client.kernelspec import (
     KernelSpecManager,
@@ -19,6 +21,9 @@ class CondaKernelSpecManager(KernelSpecManager):
     """ A custom KernelSpecManager able to search for conda environments and
         create kernelspecs for them.
     """
+    env_filter = Unicode(None, config=True, allow_none=True,
+                         help="Do not list environment names that match this regex")
+
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
 
@@ -27,6 +32,9 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         self._conda_kernels_cache = None
         self._conda_kernels_cache_expiry = None
+
+        if self.env_filter is not None:
+            self._env_filter_regex = re.compile(self.env_filter)
 
         self.log.info("[nb_conda_kernels] enabled, %s kernels found",
                       len(self._conda_kspecs))
@@ -56,6 +64,27 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         return self._conda_info_cache
 
+    def _skip_env(self, path):
+        """Get whether the environment should be included in the kernel specs or
+        not based on whether its path matches env_filter.
+
+        If the filter regex is None, always returns False (i.e., never skips).
+
+        Parameters
+        ----------
+        path: str
+            Full path of the conda environment
+
+        Returns
+        -------
+        bool
+            True if the filter matches and the env should not be included in the
+            kernel specs.
+        """
+        if self.env_filter is None:
+            return False
+        return self._env_filter_regex.search(path) is not None
+
     def _all_envs(self):
         """ Find the all the executables for each env where jupyter is
             installed.
@@ -83,7 +112,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             language_envs = {}
             for base in envs:
                 exe_path = join(base, language_exe)
-                if exists(join(base, jupyter)) and exists(exe_path):
+                if exists(join(base, jupyter)) and exists(exe_path) and not self._skip_env(base):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
                     language_envs[name] = {
