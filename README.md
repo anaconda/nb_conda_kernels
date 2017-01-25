@@ -7,6 +7,8 @@ notebook, you can choose a kernel corresponding to the environment
 you wish to run within. This will allow you to have different versions
 of python, libraries, etc. for different notebooks.
 
+**Important Note** : To use a conda environment as a kernel, don't forget to install `ipykernel` in this environment or it won't show up in the kernel list.
+
 ## Installation
 ```shell
 conda install -c conda-forge nb_conda_kernels
