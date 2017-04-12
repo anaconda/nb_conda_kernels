@@ -87,7 +87,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
                     language_envs[name] = {
-                        'display_name': '{} [conda:{}]'.format(
+                        'display_name': '{} [conda env:{}]'.format(
                             display_prefix, env_name),
                         'env_name': env_name,
                         'display_prefix': display_prefix,
