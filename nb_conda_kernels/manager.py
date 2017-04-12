@@ -122,7 +122,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             if root_python_exec != default_python_exec:
                 all_envs.update({
                     'conda-root-py': {
-                        'display_name': 'Python [conda env:root]',
+                        'display_name': 'Python [conda root]',
                         'env_name': 'root',
                         'display_prefix': 'Python',
                         'executable': root_python_exec,
