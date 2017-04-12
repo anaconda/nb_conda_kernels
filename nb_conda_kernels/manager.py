@@ -116,7 +116,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                                             python))
             all_envs.update({
                 'conda-root-py': {
-                    'display_name': 'Python [conda root]',
+                    'display_name': 'Python [conda env:root]',
                     'env_name': 'root',
                     'display_prefix': 'Python',
                     'executable': root_python_exec,
