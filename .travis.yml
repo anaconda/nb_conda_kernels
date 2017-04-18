@@ -16,8 +16,8 @@ addons:
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
-  - "3.4"
   - "3.5"
+  - "3.6"
 
 install:
   - sudo apt-get update
@@ -35,7 +35,7 @@ install:
   - conda install -n root conda conda-env anaconda-client notebook
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
-  - conda install -n nb_conda_kernels --file requirements.txt -c r -c conda-forge
+  - conda install -n nb_conda_kernels --file requirements.txt
   - source activate nb_conda_kernels
   - pip install python-coveralls
   - npm install
@@ -43,7 +43,7 @@ install:
   - npm list
 
 script:
-  - python setup.py develop
+  - pip install -e .
   - python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
   - npm run test
 
