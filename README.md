@@ -41,6 +41,9 @@ npm run test
 
 ## Changelog
 
+### 2.1.0
+- add support for regex-based filtering of conda environments that should not appear in the list
+
 ### 2.0.0
 - change kernel naming scheme to leave default kernels in place
 

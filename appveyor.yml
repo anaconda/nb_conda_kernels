@@ -15,20 +15,20 @@ environment:
       CONDA_PY: "27"
       PY_CONDITION: "python >=2.7,<3"
     - TARGET_ARCH: "x86"
-      CONDA_PY: "34"
-      PY_CONDITION: "python >=3.4,<3.5"
-    - TARGET_ARCH: "x86"
       CONDA_PY: "35"
-      PY_CONDITION: "python >=3.5"
+      PY_CONDITION: "python >=3.5,<3.6"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "36"
+      PY_CONDITION: "python >=3.6"
     - TARGET_ARCH: "x64"
       CONDA_PY: "27"
       PY_CONDITION: "python >=2.7,<3"
     - TARGET_ARCH: "x64"
-      CONDA_PY: "34"
-      PY_CONDITION: "python >=3.4,<3.5"
-    - TARGET_ARCH: "x64"
       CONDA_PY: "35"
-      PY_CONDITION: "python >=3.5"
+      PY_CONDITION: "python >=3.5,<3.6"
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "36"
+      PY_CONDITION: "python >=3.6"
 
 
 # We always use a 64-bit machine, but can build x86 distributions
@@ -59,7 +59,7 @@ install:
     - cmd: set PYTHONUNBUFFERED=1
     - cmd: conda info -a
     - cmd: conda create -n nb_conda_kernels "%PY_CONDITION%"
-    - cmd: conda install -n nb_conda_kernels --file requirements.txt -c r -c conda-forge
+    - cmd: conda install -n nb_conda_kernels -c conda-forge --file requirements.txt
     - cmd: activate nb_conda_kernels
     - cmd: npm install
     - cmd: conda list
@@ -70,6 +70,6 @@ install:
 build: off
 
 test_script:
-    - cmd: python setup.py develop
+    - cmd: pip install -e .
     - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
     - cmd: npm run test
