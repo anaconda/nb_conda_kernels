@@ -70,6 +70,6 @@ install:
 build: off
 
 test_script:
-    - cmd: pip intall -e .
+    - cmd: pip install -e .
     - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
     - cmd: npm run test
