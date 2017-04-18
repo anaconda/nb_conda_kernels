@@ -35,7 +35,7 @@ install:
   - conda install -n root conda conda-env anaconda-client notebook
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
-  - conda install -n nb_conda_kernels --file requirements.txt
+  - conda install -n nb_conda_kernels -c conda-forge --file requirements.txt
   - source activate nb_conda_kernels
   - pip install python-coveralls
   - npm install
