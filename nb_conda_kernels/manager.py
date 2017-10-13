@@ -6,7 +6,7 @@ import sys
 import time
 
 from os.path import exists, join, split, dirname, abspath
-from traitlets import Unicode
+from traitlets import Unicode, Bool
 
 from jupyter_client.kernelspec import (
     KernelSpecManager,
@@ -23,6 +23,13 @@ class CondaKernelSpecManager(KernelSpecManager):
     """
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
+
+    ensure_conda_root_kernel = Bool(
+        default_value=True,
+        config=True,
+        help="""Add conda root environment kernelspec to spec list if available.
+        """
+    )
 
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
@@ -137,7 +144,8 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         # We also add the root prefix into the soup
         root_prefix = join(self._conda_info["root_prefix"], jupyter)
-        if exists(root_prefix):
+        if (self.ensure_conda_root_kernel
+                and exists(root_prefix)):
             all_envs.update({
                 'conda-root-py': {
                     'display_name': 'Python [conda root]',
