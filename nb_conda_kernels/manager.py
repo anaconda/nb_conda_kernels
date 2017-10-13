@@ -148,8 +148,10 @@ class CondaKernelSpecManager(KernelSpecManager):
             })
         # Use Jupyter's default kernel name ('python2' or 'python3') for
         # current env
-        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix,
-                                                             python)):
+        if (self.ensure_native_kernel
+                and NATIVE_KERNEL_NAME not in all_envs
+                and exists(join(sys.prefix, jupyter))
+                and exists(join(sys.prefix, python))):
             all_envs.update({
                 NATIVE_KERNEL_NAME: {
                     'display_name': 'Python [default]',
