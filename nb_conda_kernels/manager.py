@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import re
 import subprocess
 import sys
@@ -15,6 +16,8 @@ from jupyter_client.kernelspec import (
 )
 
 CACHE_TIMEOUT = 60
+
+CONDA_EXE = os.environ.get("CONDA_EXE", "conda")
 
 
 class CondaKernelSpecManager(KernelSpecManager):
@@ -52,7 +55,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         if expiry is None or expiry < time.time():
             self.log.debug("[nb_conda_kernels] refreshing conda info")
             try:
-                p = subprocess.check_output(["conda", "info", "--json"]
+                p = subprocess.check_output([CONDA_EXE, "info", "--json"]
                                             ).decode("utf-8")
                 conda_info = json.loads(p)
             except Exception as err:
