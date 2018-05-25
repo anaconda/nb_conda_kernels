@@ -11,6 +11,9 @@ build:
   number: 0
   script:
     - python setup.py install --single-version-externally-managed --record=record.txt
+    - cp src/nb-conda-run.sh $PREFIX/bin/nb-conda-run # [not win]
+    - chmod +x $PREFIX/bin/nb-conda-run # [not win]
+    - copy src\nb-conda-run.bat %PREFIX%\Scripts # [win]
 
 requirements:
   build:

@@ -127,6 +127,9 @@ class CondaKernelSpecManager(KernelSpecManager):
         """
 
         all_specs = {}
+        # We need to be able to find conda-run in the base conda environment
+        # even if this package is not running there
+        conda_prefix = self._conda_info['conda_prefix']
         for env_name, env_path in self._all_envs().items():
             kspec_base = join(env_path, 'share', 'jupyter', 'kernels')
             kspec_glob = glob.glob(join(kspec_base, '*', 'kernel.json'))
@@ -141,10 +144,12 @@ class CondaKernelSpecManager(KernelSpecManager):
                 kernel_dir = dirname(spec_path)
                 kernel_name = 'conda-env-{}-{}'.format(
                     basename(env_name), basename(kernel_dir))
+                # Just in case there are multiple environments with the
+                # same basename, we'll do a simple disambiguation
                 while kernel_name in all_specs:
                     kernel_name += '-'
                 spec['display_name'] += ' [conda env: {}]'.format(env_name)
-                spec['argv'] = ['conda-run', env_path] + spec['argv']
+                spec['argv'] = ['nb-conda-run', conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
                 all_specs[kernel_name] = spec
         return all_specs
