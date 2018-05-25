@@ -4,16 +4,13 @@ import re
 import subprocess
 import sys
 import time
+import glob
 
 import os
 from os.path import exists, join, split, dirname, abspath
 from traitlets import Unicode
 
-from jupyter_client.kernelspec import (
-    KernelSpecManager,
-    KernelSpec,
-    NATIVE_KERNEL_NAME,
-)
+from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
 
 CACHE_TIMEOUT = 60
 
@@ -85,87 +82,72 @@ class CondaKernelSpecManager(KernelSpecManager):
         Returns
         -------
         bool
-            True if the filter matches and the env should not be included in the
-            kernel specs.
+            True if the filter matches and the env should not be included in
+            the kernel specs.
         """
         if self.env_filter is None:
             return False
         return self._env_filter_regex.search(path) is not None
 
     def _all_envs(self):
-        """ Find the all the executables for each env where jupyter is
-            installed.
+        """ Find all of the environments we should be checking. We do not
+            include the current environment, since Jupyter is already
+            picking that up, nor do we include environments that match
+            the env_filter regex. Returns a dict with canonical environment
+            names as keys, and full paths as values.
+        """
+        conda_info = self._conda_info
+        base_prefix = conda_info['conda_prefix']
+        envs_dirs = conda_info['envs_dirs']
+        conda_version = float(conda_info['conda_version'].rsplit('.', 1)[0])
+        all_envs = {}
+        for env_path in conda_info['envs']:
+            if self._skip_env(env_path):
+                continue
+            elif env_path == sys.prefix:
+                continue
+            elif env_path == base_prefix:
+                env_name = 'root' if conda_version < 4.4 else 'base'
+            else:
+                env_base, env_name = split(env_path)
+                if env_base not in envs_dirs or env_name in all_envs:
+                    env_name = env_path
+            all_envs[env_name] = env_path
+        return all_envs
 
-            Returns a dict with the env names as keys and info about the kernel
-            specs, including the paths to the lang executable in each env as
-            value if jupyter is installed in that env.
+    def _all_specs(self):
+        """ Find the all kernel specs in all environments besides sys.prefix.
+
+            Returns a dict with unique env names as keys, and the kernel.json
+            content as values, modified so that they can be run properly in
+            their native environments.
 
             Caches the information for CACHE_TIMEOUT seconds, as this is
             relatively expensive.
         """
-        # play safe with windows
-        if sys.platform.startswith('win'):
-            python = join("python.exe")
-            r = join("Scripts", "R.exe")
-            jupyter = join("Scripts", "jupyter.exe")
-        else:
-            python = join("bin", "python")
-            r = join("bin", "R")
-            jupyter = join("bin", "jupyter")
 
-        def get_paths_by_env(display_prefix, language_key, language_exe, envs):
-            """ Get a dict with name_env:info for kernel executables
-            """
-            language_envs = {}
-            for base in envs:
-                exe_path = join(base, language_exe)
-                if exists(join(base, jupyter)) and exists(exe_path) and not self._skip_env(base):
-                    env_name = split(base)[1]
-                    name = 'conda-env-{}-{}'.format(env_name, language_key)
-                    language_envs[name] = {
-                        'display_name': '{} [conda env:{}]'.format(
-                            display_prefix, env_name),
-                        'executable': exe_path,
-                        'language_key': language_key,
-                    }
-            return language_envs
-
-        # Collect all the envs in one dict
-        all_envs = {}
-
-        # Get the python envs
-        python_envs = get_paths_by_env("Python", "py", python,
-                                       self._conda_info["envs"])
-        all_envs.update(python_envs)
-
-        # Get the R envs
-        r_envs = get_paths_by_env("R", "r", r, self._conda_info["envs"])
-        all_envs.update(r_envs)
-
-        # We also add the root prefix into the soup
-        root_prefix = join(self._conda_info["root_prefix"], jupyter)
-        if exists(root_prefix):
-            all_envs.update({
-                'conda-root-py': {
-                    'display_name': 'Python [conda root]',
-                    'executable': join(self._conda_info["root_prefix"],
-                                       python),
-                    'language_key': 'py',
-                }
-            })
-        # Use Jupyter's default kernel name ('python2' or 'python3') for
-        # current env
-        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix,
-                                                             python)):
-            all_envs.update({
-                NATIVE_KERNEL_NAME: {
-                    'display_name': 'Python [default]',
-                    'executable': join(sys.prefix, python),
-                    'language_key': 'py',
-                }
-            })
-
-        return all_envs
+        all_specs = {}
+        for env_name, env_path in self._all_envs().items():
+            kspec_base = join(env_path, 'share', 'jupyter', 'kernels')
+            kspec_glob = glob.glob(join(kspec_base, '*', 'kernel.json'))
+            for spec_path in kspec_glob:
+                try:
+                    with open(spec_path) as fp:
+                        spec = json.load(fp)
+                except Exception as err:
+                    self.log.error("[nb_conda_kernels] error loading %s:\n%s",
+                                   spec_path, err)
+                    continue
+                kernel_dir = dirname(spec_path)
+                kernel_name = 'conda-env-{}-{}'.format(
+                    basename(env_name), basename(kernel_dir))
+                while kernel_name in all_specs:
+                    kernel_name += '-'
+                spec['display_name'] += ' [conda env: {}]'.format(env_name)
+                spec['argv'] = ['conda-run', env_path] + spec['argv']
+                spec['resource_dir'] = abspath(kernel_dir)
+                all_specs[kernel_name] = spec
+        return all_specs
 
     @property
     def _conda_kspecs(self):
@@ -186,35 +168,8 @@ class CondaKernelSpecManager(KernelSpecManager):
         """ Create a kernelspec for each of the envs where jupyter is installed
         """
         kspecs = {}
-        for name, info in self._all_envs().items():
-            executable = info['executable']
-            display_name = info['display_name']
-
-            if info['language_key'] == 'py':
-                kspec = {
-                    "argv": [executable, "-m", "ipykernel", "-f",
-                             "{connection_file}"],
-                    "display_name": display_name,
-                    "language": "python",
-                    "env": {},
-                    "resource_dir": join(dirname(abspath(__file__)), "logos",
-                                         "python")
-                }
-            elif info['language_key'] == 'r':
-                kspec = {
-                    "argv": [executable, "--slave", "-e", "IRkernel::main()",
-                             "--args", "{connection_file}"],
-                    "display_name": display_name,
-                    "language": "R",
-                    "env": {},
-                    "resource_dir": join(dirname(abspath(__file__)), "logos",
-                                         "r")
-                }
-
-            kspecs.update({
-                name: KernelSpec(**kspec)
-            })
-
+        for name, info in self._all_specs().items():
+            kspecs[name] = KernelSpec(**info)
         return kspecs
 
     def find_kernel_specs(self):
