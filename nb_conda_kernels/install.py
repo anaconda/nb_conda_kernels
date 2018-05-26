@@ -43,7 +43,8 @@ CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 KSMC = "kernel_spec_manager_class"
 
 
-def pretty(it): return json.dumps(it, indent=2)
+def pretty(it):
+    return json.dumps(it, indent=2)
 
 
 def install(enable=False, disable=False, prefix=None, verbose=False):

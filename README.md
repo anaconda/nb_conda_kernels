@@ -7,21 +7,26 @@ notebook, you can choose a kernel corresponding to the environment
 you wish to run within. This will allow you to have different versions
 of python, libraries, etc. for different notebooks.
 
-**Important Note** : To use a conda environment as a kernel, don't forget to install `ipykernel` in this environment or it won't show up in the kernel list.
+**Important Note** : To use a Python kernel from a conda environment,
+don't forget to install `ipykernel` in that environment or it won't
+show up on the kernel list. Similary, to use an R kernel, install
+`r-irkernel`.
 
 ## Installation
 ```shell
-conda install -c conda-forge nb_conda_kernels
+conda install nb_conda_kernels
 ```
-
 
 ### Getting Started
 You'll need conda installed, either from [Anaconda](https://www.continuum.io/downloads) or [miniconda](http://conda.pydata.org/miniconda.html). 
 
 ```shell
-conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
-conda install -n nb_conda_kernels --file requirements.txt -c r
-source activate nb_conda_kernels
+conda create -n nb_conda_kernels nb_conda_kernels python=YOUR_FAVORITE_PYTHON
+conda activate nb_conda_kernels
+# Remove just the package, leave the dependencies
+conda remove nb_conda_kernels --force
+# Install the test packages
+conda install --file requirements.txt
 python setup.py develop
 python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
 # or on windows
@@ -37,9 +42,21 @@ Finally, you are ready to run the tests!
 ```shell
 npm run test
 ```
-
+Note that the tests assume the existence of `ipykernel` in the
+base/root conda environment:
+```shell
+conda install -n root ipykernel
+```
+In addition, there needs to be at least one conda environment
+with the `R` kernel, and it need not be root;
+```shell
+conda create -n nbrtest r-irkernel
+```
 
 ## Changelog
+
+### 2.1.1
+- move to a full conda-based approach to build and test
 
 ### 2.1.0
 - add support for regex-based filtering of conda environments that should not appear in the list

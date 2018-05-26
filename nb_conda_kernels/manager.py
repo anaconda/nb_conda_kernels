@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 
+import os
 from os.path import exists, join, split, dirname, abspath
 from traitlets import Unicode
 
@@ -15,6 +16,8 @@ from jupyter_client.kernelspec import (
 )
 
 CACHE_TIMEOUT = 60
+
+CONDA_EXE = os.environ.get("CONDA_EXE", "conda")
 
 
 class CondaKernelSpecManager(KernelSpecManager):
@@ -52,7 +55,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         if expiry is None or expiry < time.time():
             self.log.debug("[nb_conda_kernels] refreshing conda info")
             try:
-                p = subprocess.check_output(["conda", "info", "--json"]
+                p = subprocess.check_output([CONDA_EXE, "info", "--json"]
                                             ).decode("utf-8")
                 conda_info = json.loads(p)
             except Exception as err:
@@ -167,10 +170,8 @@ class CondaKernelSpecManager(KernelSpecManager):
         if self._conda_info is None:
             return {}
 
-        if (
-            self._conda_kernels_cache_expiry is None or
-            self._conda_kernels_cache_expiry < time.time()
-           ):
+        if (self._conda_kernels_cache_expiry is None or
+            self._conda_kernels_cache_expiry < time.time()):
             self.log.debug("[nb_conda_kernels] refreshing conda kernelspecs")
             self._conda_kernels_cache = self._load_conda_kspecs()
             self._conda_kernels_cache_expiry = time.time() + CACHE_TIMEOUT
@@ -194,7 +195,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     "env": {},
                     "resource_dir": join(dirname(abspath(__file__)), "logos",
                                          "python")
-                 }
+                }
             elif info['language_key'] == 'r':
                 kspec = {
                     "argv": [executable, "--slave", "-e", "IRkernel::main()",

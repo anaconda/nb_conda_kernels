@@ -21,8 +21,17 @@ requirements:
     - jupyter_client >=4.2
 
 test:
-  imports:
-    - nb_conda_kernels
+  source_files:
+    - package.json
+  requires:
+    - anaconda-client
+    - coverage
+    - flake8
+    - mock
+    - nodejs
+    - nose
+    - notebook
+    - r-irkernel
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels

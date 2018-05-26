@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "python -m nose nb_conda_kernels.tests",
-    "lint": "npm run lint && flake8 setup.py nb_conda_kernels"
+    "lint": "flake8 setup.py nb_conda_kernels"
   },
   "repository": {
     "type": "git",

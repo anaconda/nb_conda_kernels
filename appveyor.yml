@@ -53,23 +53,18 @@ install:
           else
             {$root = "C:\Miniconda-x64"}
           $env:path="$root;$root\Scripts;$root\Library\bin;$($env:path)"
-    - cmd: conda config --set show_channel_urls true
     - cmd: conda config --set always_yes yes --set changeps1 no
-    - cmd: conda install -n root conda conda-env anaconda-client notebook
+    - cmd: conda update conda
+    # The tests need to see a Python kernel in the root environment
+    - cmd: conda install conda-build anaconda-client ipykernel
+    # The tests also need to see an R kernel in another environment
+    - cmd: conda create -n test_env r-irkernel r-base ipykernel
     - cmd: set PYTHONUNBUFFERED=1
     - cmd: conda info -a
-    - cmd: conda create -n nb_conda_kernels "%PY_CONDITION%"
-    - cmd: conda install -n nb_conda_kernels -c conda-forge --file requirements.txt
-    - cmd: activate nb_conda_kernels
-    - cmd: npm install
-    - cmd: conda list
-    - cmd: npm list
 
 
 # Skip .NET project specific build phase.
 build: off
 
 test_script:
-    - cmd: pip install -e .
-    - cmd: python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
-    - cmd: npm run test
+    - cmd: conda build conda-recipe
