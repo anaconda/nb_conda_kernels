@@ -1,10 +1,8 @@
-{% set version = "2.1.0" %}
-{% set gh_org = "Anaconda-Platform" %}
-{% set gh_repo = "nb_conda_kernels" %}
+{% set data = load_setup_py_data() %}
 
 package:
-  name: {{ gh_repo }}
-  version: {{ version }}
+  name: nb_conda_kernels
+  version: {{ data.get('version') }}
 
 source:
   path: ../
@@ -27,7 +25,7 @@ test:
     - nb_conda_kernels
 
 about:
-  home: https://github.com/{{ gh_org }}/{{ gh_repo }}
+  home: https://github.com/Anaconda-Platform/nb_conda_kernels
   license: BSD 3-Clause
   license_file: LICENSE
   summary: 'Launch Jupyter kernels for any installed conda environment.'
