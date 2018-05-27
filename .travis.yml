@@ -1,47 +1,37 @@
-language: python
+language: generic
+sudo: false
 
-sudo: true
+os:
+  - linux
+  - osx
 
-branches:
-  only:
-    - master
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - libstdc++-4.9-dev
-
-python:
-  # We don't actually use the Travis Python, but this keeps it organized.
-  - "2.7"
-  - "3.5"
-  - "3.6"
+env:
+  - PYTHON_VERSION=2.7 CONDA_VERSION=4.5
+  - PYTHON_VERSION=3.5 CONDA_VERSION=4.5
+  - PYTHON_VERSION=3.6 CONDA_VERSION=4.5
+  - PYTHON_VERSION=3.6 CONDA_VERSION=4.3
 
 install:
-  - sudo apt-get update
-  - sudo apt-get install -y libfreetype6-dev libfontconfig1-dev
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
+  - $HOME/miniconda/bin/conda install conda=$CONDA_VERSION --yes
+  - source $HOME/miniconda/bin/activate
   - conda config --set always_yes yes --set changeps1 no
-  - conda update conda
   # So we can get python-coveralls
   - conda config --append channels conda-forge
   # The tests need to see the Python kernel in the root environment
   - conda install conda-build anaconda-client ipykernel python-coveralls
-  # The tests also need to see an R kernel in another environment
-  - conda create -n test_env r-irkernel r-base
+  # The tests also need to see an R kernel in another environment. And
+  # the current implementation requires jupyter to be there as well.
+  - conda create -n test_env r-irkernel r-base jupyter_core
   - conda info -a
 
 script:
-  - conda build conda-recipe
+  - conda build conda-recipe --python=$PYTHON_VERSION
 
 after_success:
   - coveralls
