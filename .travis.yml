@@ -6,10 +6,10 @@ os:
   - osx
 
 env:
-  - PYTHON_VERSION=2.7 CONDA_VERSION=4.5
-  - PYTHON_VERSION=3.5 CONDA_VERSION=4.5
-  - PYTHON_VERSION=3.6 CONDA_VERSION=4.5
-  - PYTHON_VERSION=3.6 CONDA_VERSION=4.3
+  - PYTHON_VERSION=2.7
+  - PYTHON_VERSION=3.5
+  - PYTHON_VERSION=3.6
+  - PYTHON_VERSION=3.6 CONDA_SPEC='=4.3'
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -18,13 +18,14 @@ install:
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
-  - $HOME/miniconda/bin/conda install conda=$CONDA_VERSION --yes
+  # Fix the conda version before full activation
+  - $HOME/miniconda/bin/conda install conda$CONDA_SPEC --yes
   - source $HOME/miniconda/bin/activate
-  - conda config --set always_yes yes --set changeps1 no
+  - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
   # So we can get python-coveralls
   - conda config --append channels conda-forge
   # The tests need to see the Python kernel in the root environment
-  - conda install conda-build anaconda-client ipykernel python-coveralls
+  - conda install conda-build ipykernel python-coveralls
   # The tests also need to see an R kernel in another environment. And
   # the current implementation requires jupyter to be there as well.
   - conda create -n test_env r-irkernel r-base jupyter_core

@@ -24,7 +24,6 @@ test:
   source_files:
     - package.json
   requires:
-    - anaconda-client
     - coverage
     - flake8
     - mock
