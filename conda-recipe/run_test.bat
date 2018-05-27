@@ -1,2 +1,2 @@
-npm install
+call npm install
 npm run test
