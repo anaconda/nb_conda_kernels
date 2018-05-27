@@ -37,7 +37,7 @@ install:
   # The tests need to see the Python kernel in the root environment
   - conda install conda-build anaconda-client ipykernel python-coveralls
   # The tests also need to see an R kernel in another environment
-  - conda create -n test_env r-irkernel r-base ipykernel
+  - conda create -n test_env r-irkernel r-base
   - conda info -a
 
 script:
