@@ -34,9 +34,9 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - if [ "$CONDA_4_4_STYLE" = "true" ]; then
-      . $HOME/miniconda/etc/profile.d/conda.sh
+      . $HOME/miniconda/etc/profile.d/conda.sh;
     else
-      export PATH="$HOME/miniconda/bin:$PATH"
+      export PATH="$HOME/miniconda/bin:$PATH";
     fi
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
@@ -47,9 +47,9 @@ install:
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
   - conda install -n nb_conda_kernels -c conda-forge --file requirements.txt
   - if [ "$CONDA_4_4_STYLE" = true ]; then
-      conda activate nb_conda_kernels
+      conda activate nb_conda_kernels;
     else
-      source activate nb_conda_kernels
+      source activate nb_conda_kernels;
     fi
   - pip install python-coveralls
   - npm install
