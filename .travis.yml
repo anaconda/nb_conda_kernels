@@ -19,6 +19,11 @@ python:
   - "3.5"
   - "3.6"
 
+env:
+  # test new (conda>=4.4) and old-style conda installs
+  - CONDA_4_4_STYLE=false
+  - CONDA_4_4_STYLE=true
+
 install:
   - sudo apt-get update
   - sudo apt-get install -y libfreetype6-dev libfontconfig1-dev
@@ -28,15 +33,24 @@ install:
       wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
+  - if [ "$CONDA_4_4_STYLE" = "true" ]; then
+      . $HOME/miniconda/etc/profile.d/conda.sh
+    else
+      export PATH="$HOME/miniconda/bin:$PATH"
+    fi
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update --yes --quiet conda
-  - conda install -n root conda conda-env anaconda-client notebook
+  # get 4.6 from canary (can revert to 'conda' when released)
+  - conda install -n root conda-canary::conda=4.6 conda-env anaconda-client notebook
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
   - conda install -n nb_conda_kernels -c conda-forge --file requirements.txt
-  - source activate nb_conda_kernels
+  - if [ "$CONDA_4_4_STYLE" = true ]; then
+      conda activate nb_conda_kernels
+    else
+      source activate nb_conda_kernels
+    fi
   - pip install python-coveralls
   - npm install
   - conda list
