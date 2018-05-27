@@ -33,7 +33,7 @@ install:
       wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
-  - if [ "$CONDA_4_4_STYLE" = "true" ]; then
+- if [ "$CONDA_4_4_STYLE" = "true" ]; then
       . $HOME/miniconda/etc/profile.d/conda.sh;
     else
       export PATH="$HOME/miniconda/bin:$PATH";
@@ -41,8 +41,13 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update --yes --quiet conda
-  # get 4.6 from canary (can revert to 'conda' when released)
-  - conda install -n root conda-canary::conda=4.6 conda-env anaconda-client notebook
+  # test new-style installs against conda 4.6 (from conda-canary if necessary)
+  - if [ "$CONDA_4_4_STYLE" = "true" ]; then
+      conda config --append channels conda-canary;
+      conda install -n base conda=4.6 conda-env anaconda-client notebook;
+    else
+      conda install -n root conda conda-env anaconda-client notebook;
+    fi
   - conda info -a
   - conda create -n nb_conda_kernels python=$TRAVIS_PYTHON_VERSION
   - conda install -n nb_conda_kernels -c conda-forge --file requirements.txt
