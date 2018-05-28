@@ -1,4 +1,4 @@
-anaconda-client
+requests
 coverage
 flake8
 mock
