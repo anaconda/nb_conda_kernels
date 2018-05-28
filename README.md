@@ -57,6 +57,7 @@ conda create -n nbrtest r-irkernel
 
 ### 2.1.1
 - move to a full conda-based approach to build and test
+- add support for conda 4.4 and later, which can remove `conda` from the PATH
 
 ### 2.1.0
 - add support for regex-based filtering of conda environments that should not appear in the list
