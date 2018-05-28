@@ -9,6 +9,7 @@ env:
   - PYTHON_VERSION=2.7
   - PYTHON_VERSION=3.5
   - PYTHON_VERSION=3.6
+  - PYTHON_VERSION=3.6 CONDA_4_4_STYLE=Yes
   - PYTHON_VERSION=3.6 CONDA_SPEC='=4.3'
 
 install:
@@ -20,7 +21,12 @@ install:
   - bash miniconda.sh -b -p $HOME/miniconda
   # Fix the conda version before full activation
   - $HOME/miniconda/bin/conda install conda$CONDA_SPEC --yes
-  - source $HOME/miniconda/bin/activate
+  - if [ "$CONDA_4_4_STYLE" == "yes" ]; then
+        . $HOME/miniconda/etc/profile.d/conda.sh;
+        conda activate;
+    else
+        source $HOME/miniconda/bin/activate;
+    fi
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
   # So we can get python-coveralls
   - conda config --append channels conda-forge
