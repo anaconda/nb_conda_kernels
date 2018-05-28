@@ -7,7 +7,7 @@ import time
 import glob
 
 import os
-from os.path import exists, join, split, dirname, abspath
+from os.path import join, split, dirname, basename, abspath
 from traitlets import Unicode
 
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
