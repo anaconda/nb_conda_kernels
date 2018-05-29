@@ -52,23 +52,21 @@ if len(checks) < 5:
         print('  - Environment Python kernel missing')
     if not checks.get('env_r'):
         print('  - Environment R kernel missing')
-    print('The NPM tests are certain to fail because of this.')
-    # exit(-1)
+    print('Skipping the NPM tests, because they will fail.')
+    exit(-1)
 
-npm_cmd = ['npm']
-if sys.platform.startswith('win'):
-    npm_cmd = ['cmd.exe', '/c'] + npm_cmd
+shell = sys.platform.startswith('win')
 
 print('Installing NPM test packages:')
-command = npm_cmd + ['install']
+command = ['npm', 'install']
 print('Calling: {}'.format(' '.join(command)))
-status = call(command)
+status = call(command, shell=shell)
 if status:
     exit(status)
 
 print('Running NPM tests:')
-command = npm_cmd + ['run', 'test']
+command = ['npm', 'run', 'test']
 print('Calling: {}'.format(' '.join(command)))
-status = call(command)
+status = call(command, shell=shell)
 if status:
     exit(status)
