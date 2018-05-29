@@ -59,3 +59,7 @@ target/
 node_modules/
 screenshots/
 *.xunit.xml
+
+# npm
+package-lock.json
+
