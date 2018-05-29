@@ -1,6 +1,7 @@
 environment:
   global:
     PYTHONUNBUFFERED: 1
+    SKIP_NPM_TESTS: 1
   matrix:
     - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.6"
@@ -31,3 +32,4 @@ skip_branch_with_pr: true
 
 test_script:
     - conda-build conda-recipe --python=%PYTHON_VERSION%
+    - if %ERRORLEVEL% neq 0 exit 1
