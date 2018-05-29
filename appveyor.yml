@@ -21,9 +21,9 @@ install:
     - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
     # The tests need to see the Python kernel in the root environment
     - conda install conda-build ipykernel
-    # The tests also need to see an R kernel in another environment. And
-    # the current implementation requires jupyter to be there as well.
-    - conda create -n test_env r-irkernel r-base jupyter_core
+    # The tests also need to see R and Python kernels in other environments.
+    - conda create -n test_env1 r-irkernel r-base python=3
+    - conda create -n test_env2 ipykernel python=2
     - conda info -a
 
 # Skip .NET project specific build phase.

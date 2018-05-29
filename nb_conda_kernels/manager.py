@@ -107,7 +107,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             elif env_path == sys.prefix:
                 continue
             elif env_path == base_prefix:
-                env_name = 'root' if conda_version < 4.4 else 'base'
+                env_name = 'root'
             else:
                 env_base, env_name = split(env_path)
                 if env_base not in envs_dirs or env_name in all_envs:
@@ -130,6 +130,10 @@ class CondaKernelSpecManager(KernelSpecManager):
         # We need to be able to find conda-run in the base conda environment
         # even if this package is not running there
         conda_prefix = self._conda_info['conda_prefix']
+        if sys.platform.startswith('win'):
+            nb_conda_run = join(sys.prefix, 'Scripts', 'nb-conda-run')
+        else:
+            nb_conda_run = join(sys.prefix, 'bin', 'nb-conda-run')
         for env_name, env_path in self._all_envs().items():
             kspec_base = join(env_path, 'share', 'jupyter', 'kernels')
             kspec_glob = glob.glob(join(kspec_base, '*', 'kernel.json'))
@@ -141,15 +145,28 @@ class CondaKernelSpecManager(KernelSpecManager):
                     self.log.error("[nb_conda_kernels] error loading %s:\n%s",
                                    spec_path, err)
                     continue
-                kernel_dir = dirname(spec_path)
-                kernel_name = 'conda-env-{}-{}'.format(
-                    basename(env_name), basename(kernel_dir))
+                kernel_dir = dirname(spec_path).lower()
+                kernel_name = basename(kernel_dir)
+                # We're doing a few of these adjustments here to ensure that
+                # the naming convention is as close as possible to the previous
+                # versions of this package; particularly so that the tests
+                # pass without change.
+                if kernel_name in ('python2', 'python3'):
+                    kernel_name = 'py'
+                elif kernel_name == 'ir':
+                    kernel_name = 'r'
+                kernel_prefix = '' if env_name == 'root' else 'env-'
+                kernel_name = 'conda-{}{}-{}'.format(
+                    kernel_prefix, basename(env_name), kernel_name)
                 # Just in case there are multiple environments with the
                 # same basename, we'll do a simple disambiguation
                 while kernel_name in all_specs:
                     kernel_name += '-'
-                spec['display_name'] += ' [conda env: {}]'.format(env_name)
-                spec['argv'] = ['nb-conda-run', conda_prefix, env_path] + spec['argv']
+                env_prefix = '' if env_name == 'root' else 'env: '
+                if spec['display_name'].startswith('Python'):
+                    spec['display_name'] = 'Python'
+                spec['display_name'] += ' [conda {}{}]'.format(env_prefix, env_name)
+                spec['argv'] = [nb_conda_run, conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
                 all_specs[kernel_name] = spec
         return all_specs

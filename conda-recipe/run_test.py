@@ -23,13 +23,14 @@ print('Root prefix: {}'.format(conda_info['root_prefix']))
 print('Environments:')
 for env in conda_info['envs']:
     print('  - {}'.format(env))
-print('Kernels included in _all_envs:')
-for key, value in spec_manager._all_envs().items():
-    print('  - {}: {}'.format(key, value['executable']))
+print('Kernels included in _all_specs:')
+for key, value in spec_manager._all_specs().items():
+    print('  - {}: {}'.format(key, value['argv'][2]))
 checks = {}
 print('Kernels included in get_all_specs:')
 for key, value in spec_manager.get_all_specs().items():
-    print('  - {}: {}'.format(key, value['spec']['argv'][0]))
+    executable = value['spec']['argv'][2 if key.startswith('conda-') else 0]
+    print('  - {}: {}'.format(key, executable))
     key = key.lower()
     if key.startswith('python'):
         checks['default_py'] = True
