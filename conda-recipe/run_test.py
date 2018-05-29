@@ -1,4 +1,6 @@
+import os
 import sys
+
 from subprocess import call
 from nb_conda_kernels import CondaKernelSpecManager
 
@@ -54,6 +56,10 @@ if len(checks) < 5:
         print('  - Environment R kernel missing')
     print('Skipping the NPM tests, because they will fail.')
     exit(-1)
+
+if os.environ.get('SKIP_NPM_TESTS'):
+    print('Skipping NPM tests')
+    exit(0)
 
 shell = sys.platform.startswith('win')
 

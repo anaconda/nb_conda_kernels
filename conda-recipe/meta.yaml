@@ -24,12 +24,14 @@ test:
   source_files:
     - package.json
   requires:
+{% if not environ.get('SKIP_NPM_TESTS') %}
     - requests
     - coverage
     - flake8
     - mock
     - nodejs
     - nose
+{% endif %}
     - notebook
     - r-irkernel
 

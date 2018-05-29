@@ -1,13 +1,14 @@
 environment:
   global:
     PYTHONUNBUFFERED: 1
+    SKIP_NPM_TESTS: 1
   matrix:
-#     - MINICONDA: "C:\\Miniconda3-x64"
-#       PYTHON_VERSION: "3.6"
-#     - MINICONDA: "C:\\Miniconda3-x64"
-#       PYTHON_VERSION: "3.5"
-#     - MINICONDA: "C:\\Miniconda3-x64"
-#       PYTHON_VERSION: "2.7"
+    - MINICONDA: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.6"
+    - MINICONDA: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "3.5"
+    - MINICONDA: "C:\\Miniconda3-x64"
+      PYTHON_VERSION: "2.7"
     - MINICONDA: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5"
       CONDA_SPEC: "=4.3"
