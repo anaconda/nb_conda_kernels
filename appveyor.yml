@@ -31,3 +31,4 @@ skip_branch_with_pr: true
 
 test_script:
     - conda-build conda-recipe --python=%PYTHON_VERSION%
+    - if %ERRORLEVEL% neq 0 exit 1
