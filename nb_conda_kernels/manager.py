@@ -97,11 +97,16 @@ class CondaKernelSpecManager(KernelSpecManager):
             names as keys, and full paths as values.
         """
         conda_info = self._conda_info
+        envs = conda_info['envs']
         base_prefix = conda_info['conda_prefix']
+        # Older versions of conda do not seem to include the base prefix
+        # in the environment list, but we do want to scan that
+        if base_prefix not in envs:
+            envs.insert(0, base_prefix)
         envs_dirs = conda_info['envs_dirs']
         conda_version = float(conda_info['conda_version'].rsplit('.', 1)[0])
         all_envs = {}
-        for env_path in conda_info['envs']:
+        for env_path in envs:
             if self._skip_env(env_path):
                 continue
             elif env_path == sys.prefix:
