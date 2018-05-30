@@ -1,0 +1,42 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: nb_conda_kernels
+  version: {{ data.get('version') }}
+
+source:
+  path: ../
+
+build:
+  number: 0
+  script:
+    - python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    - jupyter_client >=4.2
+
+test:
+  source_files:
+    - package.json
+  requires:
+{% if not environ.get('SKIP_NPM_TESTS') %}
+    - requests
+    - coverage
+    - flake8
+    - mock
+    - nodejs
+    - nose
+{% endif %}
+    - notebook
+    - r-irkernel
+
+about:
+  home: https://github.com/Anaconda-Platform/nb_conda_kernels
+  license: BSD 3-Clause
+  license_file: LICENSE
+  summary: 'Launch Jupyter kernels for any installed conda environment.'
