@@ -125,6 +125,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                     language_envs[name] = {
                         'display_name': '{} [conda env:{}]'.format(
                             display_prefix, env_name),
+                        'env_name': env_name,
+                        'display_prefix': display_prefix,
                         'executable': exe_path,
                         'language_key': language_key,
                     }
@@ -142,25 +144,34 @@ class CondaKernelSpecManager(KernelSpecManager):
         r_envs = get_paths_by_env("R", "r", r, self._conda_info["envs"])
         all_envs.update(r_envs)
 
-        # We also add the root prefix into the soup
-        root_prefix = join(self._conda_info["root_prefix"], jupyter)
-        if exists(root_prefix):
-            all_envs.update({
-                'conda-root-py': {
-                    'display_name': 'Python [conda root]',
-                    'executable': join(self._conda_info["root_prefix"],
-                                       python),
-                    'language_key': 'py',
-                }
-            })
         # Use Jupyter's default kernel name ('python2' or 'python3') for
         # current env
-        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix,
-                                                             python)):
+        default_python_exec = abspath(join(sys.prefix, python))
+
+        # We also add the root prefix into the soup
+        root_prefix = join(self._conda_info["root_prefix"], jupyter)
+        root_python_exec = None
+        if exists(root_prefix):
+            root_python_exec = abspath(join(self._conda_info["root_prefix"],
+                                            python))
+            
+            if root_python_exec != default_python_exec:
+                all_envs.update({
+                    'conda-root-py': {
+                        'display_name': 'Python [conda root]',
+                        'env_name': 'root',
+                        'display_prefix': 'Python',
+                        'executable': root_python_exec,
+                        'language_key': 'py',
+                    }
+            })
+        if exists(join(sys.prefix, jupyter)) and exists(default_python_exec):
             all_envs.update({
                 NATIVE_KERNEL_NAME: {
                     'display_name': 'Python [default]',
-                    'executable': join(sys.prefix, python),
+                    'env_name': 'default', 
+                    'display_prefix': 'Python',
+                    'executable': default_python_exec,
                     'language_key': 'py',
                 }
             })
