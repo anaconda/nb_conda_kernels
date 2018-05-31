@@ -10,7 +10,7 @@ import os
 from os.path import join, split, dirname, basename, abspath
 from traitlets import Unicode
 
-from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
+from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NoSuchKernel
 
 CACHE_TIMEOUT = 60
 
@@ -68,27 +68,6 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         return self._conda_info_cache
 
-    def _skip_env(self, path):
-        """Get whether the environment should be included in the kernel specs or
-        not based on whether its path matches env_filter.
-
-        If the filter regex is None, always returns False (i.e., never skips).
-
-        Parameters
-        ----------
-        path: str
-            Full path of the conda environment
-
-        Returns
-        -------
-        bool
-            True if the filter matches and the env should not be included in
-            the kernel specs.
-        """
-        if self.env_filter is None:
-            return False
-        return self._env_filter_regex.search(path) is not None
-
     def _all_envs(self):
         """ Find all of the environments we should be checking. We do not
             include the current environment, since Jupyter is already
@@ -107,8 +86,9 @@ class CondaKernelSpecManager(KernelSpecManager):
         conda_version = float(conda_info['conda_version'].rsplit('.', 1)[0])
         all_envs = {}
         for env_path in envs:
-            if self._skip_env(env_path):
-                continue
+            if self.env_filter is not None:
+                if self._env_filter_regex.search(env_path):
+                    continue
             elif env_path == sys.prefix:
                 continue
             elif env_path == base_prefix:
@@ -183,20 +163,16 @@ class CondaKernelSpecManager(KernelSpecManager):
         if self._conda_info is None:
             return {}
 
-        if (self._conda_kernels_cache_expiry is None or
-            self._conda_kernels_cache_expiry < time.time()):
-            self.log.debug("[nb_conda_kernels] refreshing conda kernelspecs")
-            self._conda_kernels_cache = self._load_conda_kspecs()
-            self._conda_kernels_cache_expiry = time.time() + CACHE_TIMEOUT
+        expiry = self._conda_kernels_cache_expiry
+        if expiry is not None and expiry >= time.time():
+            return self._conda_kernels_cache 
 
-        return self._conda_kernels_cache
-
-    def _load_conda_kspecs(self):
-        """ Create a kernelspec for each of the envs where jupyter is installed
-        """
         kspecs = {}
         for name, info in self._all_specs().items():
             kspecs[name] = KernelSpec(**info)
+
+        self._conda_kernels_cache_expiry = time.time() + CACHE_TIMEOUT
+        self._conda_kernels_cache = kspecs
         return kspecs
 
     def find_kernel_specs(self):
@@ -224,3 +200,19 @@ class CondaKernelSpecManager(KernelSpecManager):
             self._conda_kspecs.get(kernel_name) or
             super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name)
         )
+
+    def get_all_specs(self):
+        """ Returns a dict mapping kernel names to dictionaries with two
+            entries: "resource_dir" and "spec". This was added to fill out
+            the full public interface to KernelManagerSpec.
+        """
+        res = {}
+        for name, resource_dir in self.find_kernel_specs().items():
+            try:
+                spec = self.get_kernel_spec(name)
+                res[name] = {'resource_dir': resource_dir,
+                             'spec': spec.to_dict()}
+            except NoSuchKernel:
+                self.log.warning("Error loading kernelspec %r", name, exc_info=True)
+        return res
+
