@@ -90,7 +90,8 @@ class CondaKernelSpecManager(KernelSpecManager):
         """
         if self.env_filter is None:
             return False
-        return self._env_filter_regex.search(path) is not None
+        # sometimes deal with the full path will cause some problem, e.g. the user name is the same as the env name.
+        return self._env_filter_regex.search(split(path)[1]) is not None
 
     def _all_envs(self):
         """ Find the all the executables for each env where jupyter is
