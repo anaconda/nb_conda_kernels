@@ -148,7 +148,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         if exists(root_prefix):
             all_envs.update({
                 'conda-root-py': {
-                    'display_name': 'Python [conda root]',
+                    'display_name': self.name_format.format('Python', 'root'),
                     'executable': join(self._conda_info["root_prefix"],
                                        python),
                     'language_key': 'py',
@@ -160,7 +160,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                                                              python)):
             all_envs.update({
                 NATIVE_KERNEL_NAME: {
-                    'display_name': 'Python [default]',
+                    'display_name': self.name_format.format('Python', 'default'),
                     'executable': join(sys.prefix, python),
                     'language_key': 'py',
                 }
