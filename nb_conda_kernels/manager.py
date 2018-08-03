@@ -146,22 +146,33 @@ class CondaKernelSpecManager(KernelSpecManager):
         # We also add the root prefix into the soup
         root_prefix = join(self._conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
+            # Replace root by root named kernel
+            root_exec = join(self._conda_info["root_prefix"], python)
+            for env in list(all_envs):
+                if all_envs[env]['executable'] == root_exec:
+                    all_envs.pop(env)
+                    break
+
             all_envs.update({
                 'conda-root-py': {
                     'display_name': self.name_format.format('Python', 'root'),
-                    'executable': join(self._conda_info["root_prefix"],
-                                       python),
+                    'executable': root_exec,
                     'language_key': 'py',
                 }
             })
-        # Use Jupyter's default kernel name ('python2' or 'python3') for
-        # current env
-        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix,
-                                                             python)):
+        # Use Jupyter's default kernel name ('python2' or 'python3') for current env
+        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix, python)):
+            # Replace default by default named kernel
+            default_exec = join(sys.prefix, python)
+            for env in list(all_envs):
+                if all_envs[env]['executable'] == default_exec:
+                    all_envs.pop(env)
+                    break
+
             all_envs.update({
                 NATIVE_KERNEL_NAME: {
                     'display_name': self.name_format.format('Python', 'default'),
-                    'executable': join(sys.prefix, python),
+                    'executable': default_exec,
                     'language_key': 'py',
                 }
             })
