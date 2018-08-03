@@ -26,6 +26,8 @@ class CondaKernelSpecManager(KernelSpecManager):
     """
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
+    name_format = Unicode('{0} [conda env:{1}]', config=True, 
+                          help="String name format; '{{0}}' = Language, '{{1}}' = Kernel")
 
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
@@ -123,8 +125,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
                     language_envs[name] = {
-                        'display_name': '{} [conda env:{}]'.format(
-                            display_prefix, env_name),
+                        'display_name': self.name_format.format(display_prefix, env_name),
                         'executable': exe_path,
                         'language_key': language_key,
                     }
