@@ -118,12 +118,14 @@ class CondaKernelSpecManager(KernelSpecManager):
         def get_paths_by_env(display_prefix, language_key, language_exe, envs):
             """ Get a dict with name_env:info for kernel executables
             """
+            whitelist = getattr(self, 'whitelist', set())
             language_envs = {}
             for base in envs:
                 exe_path = join(base, language_exe)
                 if exists(join(base, jupyter)) and exists(exe_path) and not self._skip_env(base):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
+                    if not whitelist or name in whitelist:
                     language_envs[name] = {
                         'display_name': self.name_format.format(display_prefix, env_name),
                         'executable': exe_path,
@@ -135,8 +137,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         all_envs = {}
 
         # Get the python envs
-        python_envs = get_paths_by_env("Python", "py", python,
-                                       self._conda_info["envs"])
+        python_envs = get_paths_by_env("Python", "py", python, self._conda_info["envs"])
         all_envs.update(python_envs)
 
         # Get the R envs
