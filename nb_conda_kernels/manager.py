@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import re
-import subprocess
+from subprocess import Popen, PIPE
 import sys
 import time
 
@@ -60,14 +60,13 @@ class CondaKernelSpecManager(KernelSpecManager):
             # it is a Windows batch file---which is the case in non-root
             # conda environments.
             shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
-            try:
-                p = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                            shell=shell).decode("utf-8")
-                conda_info = json.loads(p)
-            except Exception as err:
+            p = Popen([CONDA_EXE, "info", "--json"], stdout=PIPE, stderr=PIPE, shell=shell)
+            p_out, p_err = p.communicate()
+            if p.returncode == 0:
+                conda_info = json.loads(p_out.decode("utf-8"))
+            else:
                 conda_info = None
-                self.log.error("[nb_conda_kernels] couldn't call conda:\n%s",
-                               err)
+                self.log.error("[nb_conda_kernels] couldn't call conda:\n%s", p_err)
             self._conda_info_cache = conda_info
             self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
 
@@ -126,11 +125,11 @@ class CondaKernelSpecManager(KernelSpecManager):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
                     if not whitelist or name in whitelist:
-                    language_envs[name] = {
-                        'display_name': self.name_format.format(display_prefix, env_name),
-                        'executable': exe_path,
-                        'language_key': language_key,
-                    }
+                        language_envs[name] = {
+                            'display_name': self.name_format.format(display_prefix, env_name),
+                            'executable': exe_path,
+                            'language_key': language_key,
+                        }
             return language_envs
 
         # Collect all the envs in one dict
