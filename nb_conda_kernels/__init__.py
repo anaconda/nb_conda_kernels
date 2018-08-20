@@ -1,3 +1,5 @@
 # flake8: noqa
-from ._version import version_info, __version__
 from .manager import CondaKernelSpecManager
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

@@ -10,3 +10,5 @@ recursive-exclude * *.py[co]
 recursive-exclude node_modules *.*
 recursive-exclude * node_modules
 recursive-exclude * .git
+include versioneer.py
+include nb_conda_kernels/_version.py

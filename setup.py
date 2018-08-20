@@ -1,15 +1,10 @@
 import setuptools
-from os.path import join
-
-# should be loaded below
-__version__ = None
-
-with open(join('nb_conda_kernels', '_version.py')) as version:
-    exec(version.read())
+import versioneer
 
 setuptools.setup(
     name="nb_conda_kernels",
-    version=__version__,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     url="https://github.com/Anaconda-Platform/nb_conda_kernels",
     author="Continuum Analytics",
     description="Launch Jupyter kernels for any installed conda environment",
