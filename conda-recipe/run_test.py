@@ -1,7 +1,7 @@
 import os
 import sys
 
-from subprocess import call, check_output, STDOUT
+from subprocess import call, check_output, STDOUT, CalledProcessError
 from nb_conda_kernels import CondaKernelSpecManager
 
 # The testing regime for nb_conda_kernels is unique, in that it needs to
@@ -60,28 +60,38 @@ if len(checks) < 5:
     print('Skipping further tests.')
     exit(-1)
 
-shell = sys.platform.startswith('win')
+is_win = sys.platform.startswith('win')
 
 # conda_run tests
 print('Testing nb-conda-run:')
 for key, value in spec_manager._all_specs().items():
-    # Can't test the root prefix within conda build due to a
-    # strange interaction with conda activate
+    command = value['argv'][:3]
+    env_name = command[-1]
     if key.startswith('conda-root-'):
-        continue
-    env_name = value['argv'][2]
-    command = ['nb-conda-run', conda_root, env_name]
-    if key.endswith('-py'):
+        # Can't test the root prefix within conda build due to a
+        # strange interaction with conda activate. CONDA_PREFIX is
+        # set properly but not PATH. I'm still investigating but it
+        # does not seem to appear in testing outside of conda build.
+        if is_win:
+            command.extend(['echo', '%CONDA_PREFIX%'])
+        else:
+            command.extend(['sh', '-c', 'echo $CONDA_PREFIX'])
+    elif key.endswith('-py'):
         command.extend(['python', '-c', 'import sys; print(sys.prefix)'])
     elif key.endswith('-r'):
         command.extend(['Rscript', '--verbose', '-e', 'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)'])
     else:
         continue
-    print('  {}'.format(env_name, ' '.join(command)))
-    com_out = check_output(command, shell=shell, stderr=STDOUT).decode()
+    print('  {}'.format(' '.join(command)))
+    try:
+        com_out = check_output(command, shell=is_win, stderr=STDOUT).decode()
+        valid = True
+    except CalledProcessError as exc:
+        com_out = exc.output
+        valid = False
     last_line = com_out.splitlines()[-1].strip()
-    print('    Obtained: {}'.format(last_line))
-    if last_line != env_name:
+    print('    {}'.format(last_line))
+    if not valid or last_line != env_name:
         print('FAILED; skipping further tests.')
         print('Full output:\n--------\n{}\n--------'.format(com_out))
         exit(-1)

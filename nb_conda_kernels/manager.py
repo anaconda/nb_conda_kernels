@@ -115,10 +115,6 @@ class CondaKernelSpecManager(KernelSpecManager):
         # We need to be able to find conda-run in the base conda environment
         # even if this package is not running there
         conda_prefix = self._conda_info['conda_prefix']
-        if sys.platform.startswith('win'):
-            nb_conda_run = join(sys.prefix, 'Scripts', 'nb-conda-run')
-        else:
-            nb_conda_run = join(sys.prefix, 'bin', 'nb-conda-run')
         for env_name, env_path in self._all_envs().items():
             kspec_base = join(env_path, 'share', 'jupyter', 'kernels')
             kspec_glob = glob.glob(join(kspec_base, '*', 'kernel.json'))
@@ -151,7 +147,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                 if spec['display_name'].startswith('Python'):
                     spec['display_name'] = 'Python'
                 spec['display_name'] += ' [conda {}{}]'.format(env_prefix, env_name)
-                spec['argv'] = [nb_conda_run, conda_prefix, env_path] + spec['argv']
+                spec['argv'] = ['nb-conda-run', conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
                 all_specs[kernel_name] = spec
         return all_specs
