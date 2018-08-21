@@ -63,23 +63,23 @@ if len(checks) < 5:
 is_win = sys.platform.startswith('win')
 
 # conda_run tests
+any_fail = False
 print('Testing nb-conda-run:')
 for key, value in spec_manager._all_specs().items():
     command = value['argv'][:3]
     env_name = command[-1]
     if key.startswith('conda-root-'):
-        # Can't test the root prefix within conda build due to a
+        # We can't do the same test for the root prefix because of a
         # strange interaction with conda activate. CONDA_PREFIX is
         # set properly but not PATH. I'm still investigating but it
         # does not seem to appear in testing outside of conda build.
-        if is_win:
-            command.extend(['echo', '%CONDA_PREFIX%'])
-        else:
-            command.extend(['sh', '-c', 'echo $CONDA_PREFIX'])
+        command.extend(['python', '-c', 'import os; print(os.environ["CONDA_PREFIX"])'])
     elif key.endswith('-py'):
         command.extend(['python', '-c', 'import sys; print(sys.prefix)'])
     elif key.endswith('-r'):
-        command.extend(['Rscript', '--verbose', '-e', 'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)'])
+        command.extend(['Rscript', '-e', 'message(dirname(dirname(dirname(.libPaths()))))'])
+        if is_win:
+            env_name = env_name.replace('\\', '/')
     else:
         continue
     print('  {}'.format(' '.join(command)))
@@ -92,9 +92,10 @@ for key, value in spec_manager._all_specs().items():
     last_line = com_out.splitlines()[-1].strip()
     print('    {}'.format(last_line))
     if not valid or last_line != env_name:
-        print('FAILED; skipping further tests.')
         print('Full output:\n--------\n{}\n--------'.format(com_out))
-        exit(-1)
+        any_fail = True
+if any_fail:
+    exit(-1)
 
 if os.environ.get('SKIP_NPM_TESTS'):
     print('Skipping NPM tests')
