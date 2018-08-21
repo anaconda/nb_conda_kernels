@@ -18,7 +18,7 @@ install:
     # fixing the version of conda *before* doing the full activation.
     - call %MINICONDA%\Scripts\conda install conda%CONDA_SPEC% --yes
     - call %MINICONDA%\Scripts\activate.bat
-    - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
+    - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no --set safety_checks disabled
     # The tests need to see the Python kernel in the root environment
     - conda install conda-build ipykernel
     # The tests also need to see R and Python kernels in other environments.

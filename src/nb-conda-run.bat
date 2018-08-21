@@ -18,4 +18,5 @@ goto loop1
 
 rem activate the requested environment and execute
 call "%conda_root%\Scripts\activate" %envname%
-call %cmdstring%
+%cmdstring%
+

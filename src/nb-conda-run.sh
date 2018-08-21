@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # Executes a single command in the given conda environment.
 # Usage: nb-conda-run <conda-root> <env> <cmd> [<arg>...]
 conda_root=$1
-shift
-if [ "$1" = "base" ]; then envname=root; else envname=$1; fi
-shift
-. "$conda_root/bin/activate" "$envname" || exit $?
+envname=$2
+if [ "$envname" = "base" ]; then envname=root; fi
+shift 2
+source "$conda_root/bin/activate" "$envname" || exit $?
 exec "$@"
