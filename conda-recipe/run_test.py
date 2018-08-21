@@ -1,7 +1,7 @@
 import os
 import sys
 
-from subprocess import call
+from subprocess import call, check_output, STDOUT
 from nb_conda_kernels import CondaKernelSpecManager
 
 # The testing regime for nb_conda_kernels is unique, in that it needs to
@@ -18,8 +18,10 @@ conda_info = spec_manager._conda_info
 if conda_info is None:
     print('Cannot find conda, skipping tests.')
     exit(-1)
+conda_root = conda_info['root_prefix']
+envs_root = conda_info['envs_dirs'][0]
 print('Current prefix: {}'.format(sys.prefix))
-print('Root prefix: {}'.format(conda_info['root_prefix']))
+print('Root prefix: {}'.format(conda_root))
 print('Environments:')
 for env in conda_info['envs']:
     print('  - {}'.format(env))
@@ -29,8 +31,8 @@ for key, value in spec_manager._all_specs().items():
 checks = {}
 print('Kernels included in get_all_specs:')
 for key, value in spec_manager.get_all_specs().items():
-    executable = value['spec']['argv'][2 if key.startswith('conda-') else 0]
-    print('  - {}: {}'.format(key, executable))
+    long_env = value['spec']['argv'][2] if key.startswith('conda-') else sys.prefix
+    print('  - {}: {}'.format(key, long_env))
     key = key.lower()
     if key.startswith('python'):
         checks['default_py'] = True
@@ -55,14 +57,38 @@ if len(checks) < 5:
         print('  - Environment Python kernel missing')
     if not checks.get('env_r'):
         print('  - Environment R kernel missing')
-    print('Skipping the NPM tests, because they will fail.')
+    print('Skipping further tests.')
     exit(-1)
+
+shell = sys.platform.startswith('win')
+
+# conda_run tests
+print('Testing nb-conda-run:')
+for key, value in spec_manager._all_specs().items():
+    # Can't test the root prefix within conda build due to a
+    # strange interaction with conda activate
+    if key.startswith('conda-root-'):
+        continue
+    env_name = value['argv'][2]
+    command = ['nb-conda-run', conda_root, env_name]
+    if key.endswith('-py'):
+        command.extend(['python', '-c', 'import sys; print(sys.prefix)'])
+    elif key.endswith('-r'):
+        command.extend(['Rscript', '--verbose', '-e', 'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)'])
+    else:
+        continue
+    print('  {}'.format(env_name, ' '.join(command)))
+    com_out = check_output(command, shell=shell, stderr=STDOUT).decode()
+    last_line = com_out.splitlines()[-1].strip()
+    print('    Obtained: {}'.format(last_line))
+    if last_line != env_name:
+        print('FAILED; skipping further tests.')
+        print('Full output:\n--------\n{}\n--------'.format(com_out))
+        exit(-1)
 
 if os.environ.get('SKIP_NPM_TESTS'):
     print('Skipping NPM tests')
     exit(0)
-
-shell = sys.platform.startswith('win')
 
 print('Installing NPM test packages:')
 command = ['npm', 'install']

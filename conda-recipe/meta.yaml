@@ -24,9 +24,9 @@ requirements:
     - jupyter_client >=4.2
 
 test:
-  source_files:
-    - package.json
   requires:
+    - notebook
+    - r-irkernel
 {% if not environ.get('SKIP_NPM_TESTS') %}
     - requests
     - coverage
@@ -34,9 +34,9 @@ test:
     - mock
     - nodejs
     - nose
+  source_files:
+    - package.json
 {% endif %}
-    - notebook
-    - r-irkernel
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels
