@@ -104,13 +104,13 @@ if os.environ.get('SKIP_NPM_TESTS'):
 print('Installing NPM test packages:')
 command = ['npm', 'install']
 print('Calling: {}'.format(' '.join(command)))
-status = call(command, shell=shell)
+status = call(command, shell=is_win)
 if status:
     exit(status)
 
 print('Running NPM tests:')
 command = ['npm', 'run', 'test']
 print('Calling: {}'.format(' '.join(command)))
-status = call(command, shell=shell)
+status = call(command, shell=is_win)
 if status:
     exit(status)
