@@ -78,14 +78,15 @@ class CondaKernelSpecManager(KernelSpecManager):
         conda_info = self._conda_info
         envs = conda_info['envs']
         base_prefix = conda_info['conda_prefix']
+        build_prefix = join(base_prefix, 'conda-bld')
         # Older versions of conda do not seem to include the base prefix
         # in the environment list, but we do want to scan that
         if base_prefix not in envs:
             envs.insert(0, base_prefix)
         envs_dirs = conda_info['envs_dirs']
-        conda_version = float(conda_info['conda_version'].rsplit('.', 1)[0])
         all_envs = {}
         for env_path in envs:
+            # Do not include conda-bld envs
             if self.env_filter is not None:
                 if self._env_filter_regex.search(env_path):
                     continue
@@ -95,6 +96,9 @@ class CondaKernelSpecManager(KernelSpecManager):
                 env_name = 'root'
             else:
                 env_base, env_name = split(env_path)
+                # Do not include conda-bld environments
+                if env_base == build_prefix:
+                    continue
                 if env_base not in envs_dirs or env_name in all_envs:
                     env_name = env_path
             all_envs[env_name] = env_path
@@ -161,7 +165,7 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         expiry = self._conda_kernels_cache_expiry
         if expiry is not None and expiry >= time.time():
-            return self._conda_kernels_cache 
+            return self._conda_kernels_cache
 
         kspecs = {}
         for name, info in self._all_specs().items():
@@ -211,4 +215,3 @@ class CondaKernelSpecManager(KernelSpecManager):
             except NoSuchKernel:
                 self.log.warning("Error loading kernelspec %r", name, exc_info=True)
         return res
-

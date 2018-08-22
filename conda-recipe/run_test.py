@@ -1,5 +1,6 @@
 import os
 import sys
+import site
 
 from subprocess import call, check_output, STDOUT, CalledProcessError
 from nb_conda_kernels import CondaKernelSpecManager
@@ -13,26 +14,20 @@ from nb_conda_kernels import CondaKernelSpecManager
 # to see before launching the full npm session. This was a lot easier
 # to accomplish with a Python-based conda build test script.
 
-spec_manager = CondaKernelSpecManager()
-conda_info = spec_manager._conda_info
-if conda_info is None:
-    print('Cannot find conda, skipping tests.')
-    exit(-1)
-conda_root = conda_info['root_prefix']
-envs_root = conda_info['envs_dirs'][0]
-conda_version = conda_info['conda_version']
-conda_tuple = tuple(map(int, conda_version.split('.')[:2]))
-
 print('')
 print('Conda configuration')
 print('-------------------')
+spec_manager = CondaKernelSpecManager()
+conda_info = spec_manager._conda_info
+if conda_info is None:
+    print('ERROR: Could not find conda find conda.')
+    exit(-1)
 print('Current prefix: {}'.format(sys.prefix))
-print('Root prefix: {}'.format(conda_root))
-print('Conda version: {}'.format(conda_version))
+print('Root prefix: {}'.format(conda_info['root_prefix']))
+print('Conda version: {}'.format(conda_info['conda_version']))
 print('Environments:')
 for env in conda_info['envs']:
     print('  - {}'.format(env))
-
 
 checks = {}
 print('')
@@ -68,8 +63,6 @@ if len(checks) < 5:
     print('Skipping further tests.')
     exit(-1)
 
-is_win = sys.platform.startswith('win')
-
 # Due to a bug in conda build, activating other conda
 # environments during a conda build test session fails
 # under certain circumstances. The symptom is that the PATH
@@ -80,6 +73,7 @@ is_win = sys.platform.startswith('win')
 # always be correct, but we need to see only a single
 # correct PATH value.
 
+is_win = sys.platform.startswith('win')
 strong_fail = 0
 weak_pass = 0
 print('')
@@ -108,7 +102,7 @@ for key, value in spec_manager._all_specs().items():
         com_out = exc.output
         valid = False
     com_out = com_out.decode()
-    outputs = list(map(str.strip, com_out.splitlines()[-2:]))
+    outputs = list(map(lambda x: x.strip(), com_out.splitlines()[-2:]))
     if valid and len(outputs) != 2:
         valid = False
     if valid:
@@ -124,25 +118,3 @@ for key, value in spec_manager._all_specs().items():
 if strong_fail != 0 or weak_pass == 0:
     exit(-1)
 
-if not os.path.exists(os.path.join(sys.prefix, 'lib', 'node_modules')):
-    print('')
-    print('NodeJS not installed, skipping NPM tests')
-    exit(0)
-
-print('')
-print('Installing NPM packages for tests')
-print('---------------------------------')
-command = ['npm', 'install']
-print('Calling: {}'.format(' '.join(command)))
-status = call(command, shell=is_win)
-if status:
-    exit(status)
-
-print('')
-print('Running NPM tests')
-print('-----------------')
-command = ['npm', 'run', 'test']
-print('Calling: {}'.format(' '.join(command)))
-status = call(command, shell=is_win)
-if status:
-    exit(status)

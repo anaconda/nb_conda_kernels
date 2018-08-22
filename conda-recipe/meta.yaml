@@ -16,7 +16,7 @@ build:
     - copy src\nb-conda-run.bat %PREFIX%\Scripts # [win]
 
 requirements:
-  build:
+  host:
     - python
     - setuptools
   run:
@@ -29,13 +29,12 @@ test:
     - r-irkernel
 {% if not environ.get('SKIP_NPM_TESTS') %}
     - requests
-    - coverage
-    - flake8
     - mock
+    - coverage
     - nodejs
     - nose
-  source_files:
-    - package.json
+  commands:
+    - npx -p phantomjs -p casperjs python -m nose nb_conda_kernels
 {% endif %}
 
 about:
