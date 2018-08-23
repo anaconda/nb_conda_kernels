@@ -1,0 +1,7 @@
+notebook
+r-irkernel
+nose
+coverage
+mock
+requests
+nodejs

@@ -30,28 +30,26 @@ conda install --file requirements.txt
 python setup.py develop
 python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
 # or on windows
-python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX"
+python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
 ```
-
-We _still_ use `npm` for testing things, so then run:
-```shell
-npm install
-```
-
-Finally, you are ready to run the tests!
-```shell
-npm run test
-```
-Note that the tests assume the existence of `ipykernel` in the
-base/root conda environment:
+The tests assume the existence of `ipykernel` in the
+base/root conda environment, and at least one conda
+environment with the `R` kernel; e.g.
 ```shell
 conda install -n root ipykernel
-```
-In addition, there needs to be at least one conda environment
-with the `R` kernel, and it need not be root;
-```shell
 conda create -n nbrtest r-irkernel
 ```
+
+To run all of the tests, you need to use node:
+```shell
+npx -p casperjs -p phantomjs nosetests
+```
+However, only the `test_notebook` module requires node, so to
+skip that test and run the others, you could do:
+```
+nosetests --exclude=test_notebook
+```
+
 
 ## Changelog
 
