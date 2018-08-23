@@ -7,7 +7,7 @@ import time
 
 import os
 from os.path import exists, join, split, dirname, abspath
-from traitlets import Unicode
+from traitlets import Unicode, Dict
 
 from jupyter_client.kernelspec import (
     KernelSpecManager,
@@ -26,6 +26,8 @@ class CondaKernelSpecManager(KernelSpecManager):
     """
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
+    python_kernel_env = Dict(None, config=True, allow_none=True,
+                             help="Environment variables for python kernels")
 
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
@@ -196,7 +198,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                              "{connection_file}"],
                     "display_name": display_name,
                     "language": "python",
-                    "env": {},
+                    "env": self.python_kernel_env or {},
                     "resource_dir": join(dirname(abspath(__file__)), "logos",
                                          "python")
                 }
