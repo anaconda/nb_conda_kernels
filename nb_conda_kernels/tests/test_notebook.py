@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import subprocess
 
@@ -10,17 +11,9 @@ except ImportError:
 
 from notebook import jstest
 
-import platform
+IS_WIN = sys.platform.startswith('win')
 
-IS_WIN = "Windows" in platform.system()
-
-here = os.path.dirname(__file__)
-
-# global npm installs are bad, add the local node_modules to the path
-os.environ["PATH"] = os.pathsep.join([
-    os.environ["PATH"],
-    os.path.abspath(os.path.join(here, "node_modules", ".bin"))
-])
+HERE = os.path.dirname(__file__)
 
 TEST_LOG = ".jupyter.jstest.log"
 
@@ -35,12 +28,12 @@ class NBCondaKernelsTestController(jstest.JSController):
                                                            **kwargs)
         self.xunit = True
 
-        test_cases = glob.glob(os.path.join(here, 'js', 'test_notebook_*.js'))
+        test_cases = glob.glob(os.path.join(HERE, 'js', 'test_notebook_*.js'))
         js_test_dir = jstest.get_js_test_dir()
 
         includes = [
             os.path.join(js_test_dir, 'util.js')
-        ] + glob.glob(os.path.join(here, 'js', '_*.js'))
+        ] + glob.glob(os.path.join(HERE, 'js', '_*.js'))
 
         self.cmd = [
             'casperjs', 'test',

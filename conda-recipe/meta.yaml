@@ -11,9 +11,6 @@ build:
   number: 0
   script:
     - python setup.py install --single-version-externally-managed --record=record.txt
-    - cp src/nb-conda-run.sh $PREFIX/bin/nb-conda-run # [not win]
-    - chmod +x $PREFIX/bin/nb-conda-run # [not win]
-    - copy src\nb-conda-run.bat %PREFIX%\Scripts # [win]
 
 requirements:
   host:
@@ -24,17 +21,22 @@ requirements:
     - jupyter_client >=4.2
 
 test:
+  source_files:
+    - setup.cfg
   requires:
     - notebook
     - r-irkernel
-{% if not environ.get('SKIP_NPM_TESTS') %}
-    - requests
-    - mock
-    - coverage
-    - nodejs
     - nose
+    - coverage
+    - mock
+    - requests
+{% if not environ.get('SKIP_NPM_TESTS') %}
+    - nodejs
   commands:
-    - npx -p phantomjs -p casperjs python -m nose nb_conda_kernels
+    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels
+{% else %}
+  commands:
+    - nosetests nb_conda_kernels --exclude=test_notebook
 {% endif %}
 
 about:

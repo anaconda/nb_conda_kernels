@@ -1,4 +1,3 @@
-import unittest
 from subprocess import check_output, CalledProcessError
 from notebook.services.kernelspecs.tests import test_kernelspecs_api
 
@@ -12,20 +11,8 @@ CONDA_INFO_ARGS = ["conda", "info", "--json"]
 
 
 class APITest(test_kernelspecs_api.APITest):
-    """ Run all the upstream tests. Assumes:
-        - ipykernel is installed in the root
-        - r is installed in the environment under test
-    """
-
-    @unittest.skip("skipping for now because parent class disable extensions")
-    def test_has_root_py(self):
-        model = self.ks_api.list().json()
-        self.assertIn("conda-root-py", model["kernelspecs"].keys())
-
-    @unittest.skip("skipping for now because parent class disable extensions")
-    def test_has_r(self):
-        model = self.ks_api.list().json()
-        self.assertIn("ir", model["kernelspecs"].keys())
+    """ Run all the upstream tests."""
+    pass
 
 
 class BadCondaAPITest(test_kernelspecs_api.APITest):

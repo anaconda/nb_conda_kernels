@@ -151,7 +151,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                 if spec['display_name'].startswith('Python'):
                     spec['display_name'] = 'Python'
                 spec['display_name'] += ' [conda {}{}]'.format(env_prefix, env_name)
-                spec['argv'] = ['nb-conda-run', conda_prefix, env_path] + spec['argv']
+                spec['argv'] = ['python', '-m', 'nb_conda_kernels.runner',
+                                conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
                 all_specs[kernel_name] = spec
         return all_specs
