@@ -33,6 +33,7 @@ def test_runner():
             continue
         command_print = command[:-1] + ["'" + command[-1] + "'"]
         print('  {}'.format(' '.join(command_print)))
+        valid = True
         try:
             com_out = check_output(command, shell=is_win, stderr=STDOUT)
         except CalledProcessError as exc:

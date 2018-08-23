@@ -9,11 +9,11 @@ def exec_in_env(conda_root, envname, command, *args):
 		ecomm = 'call {} {}>nul & set & where {}'.format(activate, envname, command)
 	else:
 		activate = os.path.join(conda_root, 'bin', 'activate')
-		ecomm = '. {} {} >/dev/null && printenv'.format(activate, envname, command)
+		ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname, command)
 	env = check_output(ecomm, shell=True).decode().splitlines()
 	fullpath = env.pop() if is_win else command
-	env = dict(p.split('=', 1) for p in env)
-	if is_win or no_exec:
+	env = dict(p.split('=', 1) for p in env if '=' in p)
+	if is_win:
 		Popen((fullpath,) + args, env=env).wait()
 	else:
 		os.execvpe(fullpath, (command,) + args, env)
