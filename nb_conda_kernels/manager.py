@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import re
-import subprocess
+from subprocess import Popen, PIPE
 import sys
 import time
 
@@ -26,6 +26,8 @@ class CondaKernelSpecManager(KernelSpecManager):
     """
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
+    name_format = Unicode('{0} [conda env:{1}]', config=True, 
+                          help="String name format; '{{0}}' = Language, '{{1}}' = Kernel")
 
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
@@ -58,14 +60,13 @@ class CondaKernelSpecManager(KernelSpecManager):
             # it is a Windows batch file---which is the case in non-root
             # conda environments.
             shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
-            try:
-                p = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                            shell=shell).decode("utf-8")
-                conda_info = json.loads(p)
-            except Exception as err:
+            p = Popen([CONDA_EXE, "info", "--json"], stdout=PIPE, stderr=PIPE, shell=shell)
+            p_out, p_err = p.communicate()
+            if p.returncode == 0:
+                conda_info = json.loads(p_out.decode("utf-8"))
+            else:
                 conda_info = None
-                self.log.error("[nb_conda_kernels] couldn't call conda:\n%s",
-                               err)
+                self.log.error("[nb_conda_kernels] couldn't call conda:\n%s", p_err)
             self._conda_info_cache = conda_info
             self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
 
@@ -116,26 +117,26 @@ class CondaKernelSpecManager(KernelSpecManager):
         def get_paths_by_env(display_prefix, language_key, language_exe, envs):
             """ Get a dict with name_env:info for kernel executables
             """
+            whitelist = getattr(self, 'whitelist', set())
             language_envs = {}
             for base in envs:
                 exe_path = join(base, language_exe)
                 if exists(join(base, jupyter)) and exists(exe_path) and not self._skip_env(base):
                     env_name = split(base)[1]
                     name = 'conda-env-{}-{}'.format(env_name, language_key)
-                    language_envs[name] = {
-                        'display_name': '{} [conda env:{}]'.format(
-                            display_prefix, env_name),
-                        'executable': exe_path,
-                        'language_key': language_key,
-                    }
+                    if not whitelist or name in whitelist:
+                        language_envs[name] = {
+                            'display_name': self.name_format.format(display_prefix, env_name),
+                            'executable': exe_path,
+                            'language_key': language_key,
+                        }
             return language_envs
 
         # Collect all the envs in one dict
         all_envs = {}
 
         # Get the python envs
-        python_envs = get_paths_by_env("Python", "py", python,
-                                       self._conda_info["envs"])
+        python_envs = get_paths_by_env("Python", "py", python, self._conda_info["envs"])
         all_envs.update(python_envs)
 
         # Get the R envs
@@ -145,22 +146,33 @@ class CondaKernelSpecManager(KernelSpecManager):
         # We also add the root prefix into the soup
         root_prefix = join(self._conda_info["root_prefix"], jupyter)
         if exists(root_prefix):
+            # Replace root by root named kernel
+            root_exec = join(self._conda_info["root_prefix"], python)
+            for env in list(all_envs):
+                if all_envs[env]['executable'] == root_exec:
+                    all_envs.pop(env)
+                    break
+
             all_envs.update({
                 'conda-root-py': {
-                    'display_name': 'Python [conda root]',
-                    'executable': join(self._conda_info["root_prefix"],
-                                       python),
+                    'display_name': self.name_format.format('Python', 'root'),
+                    'executable': root_exec,
                     'language_key': 'py',
                 }
             })
-        # Use Jupyter's default kernel name ('python2' or 'python3') for
-        # current env
-        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix,
-                                                             python)):
+        # Use Jupyter's default kernel name ('python2' or 'python3') for current env
+        if exists(join(sys.prefix, jupyter)) and exists(join(sys.prefix, python)):
+            # Replace default by default named kernel
+            default_exec = join(sys.prefix, python)
+            for env in list(all_envs):
+                if all_envs[env]['executable'] == default_exec:
+                    all_envs.pop(env)
+                    break
+
             all_envs.update({
                 NATIVE_KERNEL_NAME: {
-                    'display_name': 'Python [default]',
-                    'executable': join(sys.prefix, python),
+                    'display_name': self.name_format.format('Python', 'default'),
+                    'executable': default_exec,
                     'language_key': 'py',
                 }
             })
