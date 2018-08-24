@@ -1,59 +1,117 @@
 # nb_conda_kernels
-Manage your `conda` environment-based kernels inside the Jupyter Notebook.
+This extension enables a [Jupyter Notebook](http://jupyter.org)
+or [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/)
+application in one [conda](https://conda.io/docs/)
+environment to access kernels for Python, R, and other languages
+found in other environments. When a kernel from an external environment is selected, the kernel conda environment is
+automatically activated before the kernel is launched. 
+This allows you to utilize different versions of Python, R,
+and other languages from a single Jupyter installation.
 
-This package defines a custom KernelSpecManager that automatically
-creates KernelSpecs for each conda environment. When you create a new
-notebook, you can choose a kernel corresponding to the environment
-you wish to run within. This will allow you to have different versions
-of python, libraries, etc. for different notebooks.
-
-**Important Note** : To use a Python kernel from a conda environment,
-don't forget to install `ipykernel` in that environment or it won't
-show up on the kernel list. Similary, to use an R kernel, install
-`r-irkernel`.
+The package works by defining a custom `KernelSpecManager` that 
+scans the current set of `conda` environments for kernel
+specifications. It dynamically modifies each `KernelSpec` 
+so that it can be properly run from the notebook environment.
+When you create a new notebook, these modified kernels
+will be made available in the selection list.
 
 ## Installation
-```shell
-conda install nb_conda_kernels
-```
 
-### Getting Started
-You'll need conda installed, either from [Anaconda](https://www.continuum.io/downloads) or [miniconda](http://conda.pydata.org/miniconda.html). 
+This package is designed to be managed solely using `conda`.
+It should be installed in then environment from which
+you run Jupyter Notebook or JupyterLab. This might be your base
+`conda` environment, but it need not be. For instance,
+if the environment `notebook_env` contains the `notebook`
+package, then you would run
+```shell
+conda install -n notebook_env nb_conda_kernels
+```
+Any _other_ environments you wish to access in your
+notebooks must have an appropriate kernel
+package installed. For instance, to access a Python
+environment, it must have the `ipykernel` package; e.g.
+```shell
+conda install -n python_env ipykernel
+```
+To utilize an R environment, it must have the `r-irkernel` package; e.g.
+```shell
+conda install -n r_env r-irkernel
+```
+For other languages, their [corresponding kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)
+must be installed.
 
-```shell
-conda create -n nb_conda_kernels nb_conda_kernels python=YOUR_FAVORITE_PYTHON
-conda activate nb_conda_kernels
-# Remove just the package, leave the dependencies
-conda remove nb_conda_kernels --force
-# Install the test packages
-conda install --file requirements.txt
-python setup.py develop
-python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
-# or on windows
-python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX"
-```
+### Limitations
 
-We _still_ use `npm` for testing things, so then run:
-```shell
-npm install
-```
+This extension works _only_ with Jupyter notebooks and
+JupyterLab. Unfortunately, it does not currently work with
+Jupyter Console, `nbconvert`, and other tools. This is because
+these tools were not designed to allow for the use of custom
+KernelSpecs.
 
-Finally, you are ready to run the tests!
-```shell
-npm run test
-```
-Note that the tests assume the existence of `ipykernel` in the
-base/root conda environment:
-```shell
-conda install -n root ipykernel
-```
-In addition, there needs to be at least one conda environment
-with the `R` kernel, and it need not be root;
-```shell
-conda create -n nbrtest r-irkernel
-```
+A new [kernel discovery system](https://jupyter-client.readthedocs.io/en/latest/kernel_providers.html)
+is being developed for Jupyter 6.0 that should enable the
+wider Jupyter ecosystem to take advantage of these external
+kernels. This package will require modification to
+function properly in this new system.
+
+
+## Development
+
+1. Install [Anaconda](https://www.anaconda.com/download/) or
+   [Miniconda](https://conda.io/miniconda.html).
+
+2. Create a development environment. Node.JS packages
+   [PhantomJS](http://phantomjs.org) and
+   [CasperJS](http://casperjs.org) are used for testing,
+   so installation requires both `conda` and `npm`:
+   ```shell
+   conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
+   # Linux / Mac
+   conda activate nb_conda_kernels
+   # Windows
+   activate nb_conda_kernels
+   # Install the package and test dependencies
+   conda install --file requirements.txt
+   # Install PhantomJS and CasperJS
+   npm install
+   ```
+
+3. Install the source package in development mode.
+   ```shell
+   python setup.py develop
+   # Linux / Mac
+   python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
+   # Windows
+   python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
+   ```
+
+4. In order to properly exercise the package, the
+   tests assume the existence of `ipykernel` in the
+   base/root conda environment, and at least one conda
+   environment with the `R` kernel. For example:
+   ```shell
+   conda install -n root ipykernel
+   conda create -n nbrtest r-irkernel
+   ```
+
+5. To run all of the tests, the Node environment must be
+   activated. The easiest way to do this is to use our
+   `npm` test command:
+   ```shell
+   npm run test
+   ```
+   If you prefer to skip the Node-based tests, you can run
+   `nose` directly, skipping the `test_notebook` module:
+   ```
+   nosetests --exclude=test_notebook
+   ```
 
 ## Changelog
+
+### 2.2.0
+- Perform full activation of kernel conda environments
+- Discover kernels from their kernel specs, enabling the use
+  of kernels besides Python and R
 
 ### 2.1.1
 - move to a full conda-based approach to build and test

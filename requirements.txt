@@ -1,8 +1,10 @@
-requests
-coverage
-flake8
-mock
-nodejs
-nose
 notebook
+jupyter_client
 r-irkernel
+nose
+coverage
+mock
+requests
+nodejs
+flake8
+

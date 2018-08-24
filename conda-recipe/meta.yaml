@@ -13,7 +13,7 @@ build:
     - python setup.py install --single-version-externally-managed --record=record.txt
 
 requirements:
-  build:
+  host:
     - python
     - setuptools
   run:
@@ -22,18 +22,22 @@ requirements:
 
 test:
   source_files:
-    - package.json
+    - setup.cfg
   requires:
-{% if not environ.get('SKIP_NPM_TESTS') %}
-    - requests
-    - coverage
-    - flake8
-    - mock
-    - nodejs
-    - nose
-{% endif %}
     - notebook
     - r-irkernel
+    - nose
+    - coverage
+    - mock
+    - requests
+{% if not environ.get('SKIP_NPM_TESTS') %}
+    - nodejs
+  commands:
+    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels
+{% else %}
+  commands:
+    - nosetests --nocapture nb_conda_kernels --exclude=test_notebook
+{% endif %}
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels
