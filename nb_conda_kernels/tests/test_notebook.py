@@ -100,7 +100,7 @@ class NBCondaKernelsTestController(jstest.JSController):
         if self.url:
             try:
                 alive = jstest.requests.get(self.url).status_code == 200
-            except:
+            except:  # noqa
                 alive = False
 
             if alive:

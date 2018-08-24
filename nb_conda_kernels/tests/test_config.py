@@ -8,6 +8,7 @@ from nb_conda_kernels.manager import CondaKernelSpecManager
 # For this reason, we're doing some checks here to verify that this
 # global environment is ready to receive the other tests.
 
+
 def test_configuration():
     print('Conda configuration')
     print('-------------------')
@@ -53,4 +54,3 @@ def test_configuration():
         if not checks.get('env_r'):
             print('  - Environment R kernel missing')
         assert False
-

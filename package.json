@@ -1,0 +1,24 @@
+{
+  "name": "nb_conda_kernels",
+  "version": "2.2.0",
+  "description": "Launch Jupyter kernels for any installed conda environment",
+  "main": "index.js",
+  "scripts": {
+    "test": "nosetests",
+    "lint": "flake8 setup.py nb_conda_kernels"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Anaconda-Platform/nb_conda_kernels.git"
+  },
+  "author": "Continuum Analytics",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/Anaconda-Platform/nb_conda_kernels/issues"
+  },
+  "homepage": "https://github.com/Anaconda-Platform/nb_conda_kernels",
+  "devDependencies": {
+    "casperjs": "^1.1.4",
+    "phantomjs-prebuilt": "^2.1.7"
+  }
+}

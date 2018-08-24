@@ -26,28 +26,32 @@ def check_exec_in_env(key, argv):
     except CalledProcessError as exc:
         com_out = exc.output
         valid = False
-    outputs = com_out.decode().splitlines()
+    com_out = com_out.decode()
+    outputs = com_out.splitlines()
     if not (valid and len(outputs) >= 2 and
             all(o.strip() in (env_name, env_name_fs) for o in outputs[-2:])):
-        print('Full output:\n--------\n{}--------'.format('\n'.join(outputs)))
+        print('Full output:\n--------\n{}--------'.format(com_out))
         assert False
 
 
 def test_runner():
     if os.environ.get('CONDA_BUILD'):
-        # Current versions of conda build invoke standard conda activation
-        # *and* manually add the activation paths a second time. Unfortunately,
-        # this frustrate's conda's ability to activate. This backs out the
-        # redundancy so that the test can proceed.
+        # The current version of conda build manually adds the activation
+        # directories to the PATH---and then calls the standard conda
+        # activation script, which does it again. This frustrates conda's
+        # ability to deactivate this environment. Most package builds are
+        # not affected by this, but we are, because our tests need to do
+        # environment activation and deactivation. To fix this, we remove
+        # the duplicate PATH entries conda-build added.
+        print('BEFORE: {}'.format(os.environ['PATH']))
         path_list = os.environ['PATH'].split(os.pathsep)
-        first_path = sys.prefix if is_win else os.path.join(sys.prefix, 'bin')
-        indexes = [i for i, v in enumerate(path_list) if v == first_path]
-        if len(indexes) > 1:
-            path_list = path_list[indexes[-1]:]
-            os.environ['PATH'] = os.pathsep.join(path_list)
+        path_dups = set()
+        path_list = [p for p in path_list
+                     if not p.startswith(sys.prefix) or
+                     p not in path_dups and not path_dups.add(p)]
+        os.environ['PATH'] = os.pathsep.join(path_list)
+        print('AFTER: {}'.format(os.environ['PATH']))
     spec_manager = CondaKernelSpecManager()
     for key, value in spec_manager._all_specs().items():
         if key.endswith('-py') or key.endswith('-r'):
             yield check_exec_in_env, key, value['argv']
-
-

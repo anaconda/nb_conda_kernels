@@ -36,7 +36,7 @@ test:
     - npx -p phantomjs -p casperjs nosetests nb_conda_kernels
 {% else %}
   commands:
-    - nosetests nb_conda_kernels --exclude=test_notebook
+    - nosetests --nocapture nb_conda_kernels --exclude=test_notebook
 {% endif %}
 
 about:

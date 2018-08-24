@@ -1,7 +1,7 @@
 import os
 import sys
-import shlex
-from subprocess import check_output, Popen, CalledProcessError
+
+from subprocess import check_output, Popen
 
 
 def exec_in_env(conda_root, envname, command, *args):
@@ -22,7 +22,11 @@ def exec_in_env(conda_root, envname, command, *args):
         activate = os.path.join(conda_root, 'bin', 'activate')
         ecomm = '. {} {} >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
-    env = check_output(ecomm, shell=is_win).decode().splitlines()
+    env = check_output(ecomm, shell=is_win)
+    # Python 2 does not support Unicode environment strings
+    if sys.version_info[0] >= 3: 
+        env = env.decode()
+    env = .splitlines()
 
     # Extract the path search results (Windows only). The "where"
     # command behaves like "which -a" in Unix, listing *all*

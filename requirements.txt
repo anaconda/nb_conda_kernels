@@ -1,7 +1,10 @@
 notebook
+jupyter_client
 r-irkernel
 nose
 coverage
 mock
 requests
 nodejs
+flake8
+

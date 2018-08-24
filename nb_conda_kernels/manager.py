@@ -201,10 +201,8 @@ class CondaKernelSpecManager(KernelSpecManager):
             accordingly with the detected envitonments.
         """
 
-        return (
-            self._conda_kspecs.get(kernel_name) or
-            super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name)
-        )
+        return (self._conda_kspecs.get(kernel_name) or
+                super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name))
 
     def get_all_specs(self):
         """ Returns a dict mapping kernel names to dictionaries with two
