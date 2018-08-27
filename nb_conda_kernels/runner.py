@@ -9,9 +9,9 @@ def exec_in_env(conda_root, envname, command, *args):
     # resulting environment variables to stdout for reading.
     is_win = sys.platform.startswith('win')
     if is_win:
+        encoding = 'iso-8859-1'
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
         ecomm = 'call "{}" "{}">nul & set'.format(activate, envname)
-        encoding = 'iso-8859-1'
         if os.sep in command:
             fullpath = command
         else:
@@ -27,9 +27,7 @@ def exec_in_env(conda_root, envname, command, *args):
         ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
     env = check_output(ecomm, shell=is_win)
-    print(env)
     env = env.decode(encoding).splitlines()
-    # print(type(env[-1]), type('='), type('@@@'))
 
     # Extract the path search results (Windows only). The "where"
     # command behaves like "which -a" in Unix, listing *all*
