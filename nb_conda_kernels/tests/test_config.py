@@ -17,18 +17,18 @@ def test_configuration():
     if conda_info is None:
         print('ERROR: Could not find conda find conda.')
         exit(-1)
-    print('Current prefix: {}'.format(prefix))
-    print('Root prefix: {}'.format(conda_info['root_prefix']))
-    print('Conda version: {}'.format(conda_info['conda_version']))
-    print('Environments:')
+    print(u'Current prefix: {}'.format(prefix))
+    print(u'Root prefix: {}'.format(conda_info['root_prefix']))
+    print(u'Conda version: {}'.format(conda_info['conda_version']))
+    print(u'Environments:')
     for env in conda_info['envs']:
-        print('  - {}'.format(env))
+        print(u'  - {}'.format(env))
     checks = {}
     print('Kernels included in get_all_specs')
     print('---------------------------------')
     for key, value in spec_manager.get_all_specs().items():
         long_env = value['spec']['argv'][4] if key.startswith('conda-') else prefix
-        print('  - {}: {}'.format(key, long_env))
+        print(u'  - {}: {}'.format(key, long_env))
         key = key.lower()
         if key.startswith('python'):
             checks['default_py'] = True
@@ -54,3 +54,8 @@ def test_configuration():
         if not checks.get('env_r'):
             print('  - Environment R kernel missing')
         assert False
+
+
+if __name__ == '__main__':
+    test_configuration()
+

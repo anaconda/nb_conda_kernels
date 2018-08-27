@@ -8,8 +8,9 @@ def exec_in_env(conda_root, envname, command, *args):
     # Run the standard conda activation script, and print the
     # resulting environment variables to stdout for reading.
     is_win = sys.platform.startswith('win')
+    encoding = sys.stdout.encoding
     if is_win:
-        encoding = 'iso-8859-1'
+        encoding = encoding or '1252'
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
         ecomm = 'call "{}" "{}">nul & set'.format(activate, envname)
         if os.sep in command:
@@ -20,7 +21,7 @@ def exec_in_env(conda_root, envname, command, *args):
             ecomm += ' & echo @@@ & where $path:{}'.format(command)
             fullpath = None
     else:
-        encoding = sys.stdout.encoding or 'utf-8'
+        encoding = encoding or 'utf-8'
         activate = os.path.join(conda_root, 'bin', 'activate')
         activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
         envname = re.sub(r'([$"\\])', '\\\g<1>', envname)

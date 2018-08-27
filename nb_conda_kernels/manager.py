@@ -73,7 +73,6 @@ class CondaKernelSpecManager(KernelSpecManager):
         """
 
         expiry = self._conda_info_cache_expiry
-
         if expiry is None or expiry < time.time():
             self.log.debug("[nb_conda_kernels] refreshing conda info")
             # This is to make sure that subprocess can find 'conda' even if
@@ -82,7 +81,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
             try:
                 p = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                            shell=shell).decode("utf-8")
+                                            shell=shell)
                 conda_info = json.loads(p)
             except Exception as err:
                 conda_info = None

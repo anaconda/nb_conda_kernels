@@ -26,7 +26,10 @@ def check_exec_in_env(key, argv):
     except CalledProcessError as exc:
         com_out = exc.output
         valid = False
-    com_out = com_out.decode()
+    # We're using getattr because nosetests replaces sys.stdout with a StringIO
+    # object, which doesn't have an encoding value
+    encoding = getattr(sys.stdout, 'encoding', None) or ('1252' if is_win else 'utf-8')
+    com_out = com_out.decode(encoding)
     outputs = com_out.splitlines()
     if not (valid and len(outputs) >= 2 and
             all(o.strip() in (env_name, env_name_fs) for o in outputs[-2:])):
@@ -55,3 +58,10 @@ def test_runner():
     for key, value in spec_manager._all_specs().items():
         if key.endswith('-py') or key.endswith('-r'):
             yield check_exec_in_env, key, value['argv']
+
+
+if __name__ == '__main__':
+    for func, key, val in test_runner():
+        print(u'{}, {}'.format(key, repr(val)))
+        print('--------')
+        func(key, val)
