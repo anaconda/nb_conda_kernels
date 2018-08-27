@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 
@@ -19,7 +20,9 @@ def exec_in_env(conda_root, envname, command, *args):
             fullpath = None
     else:
         activate = os.path.join(conda_root, 'bin', 'activate')
-        ecomm = '. {} {} >/dev/null && printenv'.format(activate, envname)
+        activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
+        envname = re.sub(r'([$"\\])', '\\\g<1>', envname)
+        ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
     env = check_output(ecomm, shell=is_win)
     encoding = sys.stdout.encoding or 'utf-8'

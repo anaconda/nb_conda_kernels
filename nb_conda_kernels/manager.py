@@ -42,6 +42,28 @@ class CondaKernelSpecManager(KernelSpecManager):
         self.log.info("[nb_conda_kernels] enabled, %s kernels found",
                       len(self._conda_kspecs))
 
+    @staticmethod
+    def clean_kernel_name(kname):
+        """ Replaces invalid characters in the Jupyter kernelname, with
+            a bit of effort to preserve readability.
+        """
+        if re.match(r'^[a-zA-Z0-9._\-]+$', kname):
+            return str(kname)
+        if not kname:
+            return 'kernel'
+        if any(ord(c) >= 128 for c in kname):
+            import unicodedata
+            try:
+                kname = unicode(kname)
+            except (TypeError, NameError):
+                pass
+            # Replace accented characters with unaccented equivalents
+            nfkd_form = unicodedata.normalize('NFKD', kname)
+            kname = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        # Replace anything else, including spaces, with underscores
+        kname = re.sub('[^a-zA-Z0-9._\-]', '_', kname)
+        return str(kname)
+
     @property
     def _conda_info(self):
         """ Get and parse the whole conda information output
@@ -145,8 +167,10 @@ class CondaKernelSpecManager(KernelSpecManager):
                 elif kernel_name == 'ir':
                     kernel_name = 'r'
                 kernel_prefix = '' if env_name == 'root' else 'env-'
-                kernel_name = 'conda-{}{}-{}'.format(
+                kernel_name = u'conda-{}{}-{}'.format(
                     kernel_prefix, basename(env_name), kernel_name)
+                # Replace invalid characters with dashes
+                kernel_name = self.clean_kernel_name(kernel_name)
                 # Disambiguate if necessary
                 if kernel_name in all_specs:
                     base_name = kernel_name
