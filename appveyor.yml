@@ -23,7 +23,8 @@ install:
     - conda install conda-build ipykernel
     # The tests also need to see R and Python kernels in other environments.
     - conda create -n test_env1 r-irkernel r-base python=3
-    - conda create -n test_env2 ipykernel python=2
+    # Add a space to this environment to test proper quoting
+    - conda create -n "test env2" ipykernel python=2
     - conda info -a
 
 # Skip .NET project specific build phase.

@@ -33,17 +33,13 @@ install:
         source $HOME/miniconda/bin/activate;
     fi
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
-  # So we can get python-coveralls
-  - conda config --append channels conda-forge
   # The tests need to see the Python kernel in the root environment
-  - conda install conda-build ipykernel python-coveralls
+  - conda install conda-build ipykernel
   # The tests also need to see R and Python kernels in other environments.
   - conda create -n test_env1 r-irkernel r-base python=3
-  - conda create -n test_env2 ipykernel python=2
+  # Add a space to this environment to test proper quoting
+  - conda create -n 'test env2' ipykernel python=2
   - conda info -a
 
 script:
   - conda build conda-recipe --python=$PYTHON_VERSION
-
-after_success:
-  - coveralls
