@@ -10,7 +10,8 @@ def exec_in_env(conda_root, envname, command, *args):
     is_win = sys.platform.startswith('win')
     if is_win:
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
-        ecomm = 'call {} {}>nul & set'.format(activate, envname)
+        ecomm = 'call "{}" "{}">nul & set'.format(activate, envname)
+        encoding = 'iso-8859-1'
         if os.sep in command:
             fullpath = command
         else:
@@ -19,13 +20,14 @@ def exec_in_env(conda_root, envname, command, *args):
             ecomm += ' & echo @@@ & where $path:{}'.format(command)
             fullpath = None
     else:
+        encoding = sys.stdout.encoding or 'utf-8'
         activate = os.path.join(conda_root, 'bin', 'activate')
         activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
         envname = re.sub(r'([$"\\])', '\\\g<1>', envname)
         ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
     env = check_output(ecomm, shell=is_win)
-    encoding = sys.stdout.encoding or 'utf-8'
+    print(env)
     env = env.decode(encoding).splitlines()
     # print(type(env[-1]), type('='), type('@@@'))
 

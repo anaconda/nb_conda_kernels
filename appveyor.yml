@@ -1,7 +1,13 @@
+branches:
+  only:
+    - master
+    - /\d+\.\d+.*/
+
 environment:
   global:
     PYTHONUNBUFFERED: 1
     SKIP_NPM_TESTS: 1
+    PYTHONIOENCODING: utf-8
   matrix:
     - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.6"
@@ -23,7 +29,11 @@ install:
     - conda install conda-build ipykernel
     # The tests also need to see R and Python kernels in other environments.
     - conda create -n test_env1 r-irkernel r-base python=3
-    - conda create -n test_env2 ipykernel python=2
+    # Accented character and space added to better exercise activation
+    - set PYTHONIOENCODING=utf-8
+    - conda create -n "tëst env2" ipykernel python=2
+    - if %ERRORLEVEL% neq 0 exit 1
+    - set PYTHONIOENCODING=
     - conda info -a
 
 # Skip .NET project specific build phase.

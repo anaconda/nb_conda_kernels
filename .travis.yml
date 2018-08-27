@@ -39,7 +39,8 @@ install:
   - conda install conda-build ipykernel python-coveralls
   # The tests also need to see R and Python kernels in other environments.
   - conda create -n test_env1 r-irkernel r-base python=3
-  - conda create -n test_env2 ipykernel python=2
+  # Accented character and space added to better exercise activation
+  - conda create -n "tëst env2" ipykernel python=2
   - conda info -a
 
 script:
