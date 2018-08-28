@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 
@@ -9,7 +10,7 @@ def exec_in_env(conda_root, envname, command, *args):
     is_win = sys.platform.startswith('win')
     if is_win:
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
-        ecomm = 'call {} {}>nul & set'.format(activate, envname)
+        ecomm = 'call "{}" "{}">nul & set'.format(activate, envname)
         if os.sep in command:
             fullpath = command
         else:
@@ -19,7 +20,9 @@ def exec_in_env(conda_root, envname, command, *args):
             fullpath = None
     else:
         activate = os.path.join(conda_root, 'bin', 'activate')
-        ecomm = '. {} {} >/dev/null && printenv'.format(activate, envname)
+        activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
+        envname = re.sub(r'([$"\\])', '\\\g<1>', envname)
+        ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
     env = check_output(ecomm, shell=is_win)
     encoding = sys.stdout.encoding or 'utf-8'
