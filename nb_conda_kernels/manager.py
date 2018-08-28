@@ -189,9 +189,12 @@ class CondaKernelSpecManager(KernelSpecManager):
         kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
 
         # add conda envs kernelspecs
-        kspecs.update({name: spec.resource_dir
-                       for name, spec
-                       in self._conda_kspecs.items()})
+        if self.whitelist:
+            kspecs.update({name: spec.resource_dir
+                           for name, spec in self._conda_kspecs.items() if name in self.whitelist})
+        else:
+            kspecs.update({name: spec.resource_dir
+                           for name, spec in self._conda_kspecs.items()})
         return kspecs
 
     def get_kernel_spec(self, kernel_name):
