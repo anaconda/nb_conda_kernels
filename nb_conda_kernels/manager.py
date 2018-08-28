@@ -24,6 +24,9 @@ class CondaKernelSpecManager(KernelSpecManager):
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
 
+    name_format = Unicode('{0} [conda env:{1}]', config=True, 
+                          help="String name format; '{{0}}' = Language, '{{1}}' = Kernel")
+
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
 
@@ -151,10 +154,11 @@ class CondaKernelSpecManager(KernelSpecManager):
                         kernel_name = '{}-{}'.format(base_name, count + 2)
                         if kernel_name not in all_specs:
                             break
-                env_prefix = '' if env_name == 'root' else 'env: '
-                if spec['display_name'].startswith('Python'):
-                    spec['display_name'] = 'Python'
-                spec['display_name'] += ' [conda {}{}]'.format(env_prefix, env_name)
+                if env_name != 'root':
+                    display_prefix = spec['display_name']
+                    if display_prefix.startswith('Python'):
+                        display_prefix = 'Python'
+                    spec['display_name'] = self.name_format.format(display_prefix, basename(env_name))
                 spec['argv'] = ['python', '-m', 'nb_conda_kernels.runner',
                                 conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
@@ -187,7 +191,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             environments.
         """
         kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
-
+        self.log.info(kspecs)
         # add conda envs kernelspecs
         kspecs.update({name: spec.resource_dir
                        for name, spec
