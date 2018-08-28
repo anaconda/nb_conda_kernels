@@ -86,11 +86,11 @@ class CondaKernelSpecManager(KernelSpecManager):
         envs_dirs = conda_info['envs_dirs']
         all_envs = {}
         for env_path in envs:
-            # Do not include conda-bld envs
             if self.env_filter is not None:
                 if self._env_filter_regex.search(env_path):
                     continue
-            elif env_path == sys.prefix:
+            
+            if env_path == sys.prefix:
                 continue
             elif env_path == base_prefix:
                 env_name = 'root'
