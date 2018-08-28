@@ -10,7 +10,7 @@ def exec_in_env(conda_root, envname, command, *args):
     is_win = sys.platform.startswith('win')
     if is_win:
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
-        ecomm = 'call {} {}>nul & set'.format(activate, envname)
+        ecomm = 'call "{}" "{}">nul & set'.format(activate, envname)
         if os.sep in command:
             fullpath = command
         else:
