@@ -154,11 +154,10 @@ class CondaKernelSpecManager(KernelSpecManager):
                         kernel_name = '{}-{}'.format(base_name, count + 2)
                         if kernel_name not in all_specs:
                             break
-                if env_name != 'root':
-                    display_prefix = spec['display_name']
-                    if display_prefix.startswith('Python'):
-                        display_prefix = 'Python'
-                    spec['display_name'] = self.name_format.format(display_prefix, basename(env_name))
+                display_prefix = spec['display_name']
+                if display_prefix.startswith('Python'):
+                    display_prefix = 'Python'
+                spec['display_name'] = self.name_format.format(display_prefix, basename(env_name))
                 spec['argv'] = ['python', '-m', 'nb_conda_kernels.runner',
                                 conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
