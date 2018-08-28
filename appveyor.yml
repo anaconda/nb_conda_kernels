@@ -30,7 +30,6 @@ install:
     # The tests also need to see R and Python kernels in other environments.
     - conda create -n test_env1 r-irkernel r-base python=3
     # Accented character and space added to better exercise activation
-    - set PYTHONIOENCODING=utf-8
     - conda create -n "tëst env2" ipykernel python=2
     - if %ERRORLEVEL% neq 0 exit 1
     - set PYTHONIOENCODING=

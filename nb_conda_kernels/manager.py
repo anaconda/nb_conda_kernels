@@ -47,22 +47,16 @@ class CondaKernelSpecManager(KernelSpecManager):
         """ Replaces invalid characters in the Jupyter kernelname, with
             a bit of effort to preserve readability.
         """
-        if re.match(r'^[a-zA-Z0-9._\-]+$', kname):
-            return str(kname)
-        if not kname:
-            return 'kernel'
-        if any(ord(c) >= 128 for c in kname):
-            import unicodedata
-            try:
-                kname = unicode(kname)
-            except (TypeError, NameError):
-                pass
+        try:
+            kname.encode('ascii')
+        except UnicodeEncodeError:
             # Replace accented characters with unaccented equivalents
+            import unicodedata
             nfkd_form = unicodedata.normalize('NFKD', kname)
             kname = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
         # Replace anything else, including spaces, with underscores
         kname = re.sub('[^a-zA-Z0-9._\-]', '_', kname)
-        return str(kname)
+        return kname
 
     @property
     def _conda_info(self):
@@ -80,8 +74,12 @@ class CondaKernelSpecManager(KernelSpecManager):
             # conda environments.
             shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
             try:
+                # conda info --json uses the standard JSON escaping
+                # mechanism for non-ASCII characters. So it is always
+                # valid to decode here as 'ascii', since the JSON loads()
+                # method will recover any original Unicode for us.
                 p = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                            shell=shell)
+                                            shell=shell).decode('ascii')
                 conda_info = json.loads(p)
             except Exception as err:
                 conda_info = None
