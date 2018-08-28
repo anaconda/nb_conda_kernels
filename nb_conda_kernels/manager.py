@@ -191,7 +191,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             environments.
         """
         kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
-        self.log.info(kspecs)
+
         # add conda envs kernelspecs
         kspecs.update({name: spec.resource_dir
                        for name, spec
