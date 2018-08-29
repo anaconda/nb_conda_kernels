@@ -4,15 +4,17 @@ import sys
 
 from subprocess import check_output, Popen
 
+PY2 = sys.version_info.major < 3
+
 def exec_in_env(conda_root, envname, command, *args):
     # Run the standard conda activation script, and print the
     # resulting environment variables to stdout for reading.
     is_win = sys.platform.startswith('win')
     encoding = sys.stdout.encoding
     if is_win:
-        encoding = encoding or '1252'
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
-        ecomm = 'call "{}" "{}">nul & set'.format(activate, envname)
+        # Use the 65001 code page to ensure utf-8 output
+        ecomm = 'chcp 65001 & call "{}" "{}">nul & set'.format(activate, envname)
         if os.sep in command:
             fullpath = command
         else:
@@ -21,14 +23,15 @@ def exec_in_env(conda_root, envname, command, *args):
             ecomm += ' & echo @@@ & where $path:{}'.format(command)
             fullpath = None
     else:
-        encoding = encoding or 'utf-8'
         activate = os.path.join(conda_root, 'bin', 'activate')
         activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
         envname = re.sub(r'([$"\\])', '\\\g<1>', envname)
         ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
-    env = check_output(ecomm, shell=is_win)
-    env = env.decode(encoding).splitlines()
+    env = check_output(ecomm, shell=is_win, universal_newlines=True)
+    if PY2:
+        env = env.decode('utf-8')
+    env = env.splitlines()
 
     # Extract the path search results (Windows only). The "where"
     # command behaves like "which -a" in Unix, listing *all*
@@ -45,7 +48,8 @@ def exec_in_env(conda_root, envname, command, *args):
     # pass them to the kernel process.
     env = dict(p.split(u'=', 1) for p in env if u'=' in p)
     # Python 2 does not support unicode env dicts
-    if sys.version_info.major < 3:
+    if PY2:
+        encoding = '1252' if is_win else 'utf-8'
         env = {k.encode(encoding): v.encode(encoding)
                for k, v in env.items()}
 
