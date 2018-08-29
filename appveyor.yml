@@ -28,11 +28,10 @@ install:
     # The tests need to see the Python kernel in the root environment
     - conda install conda-build ipykernel
     # The tests also need to see R and Python kernels in other environments.
-    - conda create -n test_env1 r-irkernel r-base python=3
+    - conda create -n test_env1 r-irkernel r-base ipykernel python=2
     # Accented character and space added to better exercise activation
-    - conda create -n "tëst env2" ipykernel python=2
+    - conda create -n "tëst env2" ipykernel python=3
     - if %ERRORLEVEL% neq 0 exit 1
-    - set PYTHONIOENCODING=
     - conda info -a
 
 # Skip .NET project specific build phase.

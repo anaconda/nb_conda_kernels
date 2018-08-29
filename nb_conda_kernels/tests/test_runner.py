@@ -1,10 +1,12 @@
 import os
 import sys
+import locale
 
 from subprocess import check_output, CalledProcessError, STDOUT
 from nb_conda_kernels.manager import CondaKernelSpecManager
 
 is_win = sys.platform.startswith('win')
+is_py2 = sys.version_info[0] < 3
 
 def check_exec_in_env(key, argv):
     command = argv[:5]
@@ -19,13 +21,17 @@ def check_exec_in_env(key, argv):
                         'import os,sys;'
                         'print(os.environ["CONDA_PREFIX"]);'
                         'print(sys.prefix)'])
+    encoding = locale.getpreferredencoding(False)
+    if 'ascii' in encoding.lower():
+        encoding = 'utf-8'
+    if is_py2:
+        command = [c.encode(encoding) for c in command]
     try:
         com_out = check_output(command)
         valid = True
     except CalledProcessError as exc:
         com_out = exc.output
         valid = False
-    encoding = (getattr(sys.stdout, 'encoding', None) or ('1252' if is_win else 'utf-8'))
     com_out = com_out.decode(encoding)
     outputs = com_out.splitlines()
     if not (valid and len(outputs) >= 2 and
