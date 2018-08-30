@@ -41,7 +41,13 @@ def test_configuration():
                 checks['env_py'] = True
             if key.endswith('-r'):
                 checks['env_r'] = True
-    if len(checks) < 5:
+        if ' ' in long_env:
+            checks['env_space'] = True
+        try:
+            long_env.encode('ascii')
+        except UnicodeEncodeError:
+            checks['env_unicode'] = True
+    if len(checks) < 7:
         print('The environment is not properly configured for testing:')
         if not checks.get('default_py'):
             print('  - Default Python kernel missing')
@@ -53,6 +59,10 @@ def test_configuration():
             print('  - Environment Python kernel missing')
         if not checks.get('env_r'):
             print('  - Environment R kernel missing')
+        if not checks.get('env_unicode'):
+            print('  - Environment with non-ASCII character missing')
+        if not checks.get('env_space'):
+            print('  - Environment with space missing')
         assert False
 
 

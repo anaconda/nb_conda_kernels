@@ -30,10 +30,10 @@ test:
     - coverage
     - mock
     - requests
-    - nodejs # [py3k]
+    - nodejs # [py3k and not win]
   commands:
-    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels # [py3k]
-    - nosetests nb_conda_kernels --exclude=test_notebook # [py2k]
+    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels # [py3k and not win]
+    - nosetests nb_conda_kernels --exclude=test_notebook # [py2k or win]
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels

@@ -1,0 +1,5 @@
+name: test_env1
+dependencies:
+  - r-irkernel
+  - ipykernel
+  - python=2

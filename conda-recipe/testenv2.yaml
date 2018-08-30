@@ -1,0 +1,4 @@
+name: "t\u00ebst env2"
+dependencies:
+  - ipykernel
+  - python=3

@@ -14,8 +14,7 @@ env:
   - PYTHON_VERSION=2.7
   - PYTHON_VERSION=3.5
   - PYTHON_VERSION=3.6
-  - PYTHON_VERSION=3.6 CONDA_4_4_STYLE=Yes SKIP_NPM_TESTS=Yes
-  - PYTHON_VERSION=3.6 CONDA_SPEC='=4.3' SKIP_NPM_TESTS=Yes
+  - PYTHON_VERSION=3.6 CONDA_SPEC='=4.3'
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -26,19 +25,16 @@ install:
   - bash miniconda.sh -b -p $HOME/miniconda
   # Fix the conda version before full activation
   - $HOME/miniconda/bin/conda install conda$CONDA_SPEC --yes
-  - if [ "$CONDA_4_4_STYLE" == "yes" ]; then
-        . $HOME/miniconda/etc/profile.d/conda.sh;
-        conda activate;
-    else
-        source $HOME/miniconda/bin/activate;
-    fi
+  - source $HOME/miniconda/bin/activate
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
   # The tests need to see the Python kernel in the root environment
   - conda install conda-verify conda-build ipykernel
-  # The tests also need to see R and Python kernels in other environments.
-  - conda create -n test_env1 r-irkernel r-base python=3
-  # Accented character and space added to better exercise activation
-  - conda create -n "tëst env2" ipykernel python=2
+  # We need to create additional environments to fully test the logic,
+  # including an R kernel, a Python kernel, and environment names with
+  # at least one non-ASCII character and one space. Because AppVeyor is
+  # difficult to work with for non-ASCII content we're using env files.
+  - conda env create -f conda-recipe/testenv1.yaml
+  - conda env create -f conda-recipe/testenv2.yaml
   - conda info -a
 
 script:
