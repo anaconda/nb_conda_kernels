@@ -14,7 +14,7 @@ is_win = sys.platform.startswith('win')
 def exec_in_env(conda_root, envname, command, *args):
     # Run the standard conda activation script, and print the
     # resulting environment variables to stdout for reading.
-    encoding = locale.getpreferredencoding(False)
+    encoding = locale.getpreferredencoding()
     if 'ascii' in encoding.lower():
         encoding = 'utf-8'
 

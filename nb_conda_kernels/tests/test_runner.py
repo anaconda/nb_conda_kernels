@@ -21,7 +21,7 @@ def check_exec_in_env(key, argv):
                         'import os,sys;'
                         'print(os.environ["CONDA_PREFIX"]);'
                         'print(sys.prefix)'])
-    encoding = locale.getpreferredencoding(False)
+    encoding = locale.getpreferredencoding()
     if 'ascii' in encoding.lower():
         encoding = 'utf-8'
     if is_py2:
