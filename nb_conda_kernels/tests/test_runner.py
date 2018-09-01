@@ -1,11 +1,12 @@
 import os
 import sys
+import locale
 
 from subprocess import check_output, CalledProcessError, STDOUT
 from nb_conda_kernels.manager import CondaKernelSpecManager
 
 is_win = sys.platform.startswith('win')
-
+is_py2 = sys.version_info[0] < 3
 
 def check_exec_in_env(key, argv):
     command = argv[:5]
@@ -13,24 +14,29 @@ def check_exec_in_env(key, argv):
     env_name_fs = env_name.replace('\\', '/')
     if key.endswith('-r'):
         command.extend(['Rscript', '-e',
-                        'message(Sys.getenv("CONDA_PREFIX"));'
-                        'message(dirname(dirname(dirname(.libPaths()))))'])
+                        'cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE);'
+                        'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)'])
     else:
         command.extend(['python', '-c',
                         'import os,sys;'
                         'print(os.environ["CONDA_PREFIX"]);'
                         'print(sys.prefix)'])
+    encoding = locale.getpreferredencoding()
+    if 'ascii' in encoding.lower():
+        encoding = 'utf-8'
+    if is_py2:
+        command = [c.encode(encoding) for c in command]
     try:
-        com_out = check_output(command, shell=is_win, stderr=STDOUT)
+        com_out = check_output(command)
         valid = True
     except CalledProcessError as exc:
         com_out = exc.output
         valid = False
-    com_out = com_out.decode()
+    com_out = com_out.decode(encoding)
     outputs = com_out.splitlines()
     if not (valid and len(outputs) >= 2 and
             all(o.strip() in (env_name, env_name_fs) for o in outputs[-2:])):
-        print('Full output:\n--------\n{}--------'.format(com_out))
+        print(u'Full output:\n--------\n{}--------'.format(com_out))
         assert False
 
 
@@ -55,3 +61,10 @@ def test_runner():
     for key, value in spec_manager._all_specs().items():
         if key.endswith('-py') or key.endswith('-r'):
             yield check_exec_in_env, key, value['argv']
+
+
+if __name__ == '__main__':
+    for func, key, val in test_runner():
+        print(u'{}: {}'.format(key, u' '.join(val[:5])))
+        print('--------')
+        func(key, val)

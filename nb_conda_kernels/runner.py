@@ -1,15 +1,29 @@
+from __future__ import print_function
+
+import re
 import os
 import sys
+import locale
 
 from subprocess import check_output, Popen
+
+is_py2 = sys.version_info.major < 3
+is_win = sys.platform.startswith('win')
+
 
 def exec_in_env(conda_root, envname, command, *args):
     # Run the standard conda activation script, and print the
     # resulting environment variables to stdout for reading.
-    is_win = sys.platform.startswith('win')
+    encoding = locale.getpreferredencoding()
+    if 'ascii' in encoding.lower():
+        encoding = 'utf-8'
+
     if is_win:
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
-        ecomm = 'call {} {}>nul & set'.format(activate, envname)
+        # For some reason I need to set the code page to utf-8
+        # in order to get output that I can later decode using
+        # the default encoding (typically 1252/latin-1) downstream
+        ecomm = 'chcp 65001 & call "{}" "{}">nul & set'.format(activate, envname)
         if os.sep in command:
             fullpath = command
         else:
@@ -19,12 +33,12 @@ def exec_in_env(conda_root, envname, command, *args):
             fullpath = None
     else:
         activate = os.path.join(conda_root, 'bin', 'activate')
-        ecomm = '. {} {} >/dev/null && printenv'.format(activate, envname)
+        activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
+        envname = re.sub(r'([$"\\])', '\\\g<1>', envname)
+        ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
         ecomm = ['bash', '-c', ecomm]
-    env = check_output(ecomm, shell=is_win)
-    encoding = sys.stdout.encoding or 'utf-8'
-    env = env.decode(encoding).splitlines()
-    # print(type(env[-1]), type('='), type('@@@'))
+    env = check_output(ecomm, shell=is_win).decode(encoding)
+    env = env.splitlines()
 
     # Extract the path search results (Windows only). The "where"
     # command behaves like "which -a" in Unix, listing *all*
@@ -41,7 +55,9 @@ def exec_in_env(conda_root, envname, command, *args):
     # pass them to the kernel process.
     env = dict(p.split(u'=', 1) for p in env if u'=' in p)
     # Python 2 does not support unicode env dicts
-    if sys.version_info.major < 3:
+    if is_py2:
+        if is_win:
+            fullpath = fullpath.encode(encoding)
         env = {k.encode(encoding): v.encode(encoding)
                for k, v in env.items()}
 

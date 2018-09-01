@@ -1,7 +1,12 @@
+branches:
+  only:
+    - master
+    - /\d+\.\d+.*/
+
 environment:
   global:
     PYTHONUNBUFFERED: 1
-    SKIP_NPM_TESTS: 1
+    SAFETY_CHECKS: "--set safety_checks disabled"
   matrix:
     - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.6"
@@ -9,21 +14,32 @@ environment:
       PYTHON_VERSION: "3.5"
     - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "2.7"
-    - MINICONDA: "C:\\Miniconda35-x64"
+    - MINICONDA: "C:\\Miniconda3-x64"
       PYTHON_VERSION: "3.5"
       CONDA_SPEC: "=4.3"
+      SAFETY_CHECKS: ""
 
 install:
     # Because the specifics of activation need to be tested here, we are
     # fixing the version of conda *before* doing the full activation.
     - call %MINICONDA%\Scripts\conda install conda%CONDA_SPEC% --yes
     - call %MINICONDA%\Scripts\activate.bat
-    - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
-    # The tests need to see the Python kernel in the root environment
-    - conda install conda-build ipykernel
-    # The tests also need to see R and Python kernels in other environments.
-    - conda create -n test_env1 r-irkernel r-base python=3
-    - conda create -n test_env2 ipykernel python=2
+    # Safety checks, in my view, are not as useful in a CI context. They
+    # simply verify that the disk space and permissions are sufficient to
+    # execute the installation command. If we're having problems of that
+    # sort, we have other issues to deal with as well.
+    - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no %SAFETY_CHECKS%
+    # The tests expect to see the Python kernel in the root environment
+    - conda install conda-verify conda-build ipykernel
+    - if %ERRORLEVEL% neq 0 exit 1
+    # We need to create additional environments to fully test the logic,
+    # including an R kernel, a Python kernel, and environment names with
+    # at least one non-ASCII character and one space. Because AppVeyor is
+    # difficult to work with for non-ASCII content we're using env files.
+    - conda env create -f conda-recipe\testenv1.yaml
+    - if %ERRORLEVEL% neq 0 exit 1
+    - conda env create -f conda-recipe\testenv2.yaml
+    - if %ERRORLEVEL% neq 0 exit 1
     - conda info -a
 
 # Skip .NET project specific build phase.
@@ -31,5 +47,5 @@ build: off
 skip_branch_with_pr: true
 
 test_script:
-    - conda-build conda-recipe --python=%PYTHON_VERSION%
+    - conda build conda-recipe --python=%PYTHON_VERSION%
     - if %ERRORLEVEL% neq 0 exit 1

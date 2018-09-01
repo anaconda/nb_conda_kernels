@@ -42,6 +42,22 @@ class CondaKernelSpecManager(KernelSpecManager):
         self.log.info("[nb_conda_kernels] enabled, %s kernels found",
                       len(self._conda_kspecs))
 
+    @staticmethod
+    def clean_kernel_name(kname):
+        """ Replaces invalid characters in the Jupyter kernelname, with
+            a bit of effort to preserve readability.
+        """
+        try:
+            kname.encode('ascii')
+        except UnicodeEncodeError:
+            # Replace accented characters with unaccented equivalents
+            import unicodedata
+            nfkd_form = unicodedata.normalize('NFKD', kname)
+            kname = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        # Replace anything else, including spaces, with underscores
+        kname = re.sub('[^a-zA-Z0-9._\-]', '_', kname)
+        return kname
+
     @property
     def _conda_info(self):
         """ Get and parse the whole conda information output
@@ -51,7 +67,6 @@ class CondaKernelSpecManager(KernelSpecManager):
         """
 
         expiry = self._conda_info_cache_expiry
-
         if expiry is None or expiry < time.time():
             self.log.debug("[nb_conda_kernels] refreshing conda info")
             # This is to make sure that subprocess can find 'conda' even if
@@ -59,8 +74,12 @@ class CondaKernelSpecManager(KernelSpecManager):
             # conda environments.
             shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
             try:
+                # conda info --json uses the standard JSON escaping
+                # mechanism for non-ASCII characters. So it is always
+                # valid to decode here as 'ascii', since the JSON loads()
+                # method will recover any original Unicode for us.
                 p = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                            shell=shell).decode("utf-8")
+                                            shell=shell).decode('ascii')
                 conda_info = json.loads(p)
             except Exception as err:
                 conda_info = None
@@ -145,8 +164,10 @@ class CondaKernelSpecManager(KernelSpecManager):
                 elif kernel_name == 'ir':
                     kernel_name = 'r'
                 kernel_prefix = '' if env_name == 'root' else 'env-'
-                kernel_name = 'conda-{}{}-{}'.format(
+                kernel_name = u'conda-{}{}-{}'.format(
                     kernel_prefix, basename(env_name), kernel_name)
+                # Replace invalid characters with dashes
+                kernel_name = self.clean_kernel_name(kernel_name)
                 # Disambiguate if necessary
                 if kernel_name in all_specs:
                     base_name = kernel_name

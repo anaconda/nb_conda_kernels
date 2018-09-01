@@ -14,7 +14,7 @@ build:
 
 requirements:
   host:
-    - python
+    - python {{ python }}
     - setuptools
   run:
     - python
@@ -30,14 +30,10 @@ test:
     - coverage
     - mock
     - requests
-{% if not environ.get('SKIP_NPM_TESTS') %}
-    - nodejs
+    - nodejs # [py3k and not win]
   commands:
-    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels
-{% else %}
-  commands:
-    - nosetests --nocapture nb_conda_kernels --exclude=test_notebook
-{% endif %}
+    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels # [py3k and not win]
+    - nosetests nb_conda_kernels --exclude=test_notebook # [py2k or win]
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels
