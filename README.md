@@ -127,11 +127,13 @@ This package introduces two additional configuration options:
 
 ## Changelog
 
-### 2.2.0
+### 2.2.0 (in development)
 
 - Perform full activation of kernel conda environments
 - Discover kernels from their kernel specs, enabling the use
   of kernels besides Python and R
+- Support for spaces and accented characters in environment
+  paths, with properly validating kernel names
 
 ### 2.1.1
 
