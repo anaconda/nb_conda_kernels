@@ -134,6 +134,7 @@ This package introduces two additional configuration options:
   of kernels besides Python and R
 - Support for spaces and accented characters in environment
   paths, with properly validating kernel names
+- Configurable format for kernel display names
 
 ### 2.1.1
 
