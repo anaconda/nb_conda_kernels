@@ -2,7 +2,7 @@
 
 var kernel_prefix = 'conda-root-py',
   kernel_suffix = '',
-  kernel_label = 'Python [conda root]';
+  kernel_label = 'Python [conda env:root]';
 
 casper.notebook_test_kernel(kernel_prefix, kernel_suffix, function(){
   casper.screenshot.init("root-python-kernel");
