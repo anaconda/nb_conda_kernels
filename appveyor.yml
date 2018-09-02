@@ -1,11 +1,18 @@
+# Build only the master branch, tagged commits, and pull requests
 branches:
   only:
     - master
     - /\d+\.\d+.*/
+# Don't run the (redundant) branch build with a pull request
+skip_branch_with_pr: true
 
 environment:
   PYTHONUNBUFFERED: 1
   MINICONDA: C:\\Miniconda3-x64
+  # Conda's safety checks verify that disk space and permissions are
+  # sufficient to complete the requested installation command. These
+  # are particularly slow on Windows and, in my view, not particularly
+  # valuable in a CI context.
   SAFETY_CHECKS: --set safety_checks disabled
   ANACONDA_TOKEN:
     secure: EhvYaE20Lg9iN3fnkCdjkHWaa/ITU6eIYOui/RVW3+f9pj88ejLJ6USjFIGWDiSo
@@ -14,6 +21,7 @@ environment:
     - PYTHON_VERSION: 3.6
     - PYTHON_VERSION: 3.5
     - PYTHON_VERSION: 2.7
+    # Conda 4.3 doesn't have the safety_checks config flag
     - PYTHON_VERSION: 3.5
       CONDA_SPEC: =4.3
       SAFETY_CHECKS: ""
@@ -23,10 +31,6 @@ install:
     # fixing the version of conda *before* doing the full activation.
     - call %MINICONDA%\Scripts\conda install conda%CONDA_SPEC% --yes
     - call %MINICONDA%\Scripts\activate.bat
-    # Safety checks, in my view, are not as useful in a CI context. They
-    # simply verify that the disk space and permissions are sufficient to
-    # execute the installation command. If we're having problems of that
-    # sort, we have other issues to deal with as well.
     - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no %SAFETY_CHECKS%
     # The tests expect to see the Python kernel in the root environment
     - conda install conda-verify conda-build ipykernel anaconda-client
@@ -43,15 +47,15 @@ install:
 
 # Skip .NET project specific build phase.
 build: off
-skip_branch_with_pr: true
 
 test_script:
     - conda build conda-recipe --python=%PYTHON_VERSION%
     - if %ERRORLEVEL% neq 0 exit 1
 
 deploy_script:
-    - if "%CONDA_SPEC%" == "=4.3" (exit 0)
+    - if not "%CONDA_SPEC%" == "" exit 0
+    - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+    # Upload untagged builds to the dev label so they're not available to casual users
+    - if "%APPVEYOR_REPO_TAG%" == "false" set ANACONDA_LABEL=main
     - conda install anaconda-client
-    - if "%APPVEYOR_REPO_TAG%" == "true" (set ANACONDA_LABEL=main)
-    - if "%APPVEYOR_REPO_TAG%" == "false" (set ANACONDA_LABEL=dev)
-    - anaconda upload --token %ANACONDA_TOKEN% --user jupycon %MINICONDA%\conda-bld\*\*.tar.bz2 --label %ANACONDA_LABEL% --force
+    - anaconda --token %ANACONDA_TOKEN% upload %MINICONDA%\conda-bld\*\*.tar.bz2 --user jupycon --label %ANACONDA_LABEL% --force

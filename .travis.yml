@@ -11,10 +11,14 @@ os:
   - osx
 
 env:
-  - PYTHON_VERSION=2.7
-  - PYTHON_VERSION=3.5
-  - PYTHON_VERSION=3.6
-  - PYTHON_VERSION=3.6 CONDA_SPEC='=4.3'
+  global:
+    - secure: "p7m2lBeihiUl6Bs6plrg0svucvqspD7ecX+7AhexlobPUIVEaAnHMqqoV86KrtKeQKi8wICkleOQ6qxUVtaHXX5h7VtqjPQNUpr4TgBhb8T6+z7WL895T2GKnza1TWnvXRdQAfMFaqQ7PsNQgpO/DaOSGaxG8LThMi4OLtJisuUk06+KXFnxBv83jqshEujjJtErD4WUnWWTvdVWKjTdBERHdHf4xxuss4DrDn4ILw+uWg7EWNigGtsPxSpZlKWh7ap5PKHkLCYUL9U+Ons++k0dZuxtdnBMRaeQ82/hOpOXbolvU35/cthmhQkQfhZInyjFQORCCucqvKGfftRtFi683kMxrYnbU5mXp2TUGIj9pX5zCWbH06kqXXYpM16F6w7bKWKYrXrB//pgD7sawh86cLCiIzKbYOvAnZWp++UTOyAKvmSEPSa+Kq+9JnN+CQ6xZf+NlqnB+0xM44vlkmDxphxm3dWkjsgKtdX27gAbGxw3AJ+8M0rlJ4Uo2jURBVeCtDDTmW4Yb5utPVCXWXnkWWr7yS1voGafSG80XevOGQMu47gP9/6yb4UF4/P7JYjU2FjrmLBCJWc/9fTYm+3k9ggSXzRWEO39iN0520xIsKQ5130cMT5siQbDPCXV7LFaew0r/b8o/7jInnKI8XocSjKSrqR5bWIlVRfGCNo="
+  matrix:
+    - PYTHON_VERSION=2.7
+    - PYTHON_VERSION=3.5
+    - PYTHON_VERSION=3.6
+    - PYTHON_VERSION=3.7
+    - PYTHON_VERSION=3.5 CONDA_SPEC='=4.3'
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -39,3 +43,15 @@ install:
 
 script:
   - conda build conda-recipe --python=$PYTHON_VERSION
+
+deploy:
+  - provider: script
+    on:
+      branch: master
+      tags: false
+    script:
+      - conda install anaconda-client
+      - if [ "$TRAVIS_TAG" == "" ]; then export ANACONDA_LABEL=dev; else export ANACONDA_LABEL=main; fi
+      - anaconda --token $ANACONDA_TOKEN upload $HOME/miniconda/conda-bld/*/*.tar.bz2 --user jupycon --label $ANACONDA_LABEL --force
+
+
