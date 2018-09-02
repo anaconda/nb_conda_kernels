@@ -4,19 +4,18 @@ branches:
     - /\d+\.\d+.*/
 
 environment:
-  global:
-    PYTHONUNBUFFERED: 1
-    SAFETY_CHECKS: "--set safety_checks disabled"
+  PYTHONUNBUFFERED: 1
+  MINICONDA: C:\\Miniconda3-x64
+  SAFETY_CHECKS: --set safety_checks disabled
+  ANACONDA_TOKEN:
+    secure: EhvYaE20Lg9iN3fnkCdjkHWaa/ITU6eIYOui/RVW3+f9pj88ejLJ6USjFIGWDiSo
   matrix:
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.6"
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.5"
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "2.7"
-    - MINICONDA: "C:\\Miniconda3-x64"
-      PYTHON_VERSION: "3.5"
-      CONDA_SPEC: "=4.3"
+    - PYTHON_VERSION: 3.7
+    - PYTHON_VERSION: 3.6
+    - PYTHON_VERSION: 3.5
+    - PYTHON_VERSION: 2.7
+    - PYTHON_VERSION: 3.5
+      CONDA_SPEC: =4.3
       SAFETY_CHECKS: ""
 
 install:
@@ -30,7 +29,7 @@ install:
     # sort, we have other issues to deal with as well.
     - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no %SAFETY_CHECKS%
     # The tests expect to see the Python kernel in the root environment
-    - conda install conda-verify conda-build ipykernel
+    - conda install conda-verify conda-build ipykernel anaconda-client
     - if %ERRORLEVEL% neq 0 exit 1
     # We need to create additional environments to fully test the logic,
     # including an R kernel, a Python kernel, and environment names with
@@ -49,3 +48,10 @@ skip_branch_with_pr: true
 test_script:
     - conda build conda-recipe --python=%PYTHON_VERSION%
     - if %ERRORLEVEL% neq 0 exit 1
+
+deploy_script:
+    - if "%CONDA_SPEC%" == "=4.3" (exit 0)
+    - conda install anaconda-client
+    - if "%APPVEYOR_REPO_TAG%" == "true" (set ANACONDA_LABEL=main)
+    - if "%APPVEYOR_REPO_TAG%" == "false" (set ANACONDA_LABEL=dev)
+    - anaconda upload --token %ANACONDA_TOKEN% --user jupycon %MINICONDA%\conda-bld\*\*.tar.bz2 --label %ANACONDA_LABEL% --force
