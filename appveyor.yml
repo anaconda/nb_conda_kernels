@@ -15,7 +15,7 @@ environment:
   # valuable in a CI context.
   SAFETY_CHECKS: --set safety_checks disabled
   ANACONDA_TOKEN:
-    secure: EhvYaE20Lg9iN3fnkCdjkHWaa/ITU6eIYOui/RVW3+f9pj88ejLJ6USjFIGWDiSo
+    secure: J6mabXFRRZxAU+TjkDZv1Hh9/vZNbR6mmrV40amMMyDhXsRwcBMaiMDk2DGZo/6m
   matrix:
     - PYTHON_VERSION: 3.7
     - PYTHON_VERSION: 3.6
