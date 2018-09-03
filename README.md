@@ -1,7 +1,9 @@
 # nb_conda_kernels
 
-Linux, OSX: [![Travis Status](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels.svg?branch=master)](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels)<br/>
-Windows: [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/l7xae7sy64yu3wb0/branch/master?svg=true)](https://ci.appveyor.com/project/mcg1969/nb-conda-kernels-33m0q/branch/master)
+[![Anaconda-Server Badge](https://anaconda.org/jupycon/nb_conda_kernels/badges/version.svg)](https://anaconda.org/jupycon/nb_conda_kernels)&nbsp;
+[![Anaconda-Server Badge](https://anaconda.org/jupycon/nb_conda_kernels/badges/latest_release_relative_date.svg)](https://anaconda.org/jupycon/nb_conda_kernels)&nbsp;
+[![Travis Status](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels.svg?branch=master)](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels)&nbsp;
+[![AppVeyor status](https://ci.appveyor.com/api/projects/status/68muap4s7ijlr8aj/branch/master?svg=true)](https://ci.appveyor.com/project/mcg1969/nb-conda-kernels)
 
 This extension enables a [Jupyter Notebook](http://jupyter.org)
 or [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/)
