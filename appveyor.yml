@@ -55,6 +55,7 @@ test_script:
 deploy_script:
     - if not "%CONDA_SPEC%" == "" exit 0
     - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-    # Upload untagged builds to the dev label so they're not available to casual users
-    - if "%APPVEYOR_REPO_TAG%" == "false" set ANACONDA_LABEL="--label dev"
-    - anaconda --verbose --token %ANACONDA_TOKEN% upload %MINICONDA%\conda-bld\*\*.tar.bz2 --user jupycon --force %ANACONDA_LABEL%
+    # Untagged builds uploaded to dev; tagged builds to main
+    - if "%APPVEYOR_REPO_TAG%" == "false" set ANACONDA_LABEL=dev
+    - if "%APPVEYOR_REPO_TAG%" == "true" set ANACONDA_LABEL=main
+    - anaconda --verbose --token %ANACONDA_TOKEN% upload %MINICONDA%\conda-bld\*\*.tar.bz2 --user jupycon --force --label %ANACONDA_LABEL%
