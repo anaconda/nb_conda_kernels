@@ -1,5 +1,8 @@
 # nb_conda_kernels
 
+Linux, OSX: [![Travis Status](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels.svg?branch=master)](https://travis-ci.org/Anaconda-Platform/nb_conda_kernels)<br/>
+Windows: [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/l7xae7sy64yu3wb0/branch/master?svg=true)](https://ci.appveyor.com/project/mcg1969/nb-conda-kernels-33m0q/branch/master)
+
 This extension enables a [Jupyter Notebook](http://jupyter.org)
 or [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/)
 application in one [conda](https://conda.io/docs/)
