@@ -7,8 +7,7 @@ import sys
 from os.path import exists, join, abspath
 
 from traitlets.config.manager import BaseJSONConfigManager
-from traitlets.config.loader import JSONFileConfigLoader, ConfigFileNotFound
-from jupyter_core.paths import jupyter_config_dir, jupyter_config_path
+from jupyter_core.paths import jupyter_config_path
 
 
 log = logging.getLogger(__name__)
@@ -52,42 +51,12 @@ NBA = "NotebookApp"
 CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 KSMC = "kernel_spec_manager_class"
 JNC = "jupyter_notebook_config"
+JNCJ = JNC + ".json"
 ENDIS = ['disabled', 'enabled']
 
 
 def pretty(it):
     return json.dumps(it, indent=2)
-
-
-def get_status(path, warn_if_mismatch=True):
-    all_paths = jupyter_config_path()
-    try:
-        cfg_all = JSONFileConfigLoader(JNC + '.json', path=all_paths).load_config()
-    except ConfigFileNotFound:
-        cfg_all = {}
-    log.debug("Global configuration:\n{}".format(pretty(cfg_all)))
-    is_enabled_all = cfg_all.get(NBA, {}).get(KSMC, None) == CKSM
-
-    cfg = BaseJSONConfigManager(config_dir=path).get(JNC)
-    log.debug("Local configuration ({}{}{}.json):\n{}".format(path, os.sep, JNC, pretty(cfg)))
-    is_enabled_local = cfg.get(NBA, {}).get(KSMC, None) == CKSM
-
-    if is_enabled_all != is_enabled_local and warn_if_mismatch:
-        mode_g = ENDIS[is_enabled_all].upper()
-        mode_l = ENDIS[is_enabled_local].upper()
-        log.warn('''WARNING: The global setting is overriding local settings:
-  Global setting: {}
-  Local setting: {}
-This can happen for several reasons:
-  - The --prefix argument does not point to sys.prefix
-  - The --path argument does not point to a directory
-    searched by this installation of Jupyter
-  - NotebookApp.kernel_spec_manager_class is set in
-    another directory on the configuration path'''.format(mode_g, mode_l))
-        if log.getEffectiveLevel() == logging.INFO:
-            log.warn("Use the --verbose flag for more information.")
-
-    return is_enabled_all, is_enabled_local
 
 
 def install(enable=False, disable=False, status=None, prefix=None, path=None, verbose=False):
@@ -96,25 +65,36 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     Parameters
     ----------
     enable: bool
+        Enable nb_conda_kernels; that is, make the changes to
+        the Jupyter notebook configuration so that it will is
+        available for Jupyter notebooks.
     disable: bool
+        Disable nb_conda_kernels.
     status: bool
-        Enable/disable nb_conda_kernels on every notebook launch,
-        or simply check the status of installation, respectively.
-        Exactly one of these should be supplied.
+        Print the installation status, but make no changes.
+    Exactly one of enable/disable/status must be supplied.
+
+    verbose: bool
+        If true, print more verbose output during operation.
+
     prefix: None
-    path: None
         The prefix of the Python environment where the Jupyter
-        configuration is to be found and/or created, or the full
-        path to jupyter_notebook_config.json, respecitvely. Exactly
-        one of these should be supplied. If prefix is supplied, it
-        is equivalent to path = join(prefix, 'etc', 'jupyter'). If
-        neither is supplied, jupyter_core.paths.jupyter_config_path()
-        will be searched for the first path within sys.prefix. If
-        there are none, the first path will be selected.
-    verbose: bool, default False
+        configuration is to be created and/or modified. It is
+        equivalent to supplying
+            path = join(prefix, 'etc', 'jupyter')
+    path: None
+        The directory where the Jupyter configuration file is
+        to be created and/or modified. The name of the file is
+        hardcoded to jupyter_notebook_config.json.
+    Either prefix or path may be supplied, but not both. If
+    neither is supplied, then the first path found in
+        jupyter_core_paths.jupyter_config_path()
+    whose directory is within sys.prefix will be selected. If
+    there is no such path, the first path will be selected.
     """
     if verbose:
         log.setLevel(logging.DEBUG)
+    verbose = log.getEffectiveLevel() == logging.DEBUG
     if status:
         log.info("Determining the status of nb_conda_kernels...")
     else:
@@ -123,10 +103,10 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     all_paths = jupyter_config_path()
     if path or prefix:
         if prefix:
-            path = join(prefix, "etc", "jupyter")
+        	path = join(prefix, 'etc', 'jupyter')
         if path not in all_paths:
-            log.warn('WARNING: the prefix is not on the current jupyter config path')
-        path = abspath(path)
+            log.warn('WARNING: the requested path\n    {}\n'
+                     'is not on the Jupyter config path'.format(path))
     else:
         prefix_s = sys.prefix + os.sep
         for path in all_paths:
@@ -135,21 +115,14 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
         else:
             log.warn('WARNING: no path within sys.prefix was found')
             path = all_paths[0]
+    path = abspath(path)
     log.debug('Path: {}'.format(path))
 
-    is_enabled_all, is_enabled_local = get_status(path, not disable)
+    cfg = BaseJSONConfigManager(config_dir=path).get(JNC)
+    log.debug("Local configuration ({}):\n{}".format(join(path, JNCJ), pretty(cfg)))
+    is_enabled_local = cfg.get(NBA, {}).get(KSMC, None) == CKSM
 
-    if status:
-        log.info('Status: {}'.format(ENDIS[is_enabled_all]))
-        return
-    elif is_enabled_all == enable:
-        log.info("Already {}, no change required".format(ENDIS[enable]))
-        return
-    elif is_enabled_local == enable:
-        log.info("No change required to local configuration")
-    else:
-        cm = BaseJSONConfigManager(config_dir=path)
-        cfg = cm.get(JNC)
+    if not status and is_enabled_local != enable:
         if enable:
             log.debug('Adding to local configuration')
             cfg.setdefault(NBA, {})[KSMC] = CKSM
@@ -159,13 +132,47 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
             if not cfg[NBA]:
                 cfg.pop(NBA)
         log.debug("Writing config in {}...".format(path))
-        cm.set(JNC, cfg)
+        BaseJSONConfigManager(config_dir=path).set(JNC, cfg)
+        is_enabled_local = enable
 
-    is_enabled_all, is_enabled_local = get_status(path, True)
-    if is_enabled_all != enable:
-        raise RuntimeError('Could not {} nb_conda_kernels'.format(ENDIS[enable][:-1]))
-    log.info("{} nb_conda_kernels".format(ENDIS[enable].capitalize()))
+    # Retrieve the global configuration the same way that the Notebook
+    # app does: by looking through jupyter_notebook_config.json in
+    # every directory in jupyter_config_path(), in reverse order.
+    all_paths = jupyter_config_path()
+    log.debug('Searching configuration path:')
+    is_enabled_all = False
+    for path_g in all_paths[::-1]:
+        cfg_g = BaseJSONConfigManager(config_dir=path_g).get(JNC)
+        if not cfg_g:
+        	value = 'no data'
+        elif NBA not in cfg_g:
+        	value = 'no {} entry'.format(NBA)
+        elif KSMC not in cfg_g[NBA]:
+        	value = 'no {}.{} entry'.format(NBA, KSMC)
+        else:
+        	value = cfg_g[NBA][KSMC]
+        	is_enabled_all = value == CKSM
+        	value = '\n        {}: {}'.format(KSMC, value)
+        log.debug('  - {}: {}'.format(path_g, value))
+
+    if is_enabled_all != is_enabled_local:
+        logsev = log.warn if status else log.error
+        logstr = 'WARNING' if status else 'ERROR'
+        mode_g = ENDIS[is_enabled_all].upper()
+        mode_l = ENDIS[is_enabled_local].upper()
+        logsev(('{}: The global setting does not match the local setting:\n'
+                '    Global: {}\n'
+                '    Local:  {}\n'
+                'This is typically caused by another configuration file in\n'
+                'the path with a conflicting setting.').format(logstr, mode_g, mode_l))
+        if not verbose:
+            logsev("Use the --verbose flag for more information.")
+        if not status:
+            return 1
+
+    log.info('Status: {}'.format(ENDIS[is_enabled_all]))
+    return 0
 
 
 if __name__ == '__main__':
-    install(**parser.parse_args().__dict__)
+    exit(install(**parser.parse_args().__dict__))
