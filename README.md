@@ -100,11 +100,11 @@ This package introduces two additional configuration options:
 
    ```shell
    python setup.py develop
-   # Linux / Mac
-   python -m nb_conda_kernels.install --enable --prefix="${CONDA_PREFIX}"
-   # Windows
-   python -m nb_conda_kernels.install --enable --prefix="%CONDA_PREFIX%"
+   python -m nb_conda_kernels.install --enable
    ```
+
+   Note: there is no longer any need to supply a
+   `--prefix` argument to the installer.
 
 4. In order to properly exercise the package, the
    tests assume the existence of `ipykernel` in the
