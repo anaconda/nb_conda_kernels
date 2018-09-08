@@ -10,6 +10,8 @@ import os
 from os.path import join, split, dirname, basename, abspath
 from traitlets import Unicode, Bool
 
+# Put this here so that our patch can silently fail with a circular import
+CondaKernelSpecManager = None
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NoSuchKernel
 
 CACHE_TIMEOUT = 60
