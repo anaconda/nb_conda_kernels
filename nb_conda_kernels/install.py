@@ -15,7 +15,7 @@ log = logging.getLogger('nb_conda_kernels')
 
 
 NBA = "NotebookApp"
-CKSM = "nb_conda_kernels.CondaKernelSpecManager"
+CKSM = "nb_conda_kernels.manager.CondaKernelSpecManager"
 KSMC = "kernel_spec_manager_class"
 JNC = "jupyter_notebook_config"
 JNCJ = JNC + ".json"

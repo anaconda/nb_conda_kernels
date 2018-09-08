@@ -53,19 +53,38 @@ conda install -n r_env r-irkernel
 For other languages, their [corresponding kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)
 must be installed.
 
-### Limitations
+### Advanced usage: `jupyter_client` patching
 
-This extension works _only_ with Jupyter notebooks and
-JupyterLab. Unfortunately, it does not currently work with
-Jupyter Console, `nbconvert`, and other tools. This is because
-these tools were not designed to allow for the use of custom
-KernelSpecs.
+By default, this extension works _only_ with Jupyter notebooks
+and JupyterLab. This is because these notebook applications allow
+the kernel modification mechanism to be customized by specifying
+an alternate provider in `jupyter_notebook_config.json`. Other
+Jupyter tools, such as `nbconvert`, `console`, and even
+`jupyter kernelspec list` do not provide a comparable mechanism 
+for customization (yet; see below).
+
+In this version of `nb_conda_kernels`, however, we have provided
+mechanism to _patch_ `jupyter_client` itself to replace its
+`KernelSpecManager` class with the conda-aware sublcass we have
+developed. This allows all of these other Jupyter tools to take
+advantage of this functionality. To try it, simply type this
+command from within the environment where `nb_conda_kernels`
+is installed:
+```shell
+python -m nb_conda_kernels patch
+```
+From there, you can verify that 
+```shell
+jupyter kernelspec list
+```
+can now engage `nb_conda_kernels` and see the additional kernels.
 
 A new [kernel discovery system](https://jupyter-client.readthedocs.io/en/latest/kernel_providers.html)
 is being developed for Jupyter 6.0 that should enable the
 wider Jupyter ecosystem to take advantage of these external
 kernels. This package will require modification to
-function properly in this new system.
+function properly in this new system, but the patching
+approach will no longer be required.
 
 ## Configuration
 
@@ -95,11 +114,12 @@ This package introduces two additional configuration options:
 
    ```shell
    python setup.py develop
-   python -m nb_conda_kernels.install --enable
+   python -m nb_conda_kernels enable
    ```
-
-   Note: there is no longer any need to supply a
-   `--prefix` argument to the installer.
+   If you want to use the jupyter_client patch, do this:
+   ```shell
+   python -m nb_conda_kernels patch
+   ```
 
 4. In order to properly exercise the package, the
    tests assume a number of requirements:
