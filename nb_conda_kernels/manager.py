@@ -8,7 +8,7 @@ import glob
 
 import os
 from os.path import join, split, dirname, basename, abspath
-from traitlets import Unicode
+from traitlets import Unicode, Bool
 
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NoSuchKernel
 
@@ -21,6 +21,9 @@ class CondaKernelSpecManager(KernelSpecManager):
     """ A custom KernelSpecManager able to search for conda environments and
         create kernelspecs for them.
     """
+    conda_only = Bool(False,
+                      help="Include only the kernels not visible from Jupyter normally")
+
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
 
@@ -111,7 +114,6 @@ class CondaKernelSpecManager(KernelSpecManager):
             if self.env_filter is not None:
                 if self._env_filter_regex.search(env_path):
                     continue
-            
             if env_path == sys.prefix:
                 continue
             elif env_path == base_prefix:
@@ -204,13 +206,16 @@ class CondaKernelSpecManager(KernelSpecManager):
         self._conda_kernels_cache = kspecs
         return kspecs
 
-    def find_kernel_specs(self):
+    def find_kernel_specs(self, skip_base=False):
         """ Returns a dict mapping kernel names to resource directories.
 
             The update process also adds the resource dir for the conda
             environments.
         """
-        kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
+        if self.conda_only:
+            kspecs = {}
+        else:
+            kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
 
         # add conda envs kernelspecs
         if self.whitelist:
@@ -228,8 +233,10 @@ class CondaKernelSpecManager(KernelSpecManager):
             accordingly with the detected envitonments.
         """
 
-        return (self._conda_kspecs.get(kernel_name) or
-                super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name))
+        res = self._conda_kspecs.get(kernel_name)
+        if res is None and not self.conda_only:
+            res = super(CondaKernelSpecManager, self).get_kernel_spec(kernel_name)
+        return res
 
     def get_all_specs(self):
         """ Returns a dict mapping kernel names to dictionaries with two
