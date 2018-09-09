@@ -34,15 +34,12 @@ install:
     - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no %SAFETY_CHECKS%
     # The tests expect to see the Python kernel in the root environment
     - conda install conda-verify conda-build ipykernel anaconda-client
-    - if %ERRORLEVEL% neq 0 exit 1
     # We need to create additional environments to fully test the logic,
     # including an R kernel, a Python kernel, and environment names with
     # at least one non-ASCII character and one space. Because AppVeyor is
     # difficult to work with for non-ASCII content we're using env files.
     - conda env create -f conda-recipe\testenv1.yaml
-    - if %ERRORLEVEL% neq 0 exit 1
     - conda env create -f conda-recipe\testenv2.yaml
-    - if %ERRORLEVEL% neq 0 exit 1
     - conda info -a
 
 # Skip .NET project specific build phase.
@@ -50,7 +47,6 @@ build: off
 
 test_script:
     - conda build conda-recipe --python=%PYTHON_VERSION%
-    - if %ERRORLEVEL% neq 0 exit 1
 
 deploy_script:
     - if not "%CONDA_SPEC%" == "" exit 0
