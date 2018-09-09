@@ -21,7 +21,7 @@ PATCH_CODE = '''try:
         KernelSpecManager = CondaKernelSpecManager
 except Exception as exc:
     msg = (['Unexpected error attempting to use nb_conda_kernels:'] +
-           ['| ' + p for p in exc.message.splitlines()] +
+           ['| ' + p for p in str(exc).splitlines()] +
            ['nb_conda_kernels NOT loaded; please reinstall.'])
     warnings.warn('\\n'.join(msg))
 finally:
@@ -130,13 +130,22 @@ def patch(uninstall=False):
             raise RuntimeError('Original file integrity check failed')
 
         log.debug('Modified file verified; moving into position')
-        os.rename(tname, fname)
+        if hasattr(os, 'replace'):
+            os.replace(tname, fname)
+        elif sys.platform.startswith('win'):
+            # No atomic replace on Windows Python 2.7
+            os.rename(fname, fname + '.nbck')
+            os.rename(tname, fname)
+            os.unlink(fname + '.nbck')
+        else:
+            os.rename(tname, fname)
+        return
 
     except Exception as exc:
-        msg = (['Unexpected error during the patching process:'] +
-               ['| ' + p for p in exc.message.splitlines() ] +
-               ['The original kernelspec.py file has NOT been modified.'])
-        raise type(exc)('\n'.join(msg))
+        if os.path.exists(fname + '.nbck') and not os.path.exists(fname):
+            os.rename(fname + '.nbck', fname)
+        log.error('ERROR: the original kernelspec.py file has NOT been modified.')
+        raise
 
     finally:
         if tname and os.path.exists(tname):
