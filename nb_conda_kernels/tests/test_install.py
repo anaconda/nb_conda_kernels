@@ -56,12 +56,14 @@ def test_install():
         predicted_state = original_state.copy()
         for test in ('disable', 'status', 'disable', 'status',
                      'enable', 'status', 'enable', 'status', 'disable', 'status',
-                     'patch', 'status', 'patch', 'status', 'disable', 'status',
+                     'patch', 'status', 'patch', 'status', 'unpatch', 'status',
                      'enable', 'status', 'patch', 'status', 'disable', 'status'):
             if test == 'disable':
                 predicted_state['notebook'] = predicted_state['patch'] = DISABLED
             elif test == 'patch':
                 predicted_state['patch'] = ENABLED
+            elif test == 'unpatch':
+                predicted_state['patch'] = DISABLED
             elif test == 'enable' and predicted_state['patch'] == DISABLED:
                 predicted_state['notebook'] = ENABLED
             if predicted_state['patch'] == ENABLED:

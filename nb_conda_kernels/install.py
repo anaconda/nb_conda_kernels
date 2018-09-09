@@ -1,10 +1,8 @@
-import json
 import logging
 import os
 import sys
 
-from os.path import join, abspath, exists
-from pkg_resources import iter_entry_points
+from os.path import abspath
 
 from traitlets.config.manager import BaseJSONConfigManager
 from jupyter_core.paths import jupyter_config_path
@@ -76,7 +74,7 @@ def status(path=None):
                   'This is typically caused by another configuration file in\n'
                   'the path with a conflicting setting.').format(mode_g, mode_l))
         if log.getEffectiveLevel() != logging.DEBUG:
-            logsev("Use the -v/--verbose flag for more information.")
+            log.warn("Use the -v/--verbose flag for more information.")
 
     return is_enabled
 
@@ -102,8 +100,8 @@ def enable(path=None):
 
 def disable(path=None):
     """Ensures that the KernelSpecManagerClass configuration
-       is not equal to nb_conda_kernels.CondaKernelSpecManager 
-       in the jupyter_notebook_config.json file found in the 
+       is not equal to nb_conda_kernels.CondaKernelSpecManager
+       in the jupyter_notebook_config.json file found in the
        directory given by the path parameter. If path is not
        supplied, it defaults to default_path(). If the setting
        is not present or not equal to this target value, the

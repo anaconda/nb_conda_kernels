@@ -1,15 +1,7 @@
 import argparse
-import json
 import logging
-import os
-import sys
 
-from os.path import exists, join, abspath
-
-from traitlets.config.manager import BaseJSONConfigManager
-from jupyter_core.paths import jupyter_config_path
-
-from .patch import status as patch_status, patch, VERSION
+from .patch import status as patch_status, patch
 from .install import status as install_status, enable, disable
 
 
@@ -43,7 +35,8 @@ subparsers.add_parser(
           "nb_conda_kernels for kernel discovery. This is the original "
           "approach to enabling nb_conda_kernels, and works only with "
           "notebooks. To use nb_conda_kernels with the Jupyter console "
-          "or nbconvert, use 'patch'."))
+          "or nbconvert, use 'patch'. If the patch is already present, "
+          "the configuration is not changed, since it would be redundant."))
 subparsers.add_parser(
     "patch",
     help=("Patch jupyter_client to use nb_conda_kernels. For notebooks, "
@@ -52,13 +45,17 @@ subparsers.add_parser(
 subparsers.add_parser(
     "disable",
     help=("Remove nb_conda_kernels from operation, by removing the "
-          "configuration setting or the patch."))
+          "configuration setting and the patch, if either are present."))
+subparsers.add_parser(
+    "unpatch",
+    help=("Remove the nb_conda_kernels patch from jupyter_client. Unlike "
+          "'disable', this does not attempt to remove the notebook"
+          "configuration setting as well."))
 
 
 def main(**kwargs):
     if kwargs.get('verbose'):
         log.setLevel(logging.DEBUG)
-    verbose = log.getEffectiveLevel() == logging.DEBUG
     command = kwargs.get('command')
 
     if command == 'list':
@@ -108,6 +105,15 @@ def main(**kwargs):
             log.info('Patch already applied; no change made.')
         else:
             patch()
+            p_status = patch_status()
+
+    elif command == 'unpatch':
+        desired = 'NOTEBOOKS ONLY' if i_status else 'DISABLED'
+        log.info('Unpatching jupyter_client.kernelspec...')
+        if not p_status:
+            log.info('Patch not detected; no change made.')
+        else:
+            patch(uninstall=True)
             p_status = patch_status()
 
     mode_g = 'ENABLED' if p_status else ('NOTEBOOKS ONLY' if i_status else 'DISABLED')

@@ -1,11 +1,9 @@
 import re
 import pkgutil
 import logging
-import tempfile
 import os
 import sys
-
-from os.path import exists, join, basename
+import stat
 
 log = logging.getLogger('nb_conda_kernels')
 
@@ -27,6 +25,12 @@ except Exception as exc:
 finally:
     del NBCK_modver, CondaKernelSpecManager
 '''.format(VERSION)
+
+NEW_PREFIX = '.nbck_new'
+OLD_PREFIX = '.nbck_old'
+OS_FLAGS = os.O_CREAT | os.O_WRONLY | os.O_EXCL
+if hasattr(os, 'O_BINARY'):
+    OS_FLAGS |= os.O_BINARY
 
 
 def find_kernelspec_py():
@@ -61,7 +65,7 @@ def determine_kernelspec_py_status(fdata, NL):
        is detected, returns the text *with the patch removed*, and the
        version of the patch found."""
     patch_finder = '(.*){}{}{}(.*){}{}{}(.*)'.format(NL, HEADER, NL, NL, FOOTER, NL)
-    patch_match = re.match(patch_finder.encode('ascii'), fdata, re.MULTILINE|re.DOTALL)
+    patch_match = re.match(patch_finder.encode('ascii'), fdata, re.MULTILINE | re.DOTALL)
     if not patch_match:
         log.debug('No patch code found.')
         return fdata, 0
@@ -69,7 +73,7 @@ def determine_kernelspec_py_status(fdata, NL):
     groups = patch_match.groups()
     fdata = groups[0] + groups[2]
     version_finder = '.* NBCK_modver == (\d+)'
-    version_match = re.match(version_finder.encode('ascii'), groups[1], re.MULTILINE|re.DOTALL)
+    version_match = re.match(version_finder.encode('ascii'), groups[1], re.MULTILINE | re.DOTALL)
     if not version_match:
         log.debug('Could not determine the patch version.')
         return fdata, -1
@@ -89,6 +93,17 @@ def status():
     return version == VERSION
 
 
+def attempt_remove(fname, ftext, must_succeed=True):
+    if os.path.exists(fname):
+        try:
+            log.debug('Removing {}'.format(ftext))
+            os.remove(fname)
+        except OSError:
+            if must_succeed:
+                raise
+            log.warn('Could not remove: {}'.format(fname))
+
+
 def patch(uninstall=False):
     """Overwrites the current file with a patched/unpatched version.
        Attempts to be as safe as possible, first writing the results to
@@ -106,53 +121,60 @@ def patch(uninstall=False):
     if uninstall:
         fdata_new = fdata_cleaned
     else:
-        parts = [ HEADER ] + PATCH_CODE.splitlines() + [ FOOTER, '' ]
-        parts = [ fdata_cleaned ] + [ x.encode('ascii') for x in parts ]
+        parts = [HEADER] + PATCH_CODE.splitlines() + [FOOTER, '']
+        parts = [fdata_cleaned] + [x.encode('ascii') for x in parts]
         fdata_new = NL.encode('ascii').join(parts)
 
-    try:
-        log.debug('Constructing new file')
-        fp = tempfile.NamedTemporaryFile(mode='w+b', prefix=fname + '.', delete=False)
-        tname = fp.name
-        log.debug('Temporary file name: {}'.format(tname))
-        fp.write(fdata_new)
-        fp.close()
+    fname_new = fname + NEW_PREFIX
+    fname_old = fname + OLD_PREFIX
 
-        log.debug('Verifying new file')
-        fdata_read, NL = read_kernelspec_py(tname)
+    try:
+        log.debug('Determining file permissions')
+        stat_res = os.stat(fname)
+        file_perms = stat.S_IMODE(stat_res.st_mode)
+        log.debug('File permissions: {}'.format(file_perms))
+
+        attempt_remove(fname_new, 'previous staging file', True)
+        log.debug('Creating staging file')
+        with open(fname_new, 'w+b') as fp:
+            fp.write(fdata_new)
+        os.chmod(fname_new, file_perms)
+
+        log.debug('Verifying staging file')
+        fdata_read, NL = read_kernelspec_py(fname_new)
         if fdata_read != fdata_new:
             raise RuntimeError('Write verification failed')
-
         fdata_stripped, version_new = determine_kernelspec_py_status(fdata_new, NL)
         if version_new != (0 if uninstall else VERSION):
             raise RuntimeError('Version verification failed')
         if fdata_stripped != fdata_cleaned:
             raise RuntimeError('Original file integrity check failed')
 
-        log.debug('Modified file verified; moving into position')
+        log.debug('Moving staging file into position')
         if hasattr(os, 'replace'):
-            os.replace(tname, fname)
+            os.replace(fname_new, fname)
         elif sys.platform.startswith('win'):
             # No atomic replace on Windows Python 2.7
-            os.rename(fname, fname + '.nbck')
-            os.rename(tname, fname)
-            os.unlink(fname + '.nbck')
+            attempt_remove(fname_old, 'previous backup file', True)
+            os.rename(fname, fname_old)
+            os.rename(fname_old, fname_new)
         else:
-            os.rename(tname, fname)
+            os.rename(fname_new, fname)
         return
 
-    except Exception as exc:
-        if os.path.exists(fname + '.nbck') and not os.path.exists(fname):
-            os.rename(fname + '.nbck', fname)
-        log.error('ERROR: the original kernelspec.py file has NOT been modified.')
+    except Exception:
+        msg = 'NOTE: the original kernelspec.py file has NOT been modified.'
+        if os.path.exists(fname_old) and not os.path.exists(fname):
+            try:
+                os.rename(fname_old, fname)
+            except OSError:
+                # We should never get here. But if we do, let's have full disclosure
+                msg = ('**** IMPORTANT NOTE ****\n'
+                       'The original kernelspec.py cannot be restored.\n'
+                       'It will be necessary to reinstall the jupyter_client package.')
+        log.error(msg)
         raise
 
     finally:
-        if tname and os.path.exists(tname):
-            log.debug('Attempting to remove temporary')
-            try:
-                os.remove(tname)
-            except OSError as exc:
-                log.warn('Could not remove temporary file: {}'.format(exc.message))
-
-
+        attempt_remove(fname_old, 'backup file', False)
+        attempt_remove(fname_old, 'staging file', False)
