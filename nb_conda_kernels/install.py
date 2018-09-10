@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 
-from os.path import exists, join, abspath
+from os.path import join, abspath
 
 from traitlets.config.manager import BaseJSONConfigManager
 from jupyter_core.paths import jupyter_config_path
@@ -103,7 +103,7 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     all_paths = jupyter_config_path()
     if path or prefix:
         if prefix:
-        	path = join(prefix, 'etc', 'jupyter')
+            path = join(prefix, 'etc', 'jupyter')
         if path not in all_paths:
             log.warn('WARNING: the requested path\n    {}\n'
                      'is not on the Jupyter config path'.format(path))
@@ -144,15 +144,15 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     for path_g in all_paths[::-1]:
         cfg_g = BaseJSONConfigManager(config_dir=path_g).get(JNC)
         if not cfg_g:
-        	value = 'no data'
+            value = 'no data'
         elif NBA not in cfg_g:
-        	value = 'no {} entry'.format(NBA)
+            value = 'no {} entry'.format(NBA)
         elif KSMC not in cfg_g[NBA]:
-        	value = 'no {}.{} entry'.format(NBA, KSMC)
+            value = 'no {}.{} entry'.format(NBA, KSMC)
         else:
-        	value = cfg_g[NBA][KSMC]
-        	is_enabled_all = value == CKSM
-        	value = '\n        {}: {}'.format(KSMC, value)
+            value = cfg_g[NBA][KSMC]
+            is_enabled_all = value == CKSM
+            value = '\n        {}: {}'.format(KSMC, value)
         log.debug('  - {}: {}'.format(path_g, value))
 
     if is_enabled_all != is_enabled_local:

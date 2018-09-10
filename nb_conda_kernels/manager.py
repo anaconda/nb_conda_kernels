@@ -27,7 +27,7 @@ class CondaKernelSpecManager(KernelSpecManager):
     env_filter = Unicode(None, config=True, allow_none=True,
                          help="Do not list environment names that match this regex")
 
-    name_format = Unicode('{0} [conda env:{1}]', config=True, 
+    name_format = Unicode('{0} [conda env:{1}]', config=True,
                           help="String name format; '{{0}}' = Language, '{{1}}' = Kernel")
 
     def __init__(self, **kwargs):

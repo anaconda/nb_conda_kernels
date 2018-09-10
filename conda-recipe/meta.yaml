@@ -28,6 +28,8 @@ test:
     - coverage
     - ipykernel
     - notebook
+    - requests
+    - mock
   commands:
     - nosetests nb_conda_kernels
 

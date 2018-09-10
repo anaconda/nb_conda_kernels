@@ -39,6 +39,7 @@ install:
   # difficult to work with for non-ASCII content we're using env files.
   - conda env create -f conda-recipe/testenv1.yaml
   - conda env create -f conda-recipe/testenv2.yaml
+  - rm -f $HOME/.conda/environments.txt
   - conda info -a
 
 script:

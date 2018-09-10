@@ -1,9 +1,6 @@
-import json
 import os
 import sys
-import locale
 
-from subprocess import check_output, CalledProcessError, STDOUT
 from nb_conda_kernels.discovery import CondaKernelProvider
 
 is_win = sys.platform.startswith('win')
@@ -31,11 +28,14 @@ def check_exec_in_env(key):
             commands = ['cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE)',
                         'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)']
         else:
-            commands = ['import os; print(os.environ["CONDA_PREFIX"])',
-                        'import sys; print(sys.prefix)']
+            commands = ['import os, sys',
+                        'print(repr(os.environ["CONDA_PREFIX"].encode("utf-8"))[2:-1])',
+                        'print(repr(sys.prefix.encode("utf-8"))[2:-1])',
+                        'print(os.environ["CONDA_PREFIX"])',
+                        'print(sys.prefix)']
         for command in commands:
             m_id = client.execute(command)
-            reply = client.get_shell_msg(m_id)
+            client.get_shell_msg(m_id)
             while True:
                 msg = client.get_iopub_msg()['content']
                 if msg.get('execution_state') == 'idle':
@@ -47,8 +47,8 @@ def check_exec_in_env(key):
         if client_started:
             client.stop_channels()
         if kernel_started:
-            kernel_manager.shutdown_kernel()
-    print(u'{}: {}\n--------\nCONDA_PREFIX: {}\nsys.prefix: {}\n--------'.format(key, env_name, outputs[-2], outputs[-1]))
+            kernel_manager.shutdown_kernel(now=True, restart=False)
+    print(u'{}: {}\n--------\n{}\n--------'.format(key, env_name, '\n'.join(outputs)))
     if not (valid and len(outputs) >= 2 and
             all(o in (env_name, env_name_fs) for o in outputs[-2:])):
         assert False
