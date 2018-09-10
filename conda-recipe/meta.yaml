@@ -18,6 +18,7 @@ requirements:
     - setuptools
   run:
     - python
+    - pywin32 # [win]
     - jupyter_client >=4.2
 
 test:
@@ -31,7 +32,7 @@ test:
     - requests
     - mock
   commands:
-    - nosetests nb_conda_kernels
+    - nosetests nb_conda_kernels --nocapture
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels

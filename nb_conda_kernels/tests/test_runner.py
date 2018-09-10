@@ -14,26 +14,25 @@ def check_exec_in_env(key):
     kernel_manager = provider.make_manager(key)
     env_name = kernel_manager.kernel_spec.argv[4]
     env_name_fs = env_name.replace('\\', '/')
-    kernel_started = client_started = False
+    client = None
     valid = False
     outputs = []
     try:
+        print('Starting kernel: {}'.format(key))
         kernel_manager.start_kernel()
-        kernel_started = True
+        print('Initializing client')
         client = kernel_manager.client()
         client.start_channels()
-        client_started = True
         client.wait_for_ready(timeout=60)
         if key.endswith('-r'):
             commands = ['cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE)',
                         'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)']
         else:
             commands = ['import os, sys',
-                        'print(repr(os.environ["CONDA_PREFIX"].encode("utf-8"))[2:-1])',
-                        'print(repr(sys.prefix.encode("utf-8"))[2:-1])',
                         'print(os.environ["CONDA_PREFIX"])',
                         'print(sys.prefix)']
         for command in commands:
+            print('>>> {}'.format(command))
             m_id = client.execute(command)
             client.get_shell_msg(m_id)
             while True:
@@ -42,16 +41,18 @@ def check_exec_in_env(key):
                     break
                 if msg.get('name') == 'stdout':
                     outputs.append(msg['text'].strip())
+                    print(outputs[-1])
         valid = True
     finally:
-        if client_started:
+        if client is None:
+            print('Cleaning up client')
             client.stop_channels()
-        if kernel_started:
-            kernel_manager.shutdown_kernel(now=True, restart=False)
+        if kernel_manager.is_alive():
+            print('Requesting shutdown')
+            kernel_manager.request_shutdown()
+            kernel_manager.finish_shutdown(waittime=5)
     print(u'{}: {}\n--------\n{}\n--------'.format(key, env_name, '\n'.join(outputs)))
-    if not (valid and len(outputs) >= 2 and
-            all(o in (env_name, env_name_fs) for o in outputs[-2:])):
-        assert False
+    assert valid and len(outputs) >= 2 and all(o in (env_name, env_name_fs) for o in outputs[-2:])
 
 
 def test_runner():

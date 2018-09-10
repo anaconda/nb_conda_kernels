@@ -63,7 +63,19 @@ def exec_in_env(conda_root, envname, command, *args):
 
     # Launch the kernel process
     if is_win:
-        Popen((fullpath,) + args, env=env).wait()
+        # Methodology: create a job object to hold the subprocess so
+        # all of its children will be killed when it completes.
+        # https://stackoverflow.com/a/23587108
+        import win32api, win32con, win32job  # noqa
+        hJob = win32job.CreateJobObject(None, "")
+        extended_info = win32job.QueryInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation)
+        extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        win32job.SetInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
+        perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
+        child = Popen((fullpath,) + args, env=env)
+        hProcess = win32api.OpenProcess(perms, False, child.pid)
+        win32job.AssignProcessToJobObject(hJob, hProcess)
+        child.wait()
     else:
         os.execvpe(command, (command,) + args, env)
 
