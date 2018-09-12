@@ -32,7 +32,7 @@ test:
     - requests
     - mock
   commands:
-    - nosetests nb_conda_kernels --nocapture
+    - nosetests nb_conda_kernels
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels

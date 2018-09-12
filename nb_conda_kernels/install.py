@@ -4,10 +4,12 @@ import logging
 import os
 import sys
 
-from os.path import join, abspath
+from os.path import join, abspath, exists
+from pkg_resources import iter_entry_points
 
 from traitlets.config.manager import BaseJSONConfigManager
 from jupyter_core.paths import jupyter_config_path
+from jupyter_client import __version__ as jc_version
 
 
 log = logging.getLogger(__name__)
@@ -52,11 +54,9 @@ CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 KSMC = "kernel_spec_manager_class"
 JNC = "jupyter_notebook_config"
 JNCJ = JNC + ".json"
+JCKP = "jupyter_client.kernel_providers"
+NCKDCKP = "nb_conda_kernels.discovery:CondaKernelProvider"
 ENDIS = ['disabled', 'enabled']
-
-
-def pretty(it):
-    return json.dumps(it, indent=2)
 
 
 def install(enable=False, disable=False, status=None, prefix=None, path=None, verbose=False):
@@ -100,6 +100,21 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     else:
         log.info("{}ing nb_conda_kernels...".format(ENDIS[enable][:-2].capitalize()))
 
+    is_enabled_entry = False
+    has_entrypoints = int(jc_version.split('.', 1)[0]) >= 6
+    log.debug('Entry points:')
+    for ep in iter_entry_points(group=JCKP):
+        log.debug('  - {}'.format(ep))
+        if str(ep).split('=', 1)[-1].strip() == NCKDCKP:
+            is_enabled_entry = True
+    if not is_enabled_entry and has_entrypoints:
+        log.error(('NOTE: nb_conda_kernels is missing its entry point '
+                   'for jupyter_client.kernel_providers, which is needed '
+                   'for correct operation with Jupyter 6.0.'))
+    if is_enabled_entry and not has_entrypoints:
+        log.debug('  NOTE: entry points not used in Jupyter {}'.format(jc_version))
+        is_enabled_entry = False
+
     all_paths = jupyter_config_path()
     if path or prefix:
         if prefix:
@@ -109,20 +124,16 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
                      'is not on the Jupyter config path'.format(path))
     else:
         prefix_s = sys.prefix + os.sep
-        for path in all_paths:
+        for path in all_paths[::-1]:
             if path.startswith(prefix_s):
                 break
         else:
             log.warn('WARNING: no path within sys.prefix was found')
-            path = all_paths[0]
-    path = abspath(path)
-    log.debug('Path: {}'.format(path))
 
     cfg = BaseJSONConfigManager(config_dir=path).get(JNC)
-    log.debug("Local configuration ({}):\n{}".format(join(path, JNCJ), pretty(cfg)))
     is_enabled_local = cfg.get(NBA, {}).get(KSMC, None) == CKSM
 
-    if not status and is_enabled_local != enable:
+    if not status and is_enabled_local != (enable and not is_enabled_entry):
         if enable:
             log.debug('Adding to local configuration')
             cfg.setdefault(NBA, {})[KSMC] = CKSM
@@ -139,21 +150,21 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     # app does: by looking through jupyter_notebook_config.json in
     # every directory in jupyter_config_path(), in reverse order.
     all_paths = jupyter_config_path()
-    log.debug('Searching configuration path:')
+    log.debug('{} entries:'.format(JNCJ))
     is_enabled_all = False
-    for path_g in all_paths[::-1]:
+    search_paths = all_paths[::-1]
+    if path not in all_paths:
+        search_paths.append(path)
+    for path_g in search_paths:
         cfg_g = BaseJSONConfigManager(config_dir=path_g).get(JNC)
-        if not cfg_g:
-            value = 'no data'
-        elif NBA not in cfg_g:
-            value = 'no {} entry'.format(NBA)
-        elif KSMC not in cfg_g[NBA]:
-            value = 'no {}.{} entry'.format(NBA, KSMC)
+        flag = '-' if path != path_g else ('*' if path in all_paths else 'x')
+        if exists(join(path_g, JNCJ)):
+            value =  '\n    '.join(json.dumps(cfg_g, indent=2).splitlines())
+            if NBA in cfg_g and KSMC in cfg_g[NBA]:
+                is_enabled_all = cfg_g[NBA][KSMC] == CKSM
         else:
-            value = cfg_g[NBA][KSMC]
-            is_enabled_all = value == CKSM
-            value = '\n        {}: {}'.format(KSMC, value)
-        log.debug('  - {}: {}'.format(path_g, value))
+            value = '<no file>'
+        log.debug('  {} {}: {}'.format(flag, path_g, value))
 
     if is_enabled_all != is_enabled_local:
         logsev = log.warn if status else log.error
@@ -170,6 +181,7 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
         if not status:
             return 1
 
+    is_enabled_all = is_enabled_all or (has_entrypoints and is_enabled_entry)
     log.info('Status: {}'.format(ENDIS[is_enabled_all]))
     return 0
 

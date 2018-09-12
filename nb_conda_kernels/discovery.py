@@ -1,3 +1,6 @@
+# Initial support for the kernel provider mechanism
+# to be introduced in jupyter_client 6.0; see
+# https://jupyter-client.readthedocs.io/en/latest/kernel_providers.html
 
 try:
     from jupyter_client.discovery import KernelProviderBase
