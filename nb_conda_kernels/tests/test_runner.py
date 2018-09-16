@@ -9,6 +9,20 @@ is_py2 = sys.version_info[0] < 3
 
 provider = CondaKernelProvider()
 
+if is_win:
+    # Create a job object and assign ourselves to it, so that
+    # all remaining test subprocesses get killed off on completion.
+    # This prevents AppVeyor from waiting an hour
+    # https://stackoverflow.com/a/23587108 (and its first comment)
+    import win32api, win32con, win32job  # noqa
+    hJob = win32job.CreateJobObject(None, "")
+    extended_info = win32job.QueryInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation)
+    extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    win32job.SetInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
+    perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
+    hProcess = win32api.OpenProcess(perms, False, os.getpid())
+    win32job.AssignProcessToJobObject(hJob, hProcess)
+
 
 def check_exec_in_env(key):
     kernel_manager = provider.make_manager(key)
@@ -26,11 +40,13 @@ def check_exec_in_env(key):
         client.wait_for_ready(timeout=60)
         if key.endswith('-r'):
             commands = ['cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE)',
-                        'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)']
+                        'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)',
+                        'quit(save="no")']
         else:
             commands = ['import os, sys',
                         'print(os.environ["CONDA_PREFIX"])',
-                        'print(sys.prefix)']
+                        'print(sys.prefix)',
+                        'quit']
         for command in commands:
             print('>>> {}'.format(command))
             m_id = client.execute(command)
@@ -50,7 +66,6 @@ def check_exec_in_env(key):
         if kernel_manager.is_alive():
             print('Requesting shutdown')
             kernel_manager.request_shutdown()
-            kernel_manager.finish_shutdown(waittime=5)
     print(u'{}: {}\n--------\n{}\n--------'.format(key, env_name, '\n'.join(outputs)))
     assert valid and len(outputs) >= 2 and all(o in (env_name, env_name_fs) for o in outputs[-2:])
 

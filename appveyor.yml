@@ -29,6 +29,7 @@ environment:
 install:
     # Because the specifics of activation need to be tested here, we are
     # fixing the version of conda *before* doing the full activation.
+    - mkdir C:\Users\appveyor\.conda
     - call %MINICONDA%\Scripts\conda install conda%CONDA_SPEC% --yes
     - call %MINICONDA%\Scripts\activate.bat
     - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no %SAFETY_CHECKS%
