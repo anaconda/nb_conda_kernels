@@ -102,16 +102,22 @@ This package introduces two additional configuration options:
    `--prefix` argument to the installer.
 
 4. In order to properly exercise the package, the
-   tests assume the existence of `ipykernel` in the
-   base/root conda environment, and at least one conda
-   environment with the `R` kernel. For example:
+   tests assume a number of requirements:
+   - `ipykernel` in the base/root environment
+   - one additional environment with `ipykernel`
+   - one environment with `r-irkernel`
+   - one environment with a space in the name
+   - one environment with a non-ASCII character in the name
 
+   An easy way to accomplish this is to use the environment
+   specifications in the `conda-recipe` directory:
    ```shell
    conda install -n root ipykernel
-   conda create -n nbrtest r-irkernel
+   conda env create -f conda-recipe/testenv1.yaml
+   conda env create -f conda-recipe/testenv2.yaml
    ```
 
-5. To run all of the tests, run the `nosetests` command.
+5. To run all of the tests, run the command `nosetests`.
 
 ## Changelog
 
