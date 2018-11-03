@@ -79,10 +79,7 @@ This package introduces two additional configuration options:
 1. Install [Anaconda](https://www.anaconda.com/download/) or
    [Miniconda](https://conda.io/miniconda.html).
 
-2. Create a development environment. Node.JS packages
-   [PhantomJS](http://phantomjs.org) and
-   [CasperJS](http://casperjs.org) are used for testing,
-   so installation requires both `conda` and `npm`:
+2. Create a development environment.
 
    ```shell
    conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
@@ -92,8 +89,6 @@ This package introduces two additional configuration options:
    activate nb_conda_kernels
    # Install the package and test dependencies
    conda install --file requirements.txt
-   # Install PhantomJS and CasperJS
-   npm install
    ```
 
 3. Install the source package in development mode.
@@ -116,24 +111,11 @@ This package introduces two additional configuration options:
    conda create -n nbrtest r-irkernel
    ```
 
-5. To run all of the tests, the Node environment must be
-   activated. The easiest way to do this is to use our
-   `npm` test command:
-
-   ```shell
-   npm run test
-   ```
-
-   If you prefer to skip the Node-based tests, you can run
-   `nose` directly, skipping the `test_notebook` module:
-
-   ```
-   nosetests --exclude=test_notebook
-   ```
+5. To run all of the tests, run the `nosetests` command.
 
 ## Changelog
 
-### 2.2.0 (in development)
+### 2.2.0
 
 - Perform full activation of kernel conda environments
 - Discover kernels from their kernel specs, enabling the use
@@ -141,6 +123,7 @@ This package introduces two additional configuration options:
 - Support for spaces and accented characters in environment
   paths, with properly validating kernel names
 - Configurable format for kernel display names
+- Remove NodeJS-based testing
 
 ### 2.1.1
 
