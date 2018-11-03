@@ -32,8 +32,6 @@ def test_configuration():
         key = key.lower()
         if key.startswith('python'):
             checks['default_py'] = True
-        if key.startswith('ir'):
-            checks['default_r'] = True
         if key.startswith('conda-root-py'):
             checks['root_py'] = True
         if key.startswith('conda-env-'):
@@ -47,25 +45,16 @@ def test_configuration():
             long_env.encode('ascii')
         except UnicodeEncodeError:
             checks['env_unicode'] = True
-    if len(checks) < 7:
-        print('The environment is not properly configured for testing:')
-        if not checks.get('default_py'):
-            print('  - Default Python kernel missing')
-        if not checks.get('default_r'):
-            print('  - Default R kernel missing')
-        if not checks.get('root_py'):
-            print('  - Root Python kernel missing')
-        if not checks.get('env_py'):
-            print('  - Environment Python kernel missing')
-        if not checks.get('env_r'):
-            print('  - Environment R kernel missing')
-        if not checks.get('env_unicode'):
-            print('  - Environment with non-ASCII character missing')
-        if not checks.get('env_space'):
-            print('  - Environment with space missing')
-        assert False
+    print('Scenarios required for proper testing')
+    print('-------------------------------------')
+    print('  - Python kernel in test environment: {}'.format(bool(checks.get('default_py'))))
+    print('  - Python kernel in root environment: {}'.format(bool(checks.get('root_py'))))
+    print('  - Python kernel in other environment: {}'.format(bool(checks.get('env_py'))))
+    print('  - R kernel in non-test environment: {}'.format(bool(checks.get('env_r'))))
+    print('  - Environment with non-ASCII name: {}'.format(bool(checks.get('env_unicode'))))
+    print('  - Environment with space in name: {}'.format(bool(checks.get('env_space'))))
+    assert len(checks) == 6
 
 
 if __name__ == '__main__':
     test_configuration()
-

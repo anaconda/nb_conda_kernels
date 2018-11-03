@@ -18,22 +18,21 @@ requirements:
     - setuptools
   run:
     - python
+    - pywin32 # [win]
     - jupyter_client >=4.2
 
 test:
   source_files:
     - setup.cfg
   requires:
-    - notebook
-    - r-irkernel
     - nose
     - coverage
-    - mock
+    - ipykernel
+    - notebook
     - requests
-    - nodejs # [py3k and not win]
+    - mock
   commands:
-    - npx -p phantomjs -p casperjs nosetests nb_conda_kernels # [py3k and not win]
-    - nosetests nb_conda_kernels --exclude=test_notebook # [py2k or win]
+    - nosetests nb_conda_kernels
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels
