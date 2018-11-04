@@ -2,7 +2,7 @@
 | --- | :-: |
 | [`conda install jupycon/label/dev::nb_conda_kernels`](https://anaconda.org/jupycon/nb_conda_kernels) | [![Anaconda-Server Badge](https://anaconda.org/jupycon/nb_conda_kernels/badges/version.svg)](https://anaconda.org/jupycon/nb_conda_kernels) |
 | [`conda install defaults::nb_conda_kernels`](https://anaconda.org/anaconda/nb_conda_kernels) | [![Anaconda-Server Badge](https://anaconda.org/anaconda/nb_conda_kernels/badges/version.svg)](https://anaconda.org/anaconda/nb_conda_kernels) |
-| [`conda install conda-forge::nb_conda_kernels`](https://anaconda.org/anaconda/nb_conda_kernels) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/nb_conda_kernels/badges/version.svg)](https://anaconda.org/anaconda/nb_conda_kernels) |
+| [`conda install conda-forge::nb_conda_kernels`](https://anaconda.org/conda-forge/nb_conda_kernels) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/nb_conda_kernels/badges/version.svg)](https://anaconda.org/conda-forge/nb_conda_kernels) |
 
 # nb_conda_kernels
 
