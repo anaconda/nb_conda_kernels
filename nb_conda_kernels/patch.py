@@ -33,6 +33,30 @@ if hasattr(os, 'O_BINARY'):
     OS_FLAGS |= os.O_BINARY
 
 
+def notify(level, text):
+    notifier = getattr(log, level)
+    return notifier('{}: {}'.format(level.upper(), text))
+
+
+def find_compatible_jc_version(level='info'):
+    p = pkgutil.get_loader('jupyter_client._version')
+    if p is None:
+        notify(level, 'Cannot find module jupyter_client._version')
+        return None
+    v_mod = p.load_module()
+    version = getattr(v_mod, 'version_info', None)
+    if version is None:
+        notify(level, 'Cannot determine jupyter_client._version')
+    elif not isinstance(version, tuple):
+        notify(level, 'Cannot parse jupyter_client version: {}'.format(repr(version)))
+    elif version < (5,) or version >= (6,):
+        version_str = '.'.join(map(str, version))
+        notify(level, 'jupyter_client version {} incompatible with patch'.format(version_str))
+    else:
+        return True
+    return False
+
+
 def find_kernelspec_py():
     """Return the path to the source file for jupyter_client.kernelspec."""
     p = pkgutil.get_loader('jupyter_client.kernelspec')
@@ -82,11 +106,13 @@ def determine_kernelspec_py_status(fdata, NL):
     return fdata, version
 
 
-def status():
+def status(level='warning'):
     """Determines whether or not the jupyter_client patch is applied.
        Returns True if the patch is applied *and* it is the correct
        version of the patch; False otherwise."""
     log.debug('Examining jupyter_client.kernelspec')
+    if not find_compatible_jc_version(level):
+        return False
     fname = find_kernelspec_py()
     fdata, NL = read_kernelspec_py(fname)
     _, version = determine_kernelspec_py_status(fdata, NL)
@@ -111,12 +137,14 @@ def patch(uninstall=False):
        moving the new file into place."""
 
     log.debug('{}ing the patch...'.format('Remov' if uninstall else 'Apply'))
+    if not find_compatible_jc_version('error'):
+        return False
     fname = find_kernelspec_py()
     fdata_orig, NL = read_kernelspec_py(fname)
     fdata_cleaned, current_version = determine_kernelspec_py_status(fdata_orig, NL)
     if current_version == (0 if uninstall else VERSION):
         log.debug('No changes needed.')
-        return
+        return True
 
     if uninstall:
         fdata_new = fdata_cleaned
@@ -160,7 +188,7 @@ def patch(uninstall=False):
             os.rename(fname_old, fname_new)
         else:
             os.rename(fname_new, fname)
-        return
+        return True
 
     except Exception:
         msg = 'NOTE: the original kernelspec.py file has NOT been modified.'

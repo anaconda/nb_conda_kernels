@@ -68,7 +68,7 @@ def main(**kwargs):
         lk.start()
         return 0
 
-    p_status = patch_status()
+    p_status = patch_status('debug' if command == 'patch' else 'warning')
     i_status = install_status()
     desired = None
 
@@ -91,8 +91,8 @@ def main(**kwargs):
             log.info('Already disabled; no change made.')
         if p_status:
             log.info('Removing jupyter_client patch...')
-            patch(uninstall=True)
-            p_status = patch_status()
+            if patch(uninstall=True):
+                p_status = patch_status()
         if i_status:
             log.info('Removing notebook configuration...')
             disable()
@@ -103,8 +103,7 @@ def main(**kwargs):
         log.info('Patching jupyter_client.kernelspec...')
         if p_status:
             log.info('Patch already applied; no change made.')
-        else:
-            patch()
+        elif patch():
             p_status = patch_status()
 
     elif command == 'unpatch':
@@ -112,8 +111,7 @@ def main(**kwargs):
         log.info('Unpatching jupyter_client.kernelspec...')
         if not p_status:
             log.info('Patch not detected; no change made.')
-        else:
-            patch(uninstall=True)
+        elif patch(uninstall=True):
             p_status = patch_status()
 
     mode_g = 'ENABLED' if p_status else ('NOTEBOOKS ONLY' if i_status else 'DISABLED')
