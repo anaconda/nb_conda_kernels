@@ -5,8 +5,9 @@ import os
 import sys
 import stat
 
-log = logging.getLogger('nb_conda_kernels')
+from jupyter_client._version import __version__ as jc_version
 
+log = logging.getLogger('nb_conda_kernels')
 
 VERSION = 2
 HEADER = '### BEGIN NB_CONDA_KERNELS PATCH ###'
@@ -38,23 +39,16 @@ def notify(level, text):
     return notifier('{}: {}'.format(level.upper(), text))
 
 
-def find_compatible_jc_version(level='info'):
-    p = pkgutil.get_loader('jupyter_client._version')
-    if p is None:
-        notify(level, 'Cannot find module jupyter_client._version')
-        return None
-    v_mod = p.load_module()
-    version = getattr(v_mod, 'version_info', None)
-    if version is None:
-        notify(level, 'Cannot determine jupyter_client._version')
-    elif not isinstance(version, tuple):
-        notify(level, 'Cannot parse jupyter_client version: {}'.format(repr(version)))
-    elif version < (5,) or version >= (6,):
-        version_str = '.'.join(map(str, version))
-        notify(level, 'jupyter_client version {} incompatible with patch'.format(version_str))
-    else:
-        return True
-    return False
+def is_jc_version_compatible(level='info'):
+    """Verify that jupyter_client version 6 is not present. We do not want
+       to apply this patch with this version, which will presumably provide
+       a better kernel provider mechanism."""
+    notify('debug', 'jupyter_client._version.version_info = {}'.format(jc_version))
+    major_version = jc_version.split('.', 1)[0]
+    if major_version not in ('4', '5'):
+        notify(level, 'jupyter_client version {} incompatible with patch'.format(jc_version))
+        return False
+    return True
 
 
 def find_kernelspec_py():
@@ -111,7 +105,7 @@ def status(level='warning'):
        Returns True if the patch is applied *and* it is the correct
        version of the patch; False otherwise."""
     log.debug('Examining jupyter_client.kernelspec')
-    if not find_compatible_jc_version(level):
+    if not is_jc_version_compatible(level):
         return False
     fname = find_kernelspec_py()
     fdata, NL = read_kernelspec_py(fname)
@@ -137,7 +131,7 @@ def patch(uninstall=False):
        moving the new file into place."""
 
     log.debug('{}ing the patch...'.format('Remov' if uninstall else 'Apply'))
-    if not find_compatible_jc_version('error'):
+    if not is_jc_version_compatible('error'):
         return False
     fname = find_kernelspec_py()
     fdata_orig, NL = read_kernelspec_py(fname)

@@ -6,7 +6,6 @@ from os.path import abspath
 
 from traitlets.config.manager import BaseJSONConfigManager
 from jupyter_core.paths import jupyter_config_path
-from jupyter_client import __version__ as jc_version
 
 
 log = logging.getLogger('nb_conda_kernels')
