@@ -79,6 +79,10 @@ jupyter kernelspec list
 ```
 can now engage `nb_conda_kernels` and see the additional kernels.
 
+_NOTE_: if the `jupyter_client` is upgraded or reinstalled, the
+patch must be reapplied. There is currently no way for `nb_conda_kernels`
+to automatically reapply the patch.
+
 A new [kernel discovery system](https://jupyter-client.readthedocs.io/en/latest/kernel_providers.html)
 is being developed for Jupyter 6.0 that should enable the
 wider Jupyter ecosystem to take advantage of these external
