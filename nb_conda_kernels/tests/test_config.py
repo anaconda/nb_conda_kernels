@@ -59,7 +59,9 @@ def test_configuration():
     print('  - R kernel in non-test environment: {}'.format(bool(checks.get('env_r'))))
     print('  - Environment with non-ASCII name: {}'.format(bool(checks.get('env_unicode'))))
     print('  - Environment with space in name: {}'.format(bool(checks.get('env_space'))))
-    assert len(checks) == 7
+    # In some conda build scenarios, the test environment is not returned by conda
+    # in the listing of conda environments.
+    assert len(checks) >= 7 - ('conda-bld' in prefix)
 
 
 if __name__ == '__main__':
