@@ -2,6 +2,7 @@ import os
 import sys
 
 from nb_conda_kernels.discovery import CondaKernelProvider
+from nb_conda_kernels.manager import RUNNER_COMMAND
 
 is_win = sys.platform.startswith('win')
 is_py2 = sys.version_info[0] < 3
@@ -26,8 +27,11 @@ if is_win:
 
 def check_exec_in_env(key):
     kernel_manager = provider.make_manager(key)
-    env_name = kernel_manager.kernel_spec.argv[4]
-    env_name_fs = env_name.replace('\\', '/')
+    if kernel_manager.kernel_spec.argv[:3] == RUNNER_COMMAND:
+        env_path = kernel_manager.kernel_spec.argv[4]
+    else:
+        env_path = sys.prefix
+    env_path_fs = env_path.replace('\\', '/')
     client = None
     valid = False
     outputs = []
@@ -66,8 +70,8 @@ def check_exec_in_env(key):
         if kernel_manager.is_alive():
             print('Requesting shutdown')
             kernel_manager.request_shutdown()
-    print(u'{}: {}\n--------\n{}\n--------'.format(key, env_name, '\n'.join(outputs)))
-    assert valid and len(outputs) >= 2 and all(o in (env_name, env_name_fs) for o in outputs[-2:])
+    print(u'{}: {}\n--------\n{}\n--------'.format(key, env_path, '\n'.join(outputs)))
+    assert valid and len(outputs) >= 2 and all(o in (env_path, env_path_fs) for o in outputs[-2:])
 
 
 def test_runner():

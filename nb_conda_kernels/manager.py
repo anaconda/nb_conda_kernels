@@ -16,6 +16,8 @@ CACHE_TIMEOUT = 60
 
 CONDA_EXE = os.environ.get("CONDA_EXE", "conda")
 
+RUNNER_COMMAND = ['python', '-m', 'nb_conda_kernels.runner']
+
 
 class CondaKernelSpecManager(KernelSpecManager):
     """ A custom KernelSpecManager able to search for conda environments and
@@ -114,9 +116,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             if self.env_filter is not None:
                 if self._env_filter_regex.search(env_path):
                     continue
-            if env_path == sys.prefix:
-                continue
-            elif env_path == base_prefix:
+            if env_path == base_prefix:
                 env_name = 'root'
             else:
                 env_base, env_name = split(env_path)
@@ -129,7 +129,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         return all_envs
 
     def _all_specs(self):
-        """ Find the all kernel specs in all environments besides sys.prefix.
+        """ Find the all kernel specs in all environments.
 
             Returns a dict with unique env names as keys, and the kernel.json
             content as values, modified so that they can be run properly in
@@ -180,9 +180,12 @@ class CondaKernelSpecManager(KernelSpecManager):
                 display_prefix = spec['display_name']
                 if display_prefix.startswith('Python'):
                     display_prefix = 'Python'
-                spec['display_name'] = self.name_format.format(display_prefix, basename(env_name))
-                spec['argv'] = ['python', '-m', 'nb_conda_kernels.runner',
-                                conda_prefix, env_path] + spec['argv']
+                display_name = self.name_format.format(display_prefix, basename(env_name))
+                if env_path == sys.prefix:
+                    display_name += ' *'
+                spec['display_name'] = display_name
+                if env_path != sys.prefix:
+                    spec['argv'] = RUNNER_COMMAND + [conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
                 all_specs[kernel_name] = spec
         return all_specs
