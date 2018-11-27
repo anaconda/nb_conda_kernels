@@ -43,7 +43,7 @@ install:
   - conda info -a
 
 script:
-  - conda build conda-recipe --python=$PYTHON_VERSION
+  - conda build conda-recipe --python=$PYTHON_VERSION --no-long-test-prefix
 
 deploy:
   # Upload to main label for tagged master builds
