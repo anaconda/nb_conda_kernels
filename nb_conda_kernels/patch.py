@@ -5,8 +5,6 @@ import os
 import sys
 import stat
 
-from jupyter_client._version import __version__ as jc_version
-
 log = logging.getLogger('nb_conda_kernels')
 
 VERSION = 2
@@ -43,10 +41,12 @@ def is_jc_version_compatible(level='info'):
     """Verify that jupyter_client version 6 is not present. We do not want
        to apply this patch with this version, which will presumably provide
        a better kernel provider mechanism."""
-    notify('debug', 'jupyter_client._version.version_info = {}'.format(jc_version))
-    major_version = jc_version.split('.', 1)[0]
+    # Must put here to avoid circular import issue
+    from jupyter_client._version import __version__ as version  # noqa
+    notify('debug', 'jupyter_client._version.version_info = {}'.format(version))
+    major_version = version.split('.', 1)[0]
     if major_version not in ('4', '5'):
-        notify(level, 'jupyter_client version {} incompatible with patch'.format(jc_version))
+        notify(level, 'jupyter_client version {} incompatible with patch'.format(version))
         return False
     return True
 
@@ -90,7 +90,7 @@ def determine_kernelspec_py_status(fdata, NL):
     log.debug('Patch code found.')
     groups = patch_match.groups()
     fdata = groups[0] + groups[2]
-    version_finder = '.* NBCK_modver == (\d+)'
+    version_finder = r'.* NBCK_modver == (\d+)'
     version_match = re.match(version_finder.encode('ascii'), groups[1], re.MULTILINE | re.DOTALL)
     if not version_match:
         log.debug('Could not determine the patch version.')
