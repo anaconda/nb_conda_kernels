@@ -145,6 +145,15 @@ This package introduces two additional configuration options:
 
 ## Changelog
 
+### 2.2.1 (unreleased)
+
+- Includes current active environment in the conda environment
+  list, even though it is already available through the normal
+  kernel search path (#115)
+- Added experimental support for monkeypatching jupyter_client
+  for broader support of nb_conda_kernels in other jupyter
+  applications (not on by default) (#104)
+
 ### 2.2.0
 
 - Perform full activation of kernel conda environments
