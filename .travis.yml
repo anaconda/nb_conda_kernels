@@ -18,7 +18,6 @@ env:
     - PYTHON_VERSION=3.5
     - PYTHON_VERSION=3.6
     - PYTHON_VERSION=3.7
-    - PYTHON_VERSION=3.5 CONDA_SPEC='=4.3'
 
 install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -28,7 +27,6 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   # Fix the conda version before full activation
-  - $HOME/miniconda/bin/conda install conda$CONDA_SPEC --yes
   - source $HOME/miniconda/bin/activate
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
   # The tests need to see the Python kernel in the root environment
@@ -37,8 +35,8 @@ install:
   # including an R kernel, a Python kernel, and environment names with
   # at least one non-ASCII character and one space. Because AppVeyor is
   # difficult to work with for non-ASCII content we're using env files.
-  - conda env create -f conda-recipe/testenv1.yaml
-  - conda env create -f conda-recipe/testenv2.yaml
+  - conda env create -v -f conda-recipe/testenv1.yaml
+  - conda env create -v -f conda-recipe/testenv2.yaml
   - rm -f $HOME/.conda/environments.txt
   - conda info -a
 

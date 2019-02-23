@@ -42,8 +42,6 @@ def test_configuration():
                     checks['env_py'] = True
                 if key.endswith('-r'):
                     checks['env_r'] = True
-            if ' ' in long_env:
-                checks['env_space'] = True
             try:
                 long_env.encode('ascii')
             except UnicodeEncodeError:
@@ -58,10 +56,9 @@ def test_configuration():
     print('  - Python kernel in other environment: {}'.format(bool(checks.get('env_py'))))
     print('  - R kernel in non-test environment: {}'.format(bool(checks.get('env_r'))))
     print('  - Environment with non-ASCII name: {}'.format(bool(checks.get('env_unicode'))))
-    print('  - Environment with space in name: {}'.format(bool(checks.get('env_space'))))
     # In some conda build scenarios, the test environment is not returned by conda
     # in the listing of conda environments.
-    assert len(checks) >= 7 - ('conda-bld' in prefix)
+    assert len(checks) >= 6 - ('conda-bld' in prefix)
 
 
 if __name__ == '__main__':
