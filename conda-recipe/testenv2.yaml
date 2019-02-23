@@ -1,4 +1,4 @@
-name: "t\u00c6st env2"
+name: "t\u00c6st_env2"
 dependencies:
   - ipykernel
   - python=3
