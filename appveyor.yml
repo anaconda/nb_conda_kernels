@@ -26,8 +26,8 @@ install:
     # including an R kernel, a Python kernel, and environment names with
     # at least one non-ASCII character and one space. Because AppVeyor is
     # difficult to work with for non-ASCII content we're using env files.
-    - conda env create -v -f conda-recipe\testenv1.yaml
-    - conda env create -v -f conda-recipe\testenv2.yaml
+    - conda env create -f conda-recipe\testenv1.yaml
+    - conda env create -f conda-recipe\testenv2.yaml
     - conda info -a
 
 # Skip .NET project specific build phase.
