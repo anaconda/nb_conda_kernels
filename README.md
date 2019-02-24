@@ -121,6 +121,12 @@ This package introduces two additional configuration options:
 
 ## Changelog
 
+### 2.2.1
+
+- Put the default environment back into the conda-env list;
+  the redundancy is worth the elimination of confusion.
+- Fix post-link scripts on windows
+
 ### 2.2.0
 
 - Perform full activation of kernel conda environments
