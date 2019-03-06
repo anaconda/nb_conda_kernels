@@ -25,7 +25,7 @@ will be made available in the selection list.
 ## Installation
 
 This package is designed to be managed solely using `conda`.
-It should be installed in then environment from which
+It should be installed in the environment from which
 you run Jupyter Notebook or JupyterLab. This might be your base
 `conda` environment, but it need not be. For instance,
 if the environment `notebook_env` contains the `notebook`
