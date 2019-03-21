@@ -96,21 +96,23 @@ class CondaKernelSpecManager(KernelSpecManager):
         return self._conda_info_cache
 
     def _all_envs(self):
-        """ Find all of the environments we should be checking. We do not
-            include the current environment, since Jupyter is already
-            picking that up, nor do we include environments that match
-            the env_filter regex. Returns a dict with canonical environment
-            names as keys, and full paths as values.
+        """ Find all of the environments we should be checking. We skip
+            environments in the conda-bld directory as well as environments
+            that match our env_filter regex. Returns a dict with canonical
+            environment names as keys, and full paths as values.
         """
         conda_info = self._conda_info
         envs = conda_info['envs']
         base_prefix = conda_info['conda_prefix']
-        build_prefix = join(base_prefix, 'conda-bld')
+        envs_prefix = join(base_prefix, 'envs')
+        build_prefix = join(base_prefix, 'conda-bld', '') 
         # Older versions of conda do not seem to include the base prefix
         # in the environment list, but we do want to scan that
         if base_prefix not in envs:
             envs.insert(0, base_prefix)
         envs_dirs = conda_info['envs_dirs']
+        if not envs_dirs:
+            envs_dirs = [join(base_prefix, 'envs')]
         all_envs = {}
         for env_path in envs:
             if self.env_filter is not None:
@@ -118,13 +120,25 @@ class CondaKernelSpecManager(KernelSpecManager):
                     continue
             if env_path == base_prefix:
                 env_name = 'root'
+            elif env_path.startswith(build_prefix):
+                # Skip the conda-bld directory entirely
+                continue
             else:
                 env_base, env_name = split(env_path)
-                # Do not include conda-bld environments
-                if env_base == build_prefix:
-                    continue
-                if env_base not in envs_dirs or env_name in all_envs:
-                    env_name = env_path
+                # Add a prefix to environments not found in the default
+                # environment location. The assumed convention is that a
+                # directory named 'envs' is a collection of environments
+                # as created by, say, conda or anaconda-project. The name
+                # of the parent directory, then, provides useful context.
+                if basename(env_base) == 'envs' and (env_base != envs_prefix or env_name in all_envs):
+                    env_name = u'{}-{}'.format(basename(dirname(env_base)), env_name)
+            # Further disambiguate, if necessary, with a counter.
+            if env_name in all_envs:
+                base_name = env_name
+                for count in range(len(all_envs)):
+                    env_name = u'{}-{}'.format(base_name, count + 2)
+                    if env_name not in all_envs:
+                        break
             all_envs[env_name] = env_path
         return all_envs
 
@@ -166,21 +180,13 @@ class CondaKernelSpecManager(KernelSpecManager):
                 elif kernel_name == 'ir':
                     kernel_name = 'r'
                 kernel_prefix = '' if env_name == 'root' else 'env-'
-                kernel_name = u'conda-{}{}-{}'.format(
-                    kernel_prefix, basename(env_name), kernel_name)
+                kernel_name = u'conda-{}{}-{}'.format(kernel_prefix, env_name, kernel_name)
                 # Replace invalid characters with dashes
                 kernel_name = self.clean_kernel_name(kernel_name)
-                # Disambiguate if necessary
-                if kernel_name in all_specs:
-                    base_name = kernel_name
-                    for count in range(len(all_envs)):
-                        kernel_name = '{}-{}'.format(base_name, count + 2)
-                        if kernel_name not in all_specs:
-                            break
                 display_prefix = spec['display_name']
                 if display_prefix.startswith('Python'):
                     display_prefix = 'Python'
-                display_name = self.name_format.format(display_prefix, basename(env_name))
+                display_name = self.name_format.format(display_prefix, env_name)
                 if env_path == sys.prefix:
                     display_name += ' *'
                 spec['display_name'] = display_name

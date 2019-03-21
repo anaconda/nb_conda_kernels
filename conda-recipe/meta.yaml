@@ -32,6 +32,7 @@ test:
     - requests
     - mock
   commands:
+    - python -m nb_conda_kernels list # [py3k]
     - nosetests nb_conda_kernels
 
 about:
