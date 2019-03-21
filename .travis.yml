@@ -32,11 +32,11 @@ install:
   # The tests need to see the Python kernel in the root environment
   - conda install conda-verify conda-build ipykernel anaconda-client
   # We need to create additional environments to fully test the logic,
-  # including an R kernel, a Python kernel, and environment names with
-  # at least one non-ASCII character and one space. Because AppVeyor is
+  # including an R kernel, a Python kernel, and environment names with at
+  # least one non-ASCII character and one space. We also need one environment
+  # installed in a non-default environment location. Because AppVeyor is
   # difficult to work with for non-ASCII content we're using env files.
   - conda env create -f conda-recipe/testenv1.yaml -p $HOME/.conda/envs/test_env1
-  - conda env create -f conda-recipe/testenv1.yaml -p $HOME/test_env1
   - conda env create -f conda-recipe/testenv2.yaml
   - rm -f $HOME/.conda/environments.txt
   - conda info -a
