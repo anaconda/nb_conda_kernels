@@ -96,16 +96,16 @@ class CondaKernelSpecManager(KernelSpecManager):
         return self._conda_info_cache
 
     def _all_envs(self):
-        """ Find all of the environments we should be checking. We do not
-            include the current environment, since Jupyter is already
-            picking that up, nor do we include environments that match
-            the env_filter regex. Returns a dict with canonical environment
-            names as keys, and full paths as values.
+        """ Find all of the environments we should be checking. We skip
+            environments in the conda-bld directory as well as environments
+            that match our env_filter regex. Returns a dict with canonical
+            environment names as keys, and full paths as values.
         """
         conda_info = self._conda_info
         envs = conda_info['envs']
         base_prefix = conda_info['conda_prefix']
-        build_prefix = join(base_prefix, 'conda-bld')
+        envs_prefix = join(base_prefix, 'envs')
+        build_prefix = join(base_prefix, 'conda-bld', '') 
         # Older versions of conda do not seem to include the base prefix
         # in the environment list, but we do want to scan that
         if base_prefix not in envs:
@@ -120,20 +120,18 @@ class CondaKernelSpecManager(KernelSpecManager):
                     continue
             if env_path == base_prefix:
                 env_name = 'root'
+            elif env_path.startswith(build_prefix):
+                # Skip the conda-bld directory entirely
+                continue
             else:
                 env_base, env_name = split(env_path)
-                if env_base == build_prefix:
-                    continue
-                if env_base != base_prefix or env_name in all_envs:
-                    # Add a prefix to environments not found in the default
-                    # environment location. We either use the name of the
-                    # parent directory, or the grandparent if the parent
-                    # has the name 'envs'. This handles scenarios like multiple
-                    # conda installations, anaconda-project instances, etc.
-                    env_base, project_name = split(env_base)
-                    if project_name == 'envs':
-                        project_name = basename(env_base)
-                    env_name = u'{}-{}'.format(project_name, env_name)
+                # Add a prefix to environments not found in the default
+                # environment location. The assumed convention is that a
+                # directory named 'envs' is a collection of environments
+                # as created by, say, conda or anaconda-project. The name
+                # of the parent directory, then, provides useful context.
+                if basename(env_base) == 'envs' and (env_base != envs_prefix or env_name in all_envs):
+                    env_name = u'{}-{}'.format(basename(dirname(env_base)), env_name)
             # Further disambiguate, if necessary, with a counter.
             if env_name in all_envs:
                 base_name = env_name

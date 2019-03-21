@@ -38,6 +38,8 @@ def test_configuration():
             if key.startswith('conda-root-'):
                 checks['root_py'] = True
             if key.startswith('conda-env-'):
+                if len(key.split('-')) >= 5:
+                    checks['env_project'] = True
                 if key.endswith('-py'):
                     checks['env_py'] = True
                 if key.endswith('-r'):
@@ -56,9 +58,10 @@ def test_configuration():
     print('  - Python kernel in other environment: {}'.format(bool(checks.get('env_py'))))
     print('  - R kernel in non-test environment: {}'.format(bool(checks.get('env_r'))))
     print('  - Environment with non-ASCII name: {}'.format(bool(checks.get('env_unicode'))))
+    print('  - External project environment: {}'.format(bool(checks.get('env_project'))))
     # In some conda build scenarios, the test environment is not returned by conda
     # in the listing of conda environments.
-    assert len(checks) >= 6 - ('conda-bld' in prefix)
+    assert len(checks) >= 7 - ('conda-bld' in prefix)
 
 
 if __name__ == '__main__':
