@@ -1,5 +1,6 @@
 import os
 import sys
+import pytest
 
 from nb_conda_kernels.discovery import CondaKernelProvider
 from nb_conda_kernels.manager import RUNNER_COMMAND
@@ -25,7 +26,33 @@ if is_win:
     win32job.AssignProcessToJobObject(hJob, hProcess)
 
 
-def check_exec_in_env(key):
+def find_test_keys():
+    if os.environ.get('CONDA_BUILD'):
+        # The current version of conda build manually adds the activation
+        # directories to the PATH---and then calls the standard conda
+        # activation script, which does it again. This frustrates conda's
+        # ability to deactivate this environment. Most package builds are
+        # not affected by this, but we are, because our tests need to do
+        # environment activation and deactivation. To fix this, we remove
+        # the duplicate PATH entries conda-build added.
+        print('BEFORE: {}'.format(os.environ['PATH']))
+        path_list = os.environ['PATH'].split(os.pathsep)
+        path_dups = set()
+        path_list = [p for p in path_list
+                     if not p.startswith(sys.prefix) or
+                     p not in path_dups and not path_dups.add(p)]
+        os.environ['PATH'] = os.pathsep.join(path_list)
+        print('AFTER: {}'.format(os.environ['PATH']))
+    keys = []
+    for key, _ in provider.find_kernels():
+        assert key.startswith('conda-')
+        if key.endswith('-py') or key.endswith('-r'):
+            keys.append(key)
+    return keys
+
+
+@pytest.mark.parametrize("key", find_test_keys())
+def test_runner(key):
     kernel_manager = provider.make_manager(key)
     if kernel_manager.kernel_spec.argv[:3] == RUNNER_COMMAND:
         env_path = kernel_manager.kernel_spec.argv[4]
@@ -74,29 +101,6 @@ def check_exec_in_env(key):
     assert valid and len(outputs) >= 2 and all(o in (env_path, env_path_fs) for o in outputs[-2:])
 
 
-def test_runner():
-    if os.environ.get('CONDA_BUILD'):
-        # The current version of conda build manually adds the activation
-        # directories to the PATH---and then calls the standard conda
-        # activation script, which does it again. This frustrates conda's
-        # ability to deactivate this environment. Most package builds are
-        # not affected by this, but we are, because our tests need to do
-        # environment activation and deactivation. To fix this, we remove
-        # the duplicate PATH entries conda-build added.
-        print('BEFORE: {}'.format(os.environ['PATH']))
-        path_list = os.environ['PATH'].split(os.pathsep)
-        path_dups = set()
-        path_list = [p for p in path_list
-                     if not p.startswith(sys.prefix) or
-                     p not in path_dups and not path_dups.add(p)]
-        os.environ['PATH'] = os.pathsep.join(path_list)
-        print('AFTER: {}'.format(os.environ['PATH']))
-    for key, _ in provider.find_kernels():
-        assert key.startswith('conda-')
-        if key.endswith('-py') or key.endswith('-r'):
-            yield check_exec_in_env, key
-
-
 if __name__ == '__main__':
-    for func, key in test_runner():
-        func(key)
+    for key in find_test_keys():
+        test_runner(key)

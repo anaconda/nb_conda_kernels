@@ -3,12 +3,14 @@ from __future__ import print_function
 import re
 import os
 import sys
+import json
 import locale
 
 from subprocess import check_output, Popen
 
 is_py2 = sys.version_info.major < 3
 is_win = sys.platform.startswith('win')
+env_cmd = '{} -c "import os,json;print(json.dumps(dict(os.environ)))"'.format(sys.executable)
 
 
 def exec_in_env(conda_root, envname, command, *args):
@@ -23,7 +25,7 @@ def exec_in_env(conda_root, envname, command, *args):
         # For some reason I need to set the code page to utf-8
         # in order to get output that I can later decode using
         # the default encoding (typically 1252/latin-1) downstream
-        ecomm = 'chcp 65001 & call "{}" "{}">nul & set'.format(activate, envname)
+        ecomm = 'chcp 65001 & call "{}" "{}">nul & {}'.format(activate, envname, env_cmd)
         if os.sep in command:
             fullpath = command
         else:
@@ -35,25 +37,24 @@ def exec_in_env(conda_root, envname, command, *args):
         activate = os.path.join(conda_root, 'bin', 'activate')
         activate = re.sub(r'([$"\\])', '\\\g<1>', activate)
         envname = re.sub(r'([$"\\])', '\\\g<1>', envname)
-        ecomm = '. "{}" "{}" >/dev/null && printenv'.format(activate, envname)
+        ecomm = '. "{}" "{}" >/dev/null && {}'.format(activate, envname, env_cmd)
         ecomm = ['bash', '-c', ecomm]
     env = check_output(ecomm, shell=is_win).decode(encoding)
-    env = env.splitlines()
 
     # Extract the path search results (Windows only). The "where"
     # command behaves like "which -a" in Unix, listing *all*
     # locations in the PATH where the executable can be found.
     # We need just the first.
     if is_win and not fullpath:
-        while not env[-1].startswith(u'@@@'):
-            fullpath = env.pop()
-        env.pop()
-        if not fullpath:
+        parts = env.rsplit('@@@\n', 1)
+        if len(parts) != 2 or not parts[1].strip():
             raise RuntimeError('Could not find full path for executable {}'.format(command))
+        fullpath = paths.splitlines()[0]
+        env = parts[0]
 
     # Extract the environment variables from the output, so we can
     # pass them to the kernel process.
-    env = dict(p.split(u'=', 1) for p in env if u'=' in p)
+    env = json.loads(env)
     # Python 2 does not support unicode env dicts
     if is_py2:
         if is_win:
