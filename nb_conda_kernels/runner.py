@@ -31,7 +31,7 @@ def exec_in_env(conda_root, envname, command, *args):
         else:
             # For Windows, we also need to obtain the full path to
             # the target executable.
-            ecomm += ' & echo @@@ & where $path:{}'.format(command)
+            ecomm += ' & where $path:{}'.format(command)
             fullpath = None
     else:
         activate = os.path.join(conda_root, 'bin', 'activate')
@@ -44,13 +44,15 @@ def exec_in_env(conda_root, envname, command, *args):
     # Extract the path search results (Windows only). The "where"
     # command behaves like "which -a" in Unix, listing *all*
     # locations in the PATH where the executable can be found.
-    # We need just the first.
-    if is_win and not fullpath:
-        parts = env.rsplit('@@@\n', 1)
-        if len(parts) != 2 or not parts[1].strip():
-            raise RuntimeError('Could not find full path for executable {}'.format(command))
-        fullpath = paths.splitlines()[0]
-        env = parts[0]
+    # We need just the first. Also ignore the output of chcp.
+    if is_win:
+        rndx = env.rindex('}') + 1
+        if not fullpath:
+            paths = env[rndx:].strip()
+            if not paths:
+                raise RuntimeError('Could not find full path for executable {}'.format(command))
+            fullpath = paths.splitlines()[0]
+        env = env[env.index('{'):rndx]
 
     # Extract the environment variables from the output, so we can
     # pass them to the kernel process.
