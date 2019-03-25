@@ -9,6 +9,8 @@ skip_branch_with_pr: true
 environment:
   PYTHONUNBUFFERED: 1
   MINICONDA: C:\\Miniconda3-x64
+  GITHUB_TOKEN:
+    secure: FD+yykAWTe1d4HOLF23TkNhSnVeOyc213tkRfJxKaXbI7W89Jp9+6X54w8RPfLlW
   ANACONDA_TOKEN:
     secure: J6mabXFRRZxAU+TjkDZv1Hh9/vZNbR6mmrV40amMMyDhXsRwcBMaiMDk2DGZo/6m
   matrix:
@@ -16,6 +18,9 @@ environment:
     - PYTHON_VERSION: 3.6
     - PYTHON_VERSION: 3.5
     - PYTHON_VERSION: 2.7
+
+init:
+    - ps: Write-host $env:GITHUB_TOKEN
 
 install:
     - mkdir C:\Users\appveyor\.conda
@@ -27,7 +32,7 @@ install:
     # least one non-ASCII character and one space. We also need one environment
     # installed in a non-default environment location. Because AppVeyor is
     # difficult to work with for non-ASCII content we're using env files.
-    - conda env create -f conda-recipe\testenv1.yaml -p %HOME%\.conda\envs\test_env1
+    - conda env create -f conda-recipe\testenv1.yaml -p %USERPROFILE%\.conda\envs\test_env1
     - conda env create -f conda-recipe\testenv2.yaml
     - conda info -a
 
