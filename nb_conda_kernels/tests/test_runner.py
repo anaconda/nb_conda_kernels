@@ -1,5 +1,8 @@
+from __future__ import print_function
+
 import os
 import sys
+import json
 import pytest
 
 from nb_conda_kernels.discovery import CondaKernelProvider
@@ -10,6 +13,13 @@ is_py2 = sys.version_info[0] < 3
 
 
 provider = CondaKernelProvider()
+
+
+old_print = print
+def print(x):
+    old_print('\n'.join(json.dumps(y)[1:-1] for y in x.splitlines()))
+    sys.stdout.flush()
+
 
 if is_win:
     # Create a job object and assign ourselves to it, so that
@@ -63,7 +73,7 @@ def test_runner(key):
     valid = False
     outputs = []
     try:
-        print('Starting kernel: {}'.format(key))
+        print('\nStarting kernel: {}'.format(key))
         kernel_manager.start_kernel()
         print('Initializing client')
         client = kernel_manager.client()
@@ -97,7 +107,7 @@ def test_runner(key):
         if kernel_manager.is_alive():
             print('Requesting shutdown')
             kernel_manager.request_shutdown()
-    print(u'{}: {}\n--------\n{}\n--------'.format(key, env_path, '\n'.join(outputs)))
+            kernel_manager.finish_shutdown()
     assert valid and len(outputs) >= 2 and all(o in (env_path, env_path_fs) for o in outputs[-2:])
 
 

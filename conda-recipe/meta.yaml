@@ -33,7 +33,7 @@ test:
     - mock
   commands:
     - python -m nb_conda_kernels list # [py3k]
-    - python -m pytest -v --cov=nb_conda_kernels --pyargs nb_conda_kernels
+    - python -m pytest -vs --cov=nb_conda_kernels --pyargs nb_conda_kernels
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels

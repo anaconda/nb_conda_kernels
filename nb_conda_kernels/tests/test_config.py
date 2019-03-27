@@ -1,3 +1,8 @@
+from __future__ import print_function
+
+import sys
+import json
+
 from sys import prefix
 from nb_conda_kernels.manager import CondaKernelSpecManager, RUNNER_COMMAND
 
@@ -9,8 +14,14 @@ from nb_conda_kernels.manager import CondaKernelSpecManager, RUNNER_COMMAND
 # global environment is ready to receive the other tests.
 
 
+old_print = print
+def print(x):
+    old_print('\n'.join(json.dumps(y)[1:-1] for y in x.splitlines()))
+    sys.stdout.flush()
+
+
 def test_configuration():
-    print('Conda configuration')
+    print('\nConda configuration')
     print('-------------------')
     spec_manager = CondaKernelSpecManager()
     conda_info = spec_manager._conda_info
