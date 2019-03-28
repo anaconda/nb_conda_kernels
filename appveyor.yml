@@ -26,9 +26,10 @@ init:
 
 install:
     - mkdir C:\Users\appveyor\.conda
+    - call %MINICONDA%\Scripts\conda.exe install conda --yes
     - call %MINICONDA%\Scripts\activate.bat
-    - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no  --set safety_checks disabled
-    - conda install conda-verify conda-build ipykernel anaconda-client
+    - conda config --set always_yes yes --set changeps1 no --set safety_checks disabled
+    - conda install -v conda-verify conda-build ipykernel anaconda-client
     # We need to create additional environments to fully test the logic,
     # including an R kernel, a Python kernel, and environment names with at
     # least one non-ASCII character and one space. We also need one environment
