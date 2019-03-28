@@ -7,7 +7,12 @@ import pytest
 
 from nb_conda_kernels.discovery import CondaKernelProvider
 from nb_conda_kernels.manager import RUNNER_COMMAND
+from jupyter_client.blocking.client import Empty
 
+
+START_TIMEOUT = 5
+CMD_TIMEOUT = 1
+NUM_RETRIES = 5
 is_win = sys.platform.startswith('win')
 is_py2 = sys.version_info[0] < 3
 
@@ -69,45 +74,53 @@ def test_runner(key):
     else:
         env_path = sys.prefix
     env_path_fs = env_path.replace('\\', '/')
-    client = None
     valid = False
-    outputs = []
-    try:
-        print('\nStarting kernel: {}'.format(key))
-        kernel_manager.start_kernel()
-        print('Initializing client')
-        client = kernel_manager.client()
-        client.start_channels()
-        client.wait_for_ready(timeout=60)
-        if key.endswith('-r'):
-            commands = ['cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE)',
-                        'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)',
-                        'quit(save="no")']
-        else:
-            commands = ['import os, sys',
-                        'print(os.environ["CONDA_PREFIX"])',
-                        'print(sys.prefix)',
-                        'quit']
-        for command in commands:
-            print('>>> {}'.format(command))
-            m_id = client.execute(command)
-            client.get_shell_msg(m_id)
-            while True:
-                msg = client.get_iopub_msg()['content']
-                if msg.get('execution_state') == 'idle':
-                    break
-                if msg.get('name') == 'stdout':
-                    outputs.append(msg['text'].strip())
-                    print(outputs[-1])
-        valid = True
-    finally:
-        if client is None:
-            print('Cleaning up client')
-            client.stop_channels()
-        if kernel_manager.is_alive():
-            print('Requesting shutdown')
-            kernel_manager.request_shutdown()
-            kernel_manager.finish_shutdown()
+    # For reasons we do not fully understand, the kernels sometimes die immediately
+    # and sometimes hang in this loop. Frankly the purpose of this test is not to
+    # understand why that is but to simply test that a successfully run kernel is
+    # using the correct environment. So we're using a simple retry loop, and we
+    # use a timeout when waiting for messages from the kernel.
+    for tries in range(NUM_RETRIES):
+        outputs = []
+        client = None
+        try:
+            print('\n--- attempt {}'.format(tries+1))
+            kernel_manager.start_kernel()
+            client = kernel_manager.client()
+            client.start_channels()
+            client.wait_for_ready(timeout=START_TIMEOUT)
+            if key.endswith('-r'):
+                commands = ['cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE)',
+                            'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)',
+                            'quit(save="no")']
+            else:
+                commands = ['import os, sys',
+                            'print(os.environ["CONDA_PREFIX"])',
+                            'print(sys.prefix)',
+                            'quit']
+            for command in commands:
+                print('>>> {}'.format(command))
+                m_id = client.execute(command)
+                while True:
+                    msg = client.get_iopub_msg(timeout=CMD_TIMEOUT)['content']
+                    if msg.get('execution_state') == 'idle':
+                        break
+                    if msg.get('name') == 'stdout':
+                        outputs.append(msg['text'].strip())
+                        print(outputs[-1])
+            valid = True
+        except:
+            pass
+        finally:
+            if client is not None:
+                client.stop_channels()
+            if kernel_manager.is_alive():
+                kernel_manager.request_shutdown()
+                kernel_manager.finish_shutdown()
+        if valid:
+            break
+    else:
+        assert False, 'Did not successfully run kernel'
     assert valid and len(outputs) >= 2 and all(o in (env_path, env_path_fs) for o in outputs[-2:])
 
 

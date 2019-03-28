@@ -8,6 +8,8 @@ skip_branch_with_pr: true
 
 environment:
   PYTHONUNBUFFERED: 1
+  PYTHONIOENCODING: utf-8
+  PYTHONLEGACYWINDOWSSTDIO: 1
   MINICONDA: C:\\Miniconda3-x64
   GITHUB_TOKEN:
     secure: FD+yykAWTe1d4HOLF23TkNhSnVeOyc213tkRfJxKaXbI7W89Jp9+6X54w8RPfLlW
