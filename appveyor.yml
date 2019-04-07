@@ -8,6 +8,8 @@ skip_branch_with_pr: true
 
 environment:
   PYTHONUNBUFFERED: 1
+  PYTHONIOENCODING: utf-8
+  PYTHONLEGACYWINDOWSSTDIO: 1
   MINICONDA: C:\\Miniconda3-x64
   GITHUB_TOKEN:
     secure: FD+yykAWTe1d4HOLF23TkNhSnVeOyc213tkRfJxKaXbI7W89Jp9+6X54w8RPfLlW
@@ -24,16 +26,18 @@ init:
 
 install:
     - mkdir C:\Users\appveyor\.conda
+    - call %MINICONDA%\Scripts\conda.exe install conda --yes
     - call %MINICONDA%\Scripts\activate.bat
-    - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no  --set safety_checks disabled
-    - conda install conda-verify conda-build ipykernel anaconda-client
+    - conda config --set always_yes yes --set changeps1 no --set safety_checks disabled
+    - conda install -v conda-verify conda-build ipykernel anaconda-client
     # We need to create additional environments to fully test the logic,
     # including an R kernel, a Python kernel, and environment names with at
     # least one non-ASCII character and one space. We also need one environment
     # installed in a non-default environment location. Because AppVeyor is
     # difficult to work with for non-ASCII content we're using env files.
     - conda env create -f conda-recipe\testenv1.yaml -p %USERPROFILE%\.conda\envs\test_env1
-    - conda env create -f conda-recipe\testenv2.yaml
+    # Too difficult to get AppVeyor to handle Unicode directories
+    - conda env create -f conda-recipe\testenv2.yaml -p %MINICONDA%\envs\test_env2
     - conda info -a
 
 # Skip .NET project specific build phase.
