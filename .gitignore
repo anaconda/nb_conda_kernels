@@ -63,3 +63,5 @@ screenshots/
 # npm
 package-lock.json
 
+# PyCharm
+.idea/

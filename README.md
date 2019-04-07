@@ -82,7 +82,7 @@ This package introduces two additional configuration options:
 2. Create a development environment.
 
    ```shell
-   conda create -n nb_conda_kernels python=YOUR_FAVORITE_PYTHON
+   conda create -n nb_conda_kernels pip python=YOUR_FAVORITE_PYTHON
    # Linux / Mac
    conda activate nb_conda_kernels
    # Windows
@@ -94,7 +94,7 @@ This package introduces two additional configuration options:
 3. Install the source package in development mode.
 
    ```shell
-   python setup.py develop
+   pip install -e .
    python -m nb_conda_kernels.install --enable
    ```
 
@@ -117,9 +117,17 @@ This package introduces two additional configuration options:
    conda env create -f conda-recipe/testenv2.yaml
    ```
 
-5. To run all of the tests, run the command `nosetests`.
+5. To run all of the tests, run the command `pytest -m nb_conda_kernels`.
 
 ## Changelog
+
+### 2.2.2
+
+- Adds project name to kernel name for environments that
+  live outside of the default environment location
+- Improved runner scripts: linear execution, better handling
+  of environment variables
+- Migrate from nosetests to pytest
 
 ### 2.2.1
 
