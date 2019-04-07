@@ -36,7 +36,8 @@ install:
     # installed in a non-default environment location. Because AppVeyor is
     # difficult to work with for non-ASCII content we're using env files.
     - conda env create -f conda-recipe\testenv1.yaml -p %USERPROFILE%\.conda\envs\test_env1
-    - conda env create -f conda-recipe\testenv2.yaml
+    # Too difficult to get AppVeyor to handle Unicode directories
+    - conda env create -f conda-recipe\testenv2.yaml -p %MINICONDA%\envs\test_env2
     - conda info -a
 
 # Skip .NET project specific build phase.

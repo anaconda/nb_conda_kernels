@@ -42,7 +42,7 @@
         this.test.assertExists(visible, "I can see " + message);
         this.screenshot(message);
       });
-  }
+  };
 
   root.canSeeAndClick = function(message, visible, click){
     return this
@@ -52,7 +52,7 @@
         this.screenshot(message);
         this.click(click || visible);
       });
-  }
+  };
 
   root.dragRelease = function(message, selector, opts){
     var it, x, y, x1, y1;
@@ -94,7 +94,7 @@
     // the actual test
     this.set_cell_text(idx, lines.join("\n"));
     this.execute_cell_then(idx);
-  }
+  };
 
   casper.notebook_test_kernel = function(kernel_prefix, kernel_suffix, test) {
     // Wrap a notebook test to reduce boilerplate.

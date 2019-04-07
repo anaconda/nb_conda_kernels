@@ -1,9 +1,8 @@
 notebook
 jupyter_client
 r-irkernel
-nose
-coverage
-mock
 requests
 flake8
-
+pytest
+pytest-cov
+mock
