@@ -40,9 +40,9 @@ def test_configuration():
     for key, value in spec_manager.get_all_specs().items():
         if value['spec']['argv'][:3] == RUNNER_COMMAND:
             long_env = value['spec']['argv'][4]
+            assert long_env == value['spec']['metadata']['conda_env_path']
         else:
             long_env = prefix
-        assert long_env == value['spec']['metadata']['conda_env_path']
         print(u'  - {}: {}'.format(key, long_env))
         if key.startswith('conda-'):
             if long_env == prefix:
