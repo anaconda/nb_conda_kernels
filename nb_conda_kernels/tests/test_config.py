@@ -42,6 +42,7 @@ def test_configuration():
             long_env = value['spec']['argv'][4]
         else:
             long_env = prefix
+        assert long_env == value['spec']['metadata']['conda_env_path']
         print(u'  - {}: {}'.format(key, long_env))
         if key.startswith('conda-'):
             if long_env == prefix:
