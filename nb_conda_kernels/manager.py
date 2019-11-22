@@ -193,6 +193,10 @@ class CondaKernelSpecManager(KernelSpecManager):
                 if env_path != sys.prefix:
                     spec['argv'] = RUNNER_COMMAND + [conda_prefix, env_path] + spec['argv']
                 spec['resource_dir'] = abspath(kernel_dir)
+                spec['metadata'] = {
+                    'conda_env_name': env_name,
+                    'conda_env_path': env_path
+                }
                 all_specs[kernel_name] = spec
         return all_specs
 
