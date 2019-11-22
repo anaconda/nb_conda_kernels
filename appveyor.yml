@@ -14,7 +14,7 @@ environment:
   GITHUB_TOKEN:
     secure: FD+yykAWTe1d4HOLF23TkNhSnVeOyc213tkRfJxKaXbI7W89Jp9+6X54w8RPfLlW
   ANACONDA_TOKEN:
-    secure: J6mabXFRRZxAU+TjkDZv1Hh9/vZNbR6mmrV40amMMyDhXsRwcBMaiMDk2DGZo/6m
+    secure: ARz+fIEDJ03ENwXTyuy0pkzmxddWXFc+pN9+mwBcCnT7ytqlQ/ojcnH3gYsLp9TB
   matrix:
     - PYTHON_VERSION: 3.7
     - PYTHON_VERSION: 3.6
