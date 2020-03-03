@@ -101,7 +101,11 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
         log.info("{}ing nb_conda_kernels...".format(ENDIS[enable][:-2].capitalize()))
 
     is_enabled_entry = False
-    has_entrypoints = int(jc_version.split('.', 1)[0]) >= 6
+    # Disable the entry-point based mechanism. Most if this code will need
+    # to be removed, because the kernel discovery mechanism was changed
+    # before jupyter_client 6 was released. For now we're dropping back to
+    # the jupyter_client 5 model until we leverage the new mechanism.
+    has_entrypoints = False # int(jc_version.split('.', 1)[0]) >= 6
     log.debug('Entry points:')
     for ep in iter_entry_points(group=JCKP):
         log.debug('  - {}'.format(ep))
