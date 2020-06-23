@@ -25,6 +25,7 @@ test:
   source_files:
     - setup.cfg
   requires:
+    - backports.functools_lru_cache # [py2k]
     - pytest
     - pytest-cov
     - ipykernel

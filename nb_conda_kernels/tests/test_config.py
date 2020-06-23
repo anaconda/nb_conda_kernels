@@ -4,6 +4,7 @@ import sys
 import json
 
 from sys import prefix
+import pytest
 from nb_conda_kernels.manager import CondaKernelSpecManager, RUNNER_COMMAND
 
 # The testing regime for nb_conda_kernels is unique, in that it needs to
@@ -80,6 +81,49 @@ def test_configuration():
     if sys.platform.startswith('win'):
         checks.setdefault('env_unicode', False)
     assert len(checks) >= 7
+
+@pytest.mark.parametrize("kernelspec", [
+    {
+        "display_name": "xpython",
+        "argv": [
+            "@XPYTHON_KERNELSPEC_PATH@xpython",
+            "-f",
+            "{connection_file}"
+        ],
+        "language": "python",
+        "metadata": { "debugger": True }
+    }
+])
+def test_kernel_metadata(monkeypatch, tmp_path, kernelspec):
+
+    mock_info = {
+        'conda_prefix': '/'
+    }
+
+    def envs(*args):
+        return {
+            'env_name': str(tmp_path)
+        }
+
+    kernel_file = tmp_path / 'share' / 'jupyter' / 'kernels' / 'my_kernel' / 'kernel.json'
+    kernel_file.parent.mkdir(parents=True, exist_ok=True)
+    if sys.version_info >= (3, 0):
+        kernel_file.write_text(json.dumps(kernelspec))
+    else:
+        kernel_file.write_bytes(json.dumps(kernelspec))
+
+    monkeypatch.setattr(CondaKernelSpecManager, "_conda_info", mock_info)
+    monkeypatch.setattr(CondaKernelSpecManager, "_all_envs", envs)
+
+    manager = CondaKernelSpecManager()
+    specs = manager._all_specs()
+
+    assert len(specs) == 1
+    for spec in specs.values():
+        metadata = spec['metadata']
+        for key, value in kernelspec['metadata'].items():
+            assert key in metadata
+            assert metadata[key] == value
 
 
 if __name__ == '__main__':
