@@ -74,6 +74,18 @@ This package introduces two additional configuration options:
 - `env_filter`: Regex to filter environment path matching it. Default: `None` (i.e. no filter)
 - `name_format`: String name format; `'{0}'` = Language, `'{1}'` = Kernel. Default: `'{0} [conda env:{1}]'`
 
+In order to pass a configuration option in the command line use ```python -m nb_conda_kernels list --CondaKernelSpecManager.env_filter="regex"``` where regex is the regular expression for filtering envs "this|that|and|that" works.
+To set it in jupyter config file, edit the jupyter configuration file (py or json) located in your ```jupyter --config-dir```
+- for `jupyter_notebook_config.py` - add a line "c.CondaKernelSpecManager.env_filter = 'regex'"
+- for `jupyter_notebook_config.json` - add a json key 
+```{
+  "CondaKernelSpecManager": {
+    "env_filter": "regex"
+  ```
+
+- ```python -m nb_conda_kernels list``` does not seem to process jupyter config files
+* filter does not seem to filter out kernels installed with --user, local kernel of the jupyter env, or root kernels
+
 ## Development
 
 1. Install [Anaconda](https://www.anaconda.com/download/) or
