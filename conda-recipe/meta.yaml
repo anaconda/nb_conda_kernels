@@ -27,7 +27,7 @@ test:
   requires:
     - pytest
     - pytest-cov
-    - conda-forge::ipykernel
+    - ipykernel
     - notebook
     - requests
     - mock

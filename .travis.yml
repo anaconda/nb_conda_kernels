@@ -40,6 +40,7 @@ install:
   - conda env create -f conda-recipe/testenv2.yaml
   - rm -f $HOME/.conda/environments.txt
   - conda info -a
+  - conda config --add channels conda-forge
 
 script:
   - conda build conda-recipe --python=$PYTHON_VERSION --no-long-test-prefix
