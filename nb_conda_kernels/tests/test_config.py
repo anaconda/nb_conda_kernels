@@ -107,7 +107,10 @@ def test_kernel_metadata(monkeypatch, tmp_path, kernelspec):
 
     kernel_file = tmp_path / 'share' / 'jupyter' / 'kernels' / 'my_kernel' / 'kernel.json'
     kernel_file.parent.mkdir(parents=True, exist_ok=True)
-    kernel_file.write_text(json.dumps(kernelspec))
+    if sys.version_info >= (3, 0):
+        kernel_file.write_text(json.dumps(kernelspec))
+    else:
+        kernel_file.write_bytes(json.dumps(kernelspec))
 
     monkeypatch.setattr(CondaKernelSpecManager, "_conda_info", mock_info)
     monkeypatch.setattr(CondaKernelSpecManager, "_all_envs", envs)
