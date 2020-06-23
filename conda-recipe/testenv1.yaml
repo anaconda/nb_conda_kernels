@@ -1,5 +1,5 @@
 name: test_env1
 dependencies:
   - r-irkernel
-  - ipykernel
+  - conda-forge::ipykernel
   - python=2
