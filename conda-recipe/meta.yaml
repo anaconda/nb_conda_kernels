@@ -25,6 +25,7 @@ test:
   source_files:
     - setup.cfg
   requires:
+    - backports # [py2k]
     - pytest
     - pytest-cov
     - ipykernel
