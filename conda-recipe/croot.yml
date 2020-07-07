@@ -1,0 +1,13 @@
+name: conda
+dependencies:
+  - python=3.7
+  - conda
+  - conda-build
+  - conda-verify
+  - notebook
+  - jupyter_client
+  - ipykernel
+  - pytest
+  - pytest-cov 
+  - requests 
+  - mock

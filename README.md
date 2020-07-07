@@ -89,47 +89,43 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
 ## Development
 
 1. Install [Anaconda](https://www.anaconda.com/download/) or
-   [Miniconda](https://conda.io/miniconda.html).
+   [Miniconda](https://conda.io/miniconda.html). If you are
+   on Windows, make sure you have a Bash shell on your path.
 
-2. Create a development environment.
+2. Create a testbed environment by running
 
    ```shell
-   conda create -n nb_conda_kernels pip python=YOUR_FAVORITE_PYTHON
-   # Linux / Mac
-   conda activate nb_conda_kernels
-   # Windows
-   activate nb_conda_kernels
-   # Install the package and test dependencies
-   conda install --file requirements.txt
+   bash conda-recipe/build_testbed.sh
    ```
 
-3. Install the source package in development mode.
+   This performs the following steps:
+   - Builds a new _root_ conda environment in ./conda
+   - Installs conda-build and the necessary dependencies to
+     locally test the package
+   - Installs the package in development mode
+   - Creates a set of environments that the tests scripts
+     require to fully exercise the package.
+
+3. To test the package, activate this environment and run pytest.
 
    ```shell
+   source conda/bin/activate
+   pytest nb_conda_kernels
+   ```
+
+4. The root environment of our testbed uses Python 3.7. If you would
+   like to test `nb_conda_kernels` with a different Python version,
+   create a new child environment:
+
+   ```shell
+   conda create -n ptest python=... jupyter_client
+   conda activate ptest
    pip install -e .
    python -m nb_conda_kernels.install --enable
+   conda install pytest pytest-cov ipykernel notebook requests mock
+   conda install backports.functools_lru_cache # python 2 only
+   pytest nb_conda_kernels
    ```
-
-   Note: there is no longer any need to supply a
-   `--prefix` argument to the installer.
-
-4. In order to properly exercise the package, the
-   tests assume a number of requirements:
-   - `ipykernel` in the base/root environment
-   - one additional environment with `ipykernel`
-   - one environment with `r-irkernel`
-   - one environment with a space in the name
-   - one environment with a non-ASCII character in the name
-
-   An easy way to accomplish this is to use the environment
-   specifications in the `conda-recipe` directory:
-   ```shell
-   conda install -n root ipykernel
-   conda env create -f conda-recipe/testenv1.yaml
-   conda env create -f conda-recipe/testenv2.yaml
-   ```
-
-5. To run all of the tests, run the command `pytest -m nb_conda_kernels`.
 
 ## Changelog
 
