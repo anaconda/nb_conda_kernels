@@ -32,14 +32,14 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ./LICENSE
-        key: key-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}-2
+        key: key-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
     - id: cache
       name: Retrieve or create the conda cache
       if: steps.cache-key.outputs.cache-hit != 'true'
       uses: actions/cache@v2
       with:
         path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}-2
+        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
     - name: Verify or build the testbed
       if: steps.cache-key.outputs.cache-hit != 'true'
       # The argument tells the script we are in caching mode
@@ -71,11 +71,13 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}-2
+        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
     - name: Verify or build the testbed
       run: conda-recipe/build_testbed.sh
     - name: Build the package
       run: |
+        mkdir -p ~/.conda
+        echo $CONDA_ROOT/ext1/ext2/env/test_env1 > ~/.conda/environments.txt
         source $CONDA_ROOT/etc/profile.d/conda.sh
         conda build conda-recipe --python=${{ matrix.pyver }}
     - name: Upload to anaconda.org
