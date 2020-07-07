@@ -14,10 +14,6 @@ echo "Testbed location: $CONDA_ROOT"
 function finish {
     # Populate the environments.txt list if it doesn't exist
     # to make sure the off-location environment gets picked up
-    if [ ! -f ~/.conda/environments.txt ]; then
-        mkdir -p ~/.conda
-        echo $CONDA_ROOT/ext1/ext2/env/test_env1 >> ~/.conda/environments.txt
-    fi
     conda info
     conda info --envs
     exit 0

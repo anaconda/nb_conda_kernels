@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import json
+import time
 import pytest
 
 from nb_conda_kernels.discovery import CondaKernelProvider
@@ -10,7 +11,7 @@ from nb_conda_kernels.manager import RUNNER_COMMAND
 from jupyter_client.blocking.client import Empty
 
 
-START_TIMEOUT = 5
+START_TIMEOUT = 10
 CMD_TIMEOUT = 1
 NUM_RETRIES = 5
 is_win = sys.platform.startswith('win')
@@ -110,6 +111,7 @@ def test_runner(key):
                         print(outputs[-1])
             valid = True
         except:
+            time.sleep(CMD_TIMEOUT)
             pass
         finally:
             if client is not None:
