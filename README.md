@@ -129,6 +129,19 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
 
 ## Changelog
 
+### 2.2.4
+
+- Tested support for noarch packages
+- Windows bug fixes
+- Better documentation for `env_filter`
+- Fixes to kernel metadata
+
+### 2.2.3
+
+- Restore compatibiltiy with Jupyter V6
+- Testing and support for Python 3.8
+- Enhanced kernelSpec metadata
+
 ### 2.2.2
 
 - Adds project name to kernel name for environments that
