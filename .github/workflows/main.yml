@@ -130,4 +130,7 @@ jobs:
         conda install anaconda-client
         git tag describe --exact-match --tags HEAD || export LABEL="--label dev"
         anaconda --verbose --token $ANACONDA_TOKEN upload --user jupycon $LABEL conda-bld/*/*.tar.bz2 --force
- 
+    - name: Clean up older artifacts
+      uses: glassechidna/artifact-cleaner@master
+      with:
+        minimumAge: 86400
