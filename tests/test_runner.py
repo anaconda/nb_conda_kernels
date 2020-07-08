@@ -12,8 +12,8 @@ from jupyter_client.blocking.client import Empty
 
 
 START_TIMEOUT = 10
-CMD_TIMEOUT = 1
-NUM_RETRIES = 5
+CMD_TIMEOUT = 3
+NUM_RETRIES = 10
 is_win = sys.platform.startswith('win')
 is_py2 = sys.version_info[0] < 3
 

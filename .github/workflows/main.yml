@@ -107,8 +107,9 @@ jobs:
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
         conda activate ptest
-        export PYTHONIOENCODING=UTF-8
-        pytest -v --cov=nb_conda_kernels tests | tee pytest.log
+        [ "$RUNNER_OS" == "Windows" ] && export PYTHONIOENCODING=UTF-8
+        pytest -vs --cov=nb_conda_kernels tests | tee pytest.log
+        # Because Windows refuses to preserve the error code
         if grep ' FAILED ' pytest.log; then exit -1; fi
   upload:
     runs-on: ubuntu-latest
