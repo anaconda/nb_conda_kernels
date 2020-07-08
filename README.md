@@ -95,22 +95,23 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
 2. Create a testbed environment by running
 
    ```shell
-   bash conda-recipe/build_testbed.sh
+   bash testbed/build.sh
    ```
 
    This performs the following steps:
-   - Builds a new _root_ conda environment in ./conda
+   - Builds a new root conda environment in `./conda`,
+     or in `CONDA_ROOT` if that environment variable is defined
    - Installs conda-build and the necessary dependencies to
      locally test the package
    - Installs the package in development mode
-   - Creates a set of environments that the tests scripts
+   - Creates a set of environments that the test scripts
      require to fully exercise the package.
 
 3. To test the package, activate this environment and run pytest.
 
    ```shell
    source conda/bin/activate
-   pytest nb_conda_kernels
+   pytest tests
    ```
 
 4. The root environment of our testbed uses Python 3.7. If you would
@@ -118,13 +119,12 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
    create a new child environment:
 
    ```shell
-   conda create -n ptest python=... jupyter_client
+   conda create -n ptest python=... notebook pytest pytest-cov requests mock
+   conda install backports.functools_lru_cache # python 2 only
    conda activate ptest
    pip install -e .
    python -m nb_conda_kernels.install --enable
-   conda install pytest pytest-cov ipykernel notebook requests mock
-   conda install backports.functools_lru_cache # python 2 only
-   pytest nb_conda_kernels
+   pytest tests
    ```
 
 ## Changelog

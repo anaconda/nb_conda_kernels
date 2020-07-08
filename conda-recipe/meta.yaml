@@ -9,32 +9,25 @@ source:
 
 build:
   number: 0
+  noarch: python
   script:
-    - python setup.py install --single-version-externally-managed --record=record.txt
+    - python -m pip install --no-deps --ignore-installed .
 
 requirements:
   host:
     - python
-    - setuptools
+    - pip
   run:
     - python
-    - pywin32 # [win]
-    - jupyter_client >=4.2
+    - notebook >=4.2
 
 test:
-  source_files:
-    - setup.cfg
   requires:
-    - backports.functools_lru_cache # [py2k]
-    - pytest
-    - pytest-cov
-    - ipykernel
-    - notebook
-    - requests
-    - mock
+    - pip
   commands:
-    - python -m nb_conda_kernels list # [py3k]
-    - python -m pytest -v --cov=nb_conda_kernels --pyargs nb_conda_kernels
+    - pip check
+  imports:
+    - nb_conda_kernels
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels

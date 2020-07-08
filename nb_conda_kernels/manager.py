@@ -163,8 +163,9 @@ class CondaKernelSpecManager(KernelSpecManager):
             kspec_glob = glob.glob(join(kspec_base, '*', 'kernel.json'))
             for spec_path in kspec_glob:
                 try:
-                    with open(spec_path) as fp:
-                        spec = json.load(fp)
+                    with open(spec_path, 'rb') as fp:
+                        data = fp.read()
+                    spec = json.loads(data.decode('utf-8'))
                 except Exception as err:
                     self.log.error("[nb_conda_kernels] error loading %s:\n%s",
                                    spec_path, err)

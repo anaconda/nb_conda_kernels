@@ -7,6 +7,22 @@ on:
     branches:
       - master
 jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Retrieve the source code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Build the package
+      run: |
+        conda install -y conda-build conda-verify
+        conda build conda-recipe --no-test
+    - name: Upload the build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: package-${{ github.sha }}
+        path: /usr/share/miniconda/conda-bld
   testbed:
     defaults:
       run:
@@ -32,24 +48,24 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ./LICENSE
-        key: key-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
+        key: key-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - id: cache
       name: Retrieve or create the conda cache
       if: steps.cache-key.outputs.cache-hit != 'true'
       uses: actions/cache@v2
       with:
         path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
+        key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Verify or build the testbed
       if: steps.cache-key.outputs.cache-hit != 'true'
       # The argument tells the script we are in caching mode
-      run: conda-recipe/build_testbed.sh
+      run: testbed/build.sh
   tests:
     defaults:
       run:
         shell: bash
     runs-on: ${{ matrix.os }}
-    needs: testbed
+    needs: [testbed,package]
     strategy:
       fail-fast: false
       matrix:
@@ -71,23 +87,47 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
+        key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Verify or build the testbed
-      run: conda-recipe/build_testbed.sh
-    - name: Build the package
+      run: testbed/build.sh
+    - name: Download the build artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: package-${{ github.sha }}
+        path: conda-bld
+    - name: Create the test environment
       run: |
         mkdir -p ~/.conda
+        mv conda-bld $CONDA_ROOT/conda-bld
         echo $CONDA_ROOT/ext1/ext2/env/test_env1 > ~/.conda/environments.txt
         source $CONDA_ROOT/etc/profile.d/conda.sh
-        conda build conda-recipe --python=${{ matrix.pyver }}
-    - name: Upload to anaconda.org
-      if: github.event_name == 'push'
-      env:
-        ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+        [ "${{ matrix.pyver }}" == "2.7" ] && BACKPORT="backports.functools_lru_cache"
+        conda create -y -n ptest local::nb_conda_kernels python=${{ matrix.pyver }} pytest pytest-cov requests mock $BACKPORT
+    - name: Test the package
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
+        conda activate ptest
+        [ "$RUNNER_OS" == "Windows" ] && export PYTHONIOENCODING=UTF-8
+        pytest -vs --cov=nb_conda_kernels tests | tee pytest.log
+        # Because Windows refuses to preserve the error code
+        if grep ' FAILED ' pytest.log; then exit -1; fi
+  upload:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: tests
+    env:
+      ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+    steps:
+    - name: Download the build artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: package-${{ github.sha }}
+        path: conda-bld
+    - name: Upload to anaconda.org
+      run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate
         conda install anaconda-client
         git tag describe --exact-match --tags HEAD || export LABEL="--label dev"
-        anaconda --verbose --token $ANACONDA_TOKEN upload --user jupycon $LABEL $CONDA_PREFIX/conda-bld/*/*.tar.bz2 --force
+        anaconda --verbose --token $ANACONDA_TOKEN upload --user jupycon $LABEL conda-bld/*/*.tar.bz2 --force
  

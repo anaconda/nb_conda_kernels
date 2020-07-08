@@ -27,8 +27,10 @@ if [ -d $CONDA_ROOT/conda-meta ]; then
     finish
 fi
 
-# Create the root environment
 ${CONDA_EXE:-conda} env create -f $cwd/croot.yml -p $CONDA_ROOT
+if [[ "$RUNNER_OS" == "" && "$OS" == "Windows_NT" ]]; then
+	conda install -y -p $CONDA_ROOT m2-bash m2-coreutils m2-filesystem
+fi
 source $CONDA_ROOT/etc/profile.d/conda.sh
 conda activate base
 echo "CONDA_ROOT: "$CONDA_ROOT
