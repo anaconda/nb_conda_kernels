@@ -75,7 +75,6 @@ def test_runner(key):
     else:
         env_path = sys.prefix
     env_path = os.path.normcase(os.path.normpath(env_path))
-    print(env_path)
     valid = False
     # For reasons we do not fully understand, the kernels sometimes die immediately
     # and sometimes hang in this loop. Frankly the purpose of this test is not to

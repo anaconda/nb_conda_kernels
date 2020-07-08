@@ -107,7 +107,9 @@ jobs:
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
         conda activate ptest
-        pytest -v --cov=nb_conda_kernels tests || exit -1
+        export PYTHONIOENCODING=UTF-8
+        pytest -v --cov=nb_conda_kernels tests | tee pytest.log
+        if grep ' FAILED ' pytest.log; then exit -1; fi
   upload:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
