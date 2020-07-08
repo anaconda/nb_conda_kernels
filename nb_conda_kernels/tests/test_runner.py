@@ -74,7 +74,8 @@ def test_runner(key):
         env_path = kernel_manager.kernel_spec.argv[4]
     else:
         env_path = sys.prefix
-    env_path_fs = env_path.replace('\\', '/')
+    env_path = os.path.normcase(os.path.normpath(env_path))
+    print(env_path)
     valid = False
     # For reasons we do not fully understand, the kernels sometimes die immediately
     # and sometimes hang in this loop. Frankly the purpose of this test is not to
@@ -123,7 +124,9 @@ def test_runner(key):
             break
     else:
         assert False, 'Did not successfully run kernel'
-    assert valid and len(outputs) >= 2 and all(o in (env_path, env_path_fs) for o in outputs[-2:])
+    assert valid and len(outputs) >= 2
+    for o in outputs[-2:]:
+        assert os.path.normcase(os.path.normpath(o)) == env_path, (o, env_path)
 
 
 if __name__ == '__main__':
