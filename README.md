@@ -119,12 +119,11 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
    create a new child environment:
 
    ```shell
-   conda create -n ptest python=... jupyter_client
+   conda create -n ptest python=... notebook pytest pytest-cov requests mock
+   conda install backports.functools_lru_cache # python 2 only
    conda activate ptest
    pip install -e .
    python -m nb_conda_kernels.install --enable
-   conda install pytest pytest-cov ipykernel notebook requests mock
-   conda install backports.functools_lru_cache # python 2 only
    pytest tests
    ```
 

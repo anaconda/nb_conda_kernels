@@ -16,7 +16,7 @@ def exec_in_env(conda_root, envname, *command):
     if sys.platform.startswith('win'):
         activate = os.path.join(conda_root, 'Scripts', 'activate.bat')
         ecomm = [os.environ['COMSPEC'], '/S', '/U', '/C', '@echo', 'off', '&&',
-                 'chcp', '&&', 'call', activate, envname, '&&'] + list(command)
+                 'chcp', '65001', '&&', 'call', activate, envname, '&&'] + list(command)
         subprocess.Popen(ecomm).wait()
     else:
         command = ' '.join(quote(c) for c in command)
