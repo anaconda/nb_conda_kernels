@@ -33,6 +33,7 @@ def test_install():
                      ('status', STATUS, IS_DISABLED),
                      ('enable', ENABLING, IS_ENABLED),
                      ('status', STATUS, IS_ENABLED)):
+            print(test)
             check_command_(*test, verbose=verbose)
 
 

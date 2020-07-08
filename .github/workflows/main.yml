@@ -107,7 +107,7 @@ jobs:
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
         conda activate ptest
-        pytest -v --cov=nb_conda_kernels tests
+        pytest -v --cov=nb_conda_kernels tests || exit -1
   upload:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
