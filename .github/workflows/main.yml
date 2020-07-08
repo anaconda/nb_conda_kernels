@@ -48,18 +48,18 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ./LICENSE
-        key: key-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
+        key: key-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - id: cache
       name: Retrieve or create the conda cache
       if: steps.cache-key.outputs.cache-hit != 'true'
       uses: actions/cache@v2
       with:
         path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
+        key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Verify or build the testbed
       if: steps.cache-key.outputs.cache-hit != 'true'
       # The argument tells the script we are in caching mode
-      run: conda-recipe/build_testbed.sh
+      run: testbed/build.sh
   tests:
     defaults:
       run:
@@ -87,9 +87,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('conda-recipe') }}
+        key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Verify or build the testbed
-      run: conda-recipe/build_testbed.sh
+      run: testbed/build.sh
     - name: Download the build artifact
       uses: actions/download-artifact@v2
       with:
@@ -107,7 +107,7 @@ jobs:
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
         conda activate ptest
-        pytest -v --cov=nb_conda_kernels --pyargs nb_conda_kernels
+        pytest -v --cov=nb_conda_kernels tests
   upload:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'

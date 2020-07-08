@@ -27,7 +27,6 @@ if [ -d $CONDA_ROOT/conda-meta ]; then
     finish
 fi
 
-# Create the root environment
 ${CONDA_EXE:-conda} env create -f $cwd/croot.yml -p $CONDA_ROOT
 source $CONDA_ROOT/etc/profile.d/conda.sh
 conda activate base
