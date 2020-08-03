@@ -92,25 +92,32 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
    [Miniconda](https://conda.io/miniconda.html). If you are
    on Windows, make sure you have a Bash shell on your path.
 
-2. Create a testbed environment by running
+2. Create and activate the testbed environment by running
 
    ```shell
-   bash testbed/build.sh
+   source testbed/build.sh
    ```
 
    This performs the following steps:
-   - Builds a new root conda environment in `./conda`,
-     or in `CONDA_ROOT` if that environment variable is defined
+   - Builds a new root conda environment in `../nbckdev`,
+     or in `CONDA_ROOT` if that environment variable is defined.
+     (Note that the default directory `../nbckdev` is at the same
+     level as your copy of the repository. This is because we do
+     not want `conda build` to try to capture the entire testbed
+     into the build workspace.)
    - Installs conda-build and the necessary dependencies to
      locally test the package
    - Installs the package in development mode
    - Creates a set of environments that the test scripts
      require to fully exercise the package.
+   - Activates the environment.
 
-3. To test the package, activate this environment and run pytest.
+   If the environment already exists, `testbed/build.sh` will
+   quickly exit, so it is safe to run it if you are not sure.
+
+3. Run pytest to test the package.
 
    ```shell
-   source conda/bin/activate
    pytest tests
    ```
 
