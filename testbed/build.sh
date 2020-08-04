@@ -6,7 +6,7 @@
 
 # Determine the root location of the testbed
 cwd=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
-[ $CONDA_ROOT ] || CONDA_ROOT=${cwd%/*}/conda
+[ $CONDA_ROOT ] || CONDA_ROOT=${cwd%/*/*}/nbckdev
 mkdir -p $CONDA_ROOT
 export CONDA_ROOT=$(cd $CONDA_ROOT && pwd)
 echo "Testbed location: $CONDA_ROOT"
@@ -22,6 +22,12 @@ function finish {
 # Exit quickly if the cached version is available. See the end of
 # the script for the explanation why we do it this way
 if [ -d $CONDA_ROOT/conda-meta ]; then
+    # Make sure the external environment is in the environments.txt file
+    ext_env=$CONDA_ROOT/ext1/ext2/env/test_env1
+    if ! grep -q "^$ext_env" ~/.conda/environments.txt 2>/dev/null; then
+        mkdir -p ~/.conda
+        echo $ext_env >> ~/.conda/environments.txt
+    fi
     source $CONDA_ROOT/etc/profile.d/conda.sh
     conda activate base
     finish

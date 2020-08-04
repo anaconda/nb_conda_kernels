@@ -6,27 +6,11 @@ on:
   pull_request:
     branches:
       - master
+defaults:
+  run:
+    shell: bash
 jobs:
-  package:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Retrieve the source code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Build the package
-      run: |
-        conda install -y conda-build conda-verify
-        conda build conda-recipe --no-test
-    - name: Upload the build artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: package-${{ github.sha }}
-        path: /usr/share/miniconda/conda-bld
   testbed:
-    defaults:
-      run:
-        shell: bash
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -61,16 +45,13 @@ jobs:
       # The argument tells the script we are in caching mode
       run: testbed/build.sh
   tests:
-    defaults:
-      run:
-        shell: bash
     runs-on: ${{ matrix.os }}
-    needs: [testbed,package]
+    needs: testbed
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest,ubuntu-latest,windows-latest]
-        pyver: [3.6,3.7,3.8,2.7]
+        pyver: [2.7,3.6,3.7,3.8]
     steps:
     - name: Retrieve the source code
       uses: actions/checkout@v2
@@ -90,44 +71,41 @@ jobs:
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Verify or build the testbed
       run: testbed/build.sh
-    - name: Download the build artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: package-${{ github.sha }}
-        path: conda-bld
-    - name: Create the test environment
-      run: |
-        mkdir -p ~/.conda
-        mv conda-bld $CONDA_ROOT/conda-bld
-        echo $CONDA_ROOT/ext1/ext2/env/test_env1 > ~/.conda/environments.txt
-        source $CONDA_ROOT/etc/profile.d/conda.sh
-        [ "${{ matrix.pyver }}" == "2.7" ] && BACKPORT="backports.functools_lru_cache"
-        conda create -y -n ptest local::nb_conda_kernels python=${{ matrix.pyver }} pytest pytest-cov requests mock $BACKPORT
-    - name: Test the package
+    - name: Build and test the package
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
-        conda activate ptest
-        [ "$RUNNER_OS" == "Windows" ] && export PYTHONIOENCODING=UTF-8
-        pytest -vs --cov=nb_conda_kernels tests | tee pytest.log
+        conda build conda-recipe --python=${{ matrix.pyver }} | tee build.log
         # Because Windows refuses to preserve the error code
         if grep ' FAILED ' pytest.log; then exit -1; fi
+        mv $CONDA_ROOT/conda-bld .
+    - name: Upload the build artifact
+      if: github.event_name == 'push'
+      uses: actions/upload-artifact@v2
+      with:
+        # By uploading to the same artifact we can download all of the packages
+        # and upload them all to anaconda.org in a single job
+        name: package-${{ github.sha }}
+        path: conda-bld/*/*.tar.bz2
   upload:
+    needs: tests
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: tests
-    env:
-      ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
     steps:
-    - name: Download the build artifact
+    - name: Retrieve the source code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Download the build artifacts
       uses: actions/download-artifact@v2
       with:
         name: package-${{ github.sha }}
         path: conda-bld
     - name: Upload to anaconda.org
+      env:
+        ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
       run: |
-        source /usr/share/miniconda/etc/profile.d/conda.sh
-        conda activate
-        conda install anaconda-client
+        source $CONDA/bin/activate
+        conda install -y anaconda-client
         git tag describe --exact-match --tags HEAD || export LABEL="--label dev"
         anaconda --verbose --token $ANACONDA_TOKEN upload --user jupycon $LABEL conda-bld/*/*.tar.bz2 --force
     - name: Clean up older artifacts
