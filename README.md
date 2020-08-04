@@ -110,7 +110,8 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
    - Installs the package in development mode
    - Creates a set of environments that the test scripts
      require to fully exercise the package.
-   - Activates the environment.
+   - Activates the environment, including a deliberate scrubbing
+     of variables and paths from your primary conda environment.
 
    If the environment already exists, `testbed/build.sh` will
    quickly exit, so it is safe to run it if you are not sure.
