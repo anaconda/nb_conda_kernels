@@ -143,7 +143,7 @@ def test_remove_kernelspec(tmp_path, kernel_name, expected):
     config = Config({"CondaKernelSpecManager": {"kernelspec_path": ""}})
     kernel_spec = tmp_path / kernel_name / "kernel.json"
     kernel_spec.parent.mkdir()
-    kernel_spec.write_text("{}")
+    kernel_spec.write_bytes(b"{}")
     with patch("nb_conda_kernels.manager.CondaKernelSpecManager.install_kernel_spec") as install:
         install.return_value = str(tmp_path)
         with patch("nb_conda_kernels.manager.CondaKernelSpecManager._get_destination_dir") as destination:
