@@ -60,7 +60,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             nfkd_form = unicodedata.normalize('NFKD', kname)
             kname = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
         # Replace anything else, including spaces, with underscores
-        kname = re.sub('[^a-zA-Z0-9._\-]', '_', kname)
+        kname = re.sub(r'[^a-zA-Z0-9._\-]', '_', kname)
         return kname
 
     @property
@@ -246,7 +246,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         """ Returns a :class:`KernelSpec` instance for the given kernel_name.
 
             Additionally, conda kernelspecs are generated on the fly
-            accordingly with the detected envitonments.
+            accordingly with the detected environments.
         """
 
         res = self._conda_kspecs.get(kernel_name)
