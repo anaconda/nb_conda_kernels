@@ -222,7 +222,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         self._conda_kernels_cache = kspecs
         return kspecs
 
-    def find_kernel_specs(self, skip_base=False):
+    def find_kernel_specs(self):
         """ Returns a dict mapping kernel names to resource directories.
 
             The update process also adds the resource dir for the conda
