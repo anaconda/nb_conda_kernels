@@ -39,7 +39,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         - ``PREFIX``: Specify an install prefix for the kernelspec. The kernel specs will be
         written in ``PREFIX/share/jupyter/kernels``. Be careful that the PREFIX
         may not be discoverable by Jupyter; set JUPYTER_DATA_DIR to force it or run 
-        ``jupyter --paths`` to ge the list of data directories.
+        ``jupyter --paths`` to get the list of data directories.
         
         If None, the conda kernel specs will only be available dynamically on notebook editors.
         """)
