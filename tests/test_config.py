@@ -1,11 +1,18 @@
 from __future__ import print_function
 
-import sys
 import json
-
+import os
+import sys
 from sys import prefix
+
+try:
+    from unittest.mock import call, patch
+except ImportError:
+    from mock import call, patch  # py2
+
 import pytest
-from nb_conda_kernels.manager import CondaKernelSpecManager, RUNNER_COMMAND
+from traitlets.config import Config, TraitError
+from nb_conda_kernels.manager import RUNNER_COMMAND, CondaKernelSpecManager
 
 # The testing regime for nb_conda_kernels is unique, in that it needs to
 # see an entire conda installation with multiple environments and both
@@ -81,6 +88,43 @@ def test_configuration():
     if sys.platform.startswith('win'):
         checks.setdefault('env_unicode', False)
     assert len(checks) >= 7
+
+
+@pytest.mark.parametrize("config, user, prefix, expected", [
+    (
+        {"CondaKernelSpecManager": {"kernelspec_path": ""}}, 
+        False, "", ""),  # Usually it is not allowed to write at system level
+    (
+        {"CondaKernelSpecManager": {"kernelspec_path": "--user"}}, 
+        True, None, "--user"),
+    (
+        {"CondaKernelSpecManager": {"kernelspec_path": "--sys-prefix"}}, 
+        False, sys.prefix, "--sys-prefix"),
+    (
+        {"CondaKernelSpecManager": {"kernelspec_path": os.path.dirname(__file__)}}, 
+        False, os.path.dirname(__file__), os.path.dirname(__file__)),
+    (
+        {"CondaKernelSpecManager": {"kernelspec_path": "/dummy/path"}}, 
+        False, None, TraitError),
+    (
+        {"CondaKernelSpecManager": {"kernelspec_path": __file__}}, 
+        False, None, TraitError),
+])
+def test_kernelspec_path(tmpdir, config, user, prefix, expected):
+
+    with patch("nb_conda_kernels.manager.CondaKernelSpecManager.install_kernel_spec") as install:
+        install.return_value = str(tmpdir)
+        if isinstance(expected, type) and issubclass(expected, Exception):
+            with pytest.raises(expected):
+                CondaKernelSpecManager(config=Config(config))
+        else:
+            spec_manager = CondaKernelSpecManager(config=Config(config))
+            assert spec_manager.kernelspec_path == expected
+            assert spec_manager.conda_only == (spec_manager.kernelspec_path is not None)
+            for call_ in install.call_args_list:
+                assert call_[1]["user"] == user
+                assert call_[1]["prefix"] ==prefix
+
 
 @pytest.mark.parametrize("kernelspec", [
     {

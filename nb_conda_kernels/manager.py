@@ -49,8 +49,8 @@ class CondaKernelSpecManager(KernelSpecManager):
         new_value = proposal["value"]
         if new_value is not None:
             if new_value not in ("", "--user", "--sys-prefix"):
-                if not os.path.exists(self.kernelspec_path) or not os.path.isdir(self.kernelspec_path):
-                    raise TraitError("CondaKernelSpecManager.kernelspec_path does not a valid prefix directory.")
+                if not os.path.isdir(self.kernelspec_path):
+                    raise TraitError("CondaKernelSpecManager.kernelspec_path is not a directory.")
             self.log.debug("[nb_conda_kernels] Force conda_only=True as kernelspec_path is not None.")
             self.conda_only = True
         
