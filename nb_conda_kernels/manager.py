@@ -23,7 +23,7 @@ class CondaKernelSpecManager(KernelSpecManager):
     """ A custom KernelSpecManager able to search for conda environments and
         create kernelspecs for them.
     """
-    conda_only = Bool(False,
+    conda_only = Bool(False, config=True,
                       help="Include only the kernels not visible from Jupyter normally")
 
     env_filter = Unicode(None, config=True, allow_none=True,
