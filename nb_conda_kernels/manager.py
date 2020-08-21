@@ -250,7 +250,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     with open(kernel_spec, "w") as f:
                         json.dump(spec, f)
                 
-                # resource_dir is not part of the dump file, so it is added at the latest time
+                # resource_dir is not part of the spec file, so it is added at the latest time
                 spec['resource_dir'] = abspath(kernel_dir)
 
                 all_specs[kernel_name] = spec
@@ -285,7 +285,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                 prefix=self._kernel_prefix
             )
             for folder in glob.glob(join(kernels_destination, "*", "kernel.json")):
-                kernel_dir = dirname(folder)
+                kernel_dir = basename(dirname(folder))
                 if kernel_dir.startswith("conda-") and kernel_dir not in kspecs:
                     self.remove_kernel_spec(kernel_dir)
 
