@@ -76,7 +76,7 @@ jobs:
         source $CONDA_ROOT/etc/profile.d/conda.sh
         conda build conda-recipe --python=${{ matrix.pyver }} | tee build.log
         # Because Windows refuses to preserve the error code
-        if grep ' FAILED ' pytest.log; then exit -1; fi
+        if grep ' FAILED ' build.log; then exit -1; fi
         mv $CONDA_ROOT/conda-bld .
     - name: Upload the build artifact
       if: github.event_name == 'push'
