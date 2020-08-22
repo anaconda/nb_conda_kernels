@@ -52,9 +52,17 @@ fi
 
 # Make sure the external environment is in the environments.txt file
 ext_env=$CONDA_ROOT/ext1/ext2/env/test_env1
-if ! grep -q "^$ext_env" ~/.conda/environments.txt 2>/dev/null; then
-    mkdir -p ~/.conda
-    echo $ext_env >> ~/.conda/environments.txt
+if [ "$OS" == "Windows_NT" ]; then
+    CONDA_HOME=$USERPROFILE
+    ext_env=$(echo $ext_env | sed -E 's@^/([^/]*)@\U\1:@;s@/@\\@g')
+    ext_env_g=^$(echo $ext_env | sed -E 's@\\@\\\\@g')
+else
+    CONDA_HOME=$HOME
+    ext_env_g=^$ext_env
+fi
+if ! grep -q "$ext_env_g" $CONDA_HOME/environments.txt 2>/dev/null; then
+    mkdir -p $CONDA_HOME/.conda
+    echo "$ext_env" >> $CONDA_HOME/.conda/environments.txt
 fi
 
 # Display final result
