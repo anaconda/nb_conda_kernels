@@ -53,38 +53,75 @@ conda install -n r_env r-irkernel
 For other languages, their [corresponding kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels)
 must be installed.
 
-### Limitations
+### Use with nbconvert, voila, papermill,...
 
-This extension works _only_ with Jupyter notebooks and
-JupyterLab. Unfortunately, it does not currently work with
-Jupyter Console, `nbconvert`, and other tools. This is because
-these tools were not designed to allow for the use of custom
-KernelSpecs.
+This extension works out of the box _only_ with Jupyter notebooks and
+JupyterLab.
 
-A new [kernel discovery system](https://jupyter-client.readthedocs.io/en/latest/kernel_providers.html)
-is being developed for Jupyter 6.0 that should enable the
+A new [kernel discovery system](https://github.com/jupyter/jupyter_server/pull/112)
+is being developed that should enable the 
 wider Jupyter ecosystem to take advantage of these external
 kernels. This package will require modification to
 function properly in this new system.
+
+But you can activate a workaround for it to work with 
+Jupyter Console, `nbconvert`, and other tools. As
+these tools were not designed to allow for the use of custom
+KernelSpecs, you can set the configuration parameter `kernelspec_path`
+to tell this extension to add dynamically the conda environment to
+the kernel list. To set it up:
+
+1. Create a configuration file for jupyter, like `jupyter_config.json`
+in the folder returned by `jupyter --config-dir`.
+2. Add the following configuration to install all kernel spec for the current user:
+```json
+{
+  "CondaKernelSpecManager": {
+    "kernelspec_path": "--user"
+}
+```
+3. Execute the command (or open the classical Notebook or JupyterLab UI):
+```sh
+python -m nb_conda_kernels list
+```
+4. Check that the conda environment kernels are discovered by `jupyter`:
+```sh
+jupyter kernelspec list
+```
+The previous command should list the same kernel than `nb_conda_kernels`.
+
+You are now all set. `nbconvert`, `voila`, `papermill`,... should find the 
+conda environment kernels.
 
 ## Configuration
 
 This package introduces two additional configuration options:
 
+- `conda_only`: Whether to include only the kernels not visible from Jupyter normally or not (default: False except if `kernelspec_path` is set)
 - `env_filter`: Regex to filter environment path matching it. Default: `None` (i.e. no filter)
+- `kernelspec_path`: Path to install conda kernel specs to if not `None`. Default: `None` (i.e. don't install the conda environment as kernel specs for other Jupyter tools)  
+Possible values are:
+  - `""` (empty string): Install for all users
+  - `--user`: Install for the current user instead of system-wide
+  - `--sys-prefix`: Install to Python's sys.prefix
+  - `PREFIX`: Specify an install prefix for the kernelspec. The kernel specs will be
+  written in `PREFIX/share/jupyter/kernels`. Be careful that the PREFIX
+  may not be discoverable by Jupyter; set JUPYTER_DATA_DIR to force it or run 
+  `jupyter --paths` to get the list of data directories.
+
 - `name_format`: String name format; `'{0}'` = Language, `'{1}'` = Kernel. Default: `'{0} [conda env:{1}]'`
 
 In order to pass a configuration option in the command line use ```python -m nb_conda_kernels list --CondaKernelSpecManager.env_filter="regex"``` where regex is the regular expression for filtering envs "this|that|and|that" works.
 To set it in jupyter config file, edit the jupyter configuration file (py or json) located in your ```jupyter --config-dir```
-- for `jupyter_notebook_config.py` - add a line "c.CondaKernelSpecManager.env_filter = 'regex'"
-- for `jupyter_notebook_config.json` - add a json key 
-```{
+- for `jupyter_config.py` - add a line "c.CondaKernelSpecManager.env_filter = 'regex'"
+- for `jupyter_config.json` - add a json key 
+
+```json
+{
   "CondaKernelSpecManager": {
     "env_filter": "regex"
-  ```
-
-- ```python -m nb_conda_kernels list``` does not seem to process jupyter config files
-* filter does not seem to filter out kernels installed with --user, local kernel of the jupyter env, or root kernels
+}
+```
 
 ## Development
 

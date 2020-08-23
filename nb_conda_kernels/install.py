@@ -13,46 +13,12 @@ from jupyter_client import __version__ as jc_version
 
 
 log = logging.getLogger(__name__)
-log.addHandler(logging.StreamHandler())
-log.setLevel(logging.INFO)
 
 
-# Arguments for command line
-parser = argparse.ArgumentParser(
-    description="Installs the nb_conda_kernels notebook extension")
-group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument(
-    "-s", "--status",
-    help="Print the current status of nb_conda_kernels installation",
-    action="store_true")
-group.add_argument(
-    "-e", "--enable",
-    help="Automatically load nb_conda_kernels on notebook launch",
-    action="store_true")
-group.add_argument(
-    "-d", "--disable",
-    help="Remove nb_conda_kernels from config on notebook launch",
-    action="store_true")
-group2 = parser.add_mutually_exclusive_group(required=False)
-group2.add_argument(
-    "-p", "--prefix",
-    help="Prefix where to load nb_conda_kernels config (default: sys.prefix)",
-    action="store")
-group2.add_argument(
-    "--path",
-    help="Absolute path to jupyter_notebook_config.json",
-    action="store")
-parser.add_argument(
-    "-v", "--verbose",
-    help="Show more output",
-    action="store_true"
-)
-
-
-NBA = "NotebookApp"
+NBA = "JupyterApp"
 CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 KSMC = "kernel_spec_manager_class"
-JNC = "jupyter_notebook_config"
+JNC = "jupyter_config"
 JNCJ = JNC + ".json"
 JCKP = "jupyter_client.kernel_providers"
 NCKDCKP = "nb_conda_kernels.discovery:CondaKernelProvider"
@@ -191,4 +157,38 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
 
 
 if __name__ == '__main__':
+    log.addHandler(logging.StreamHandler())
+    log.setLevel(logging.INFO)
+
+    # Arguments for command line
+    parser = argparse.ArgumentParser(
+        description="Installs the nb_conda_kernels notebook extension")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "-s", "--status",
+        help="Print the current status of nb_conda_kernels installation",
+        action="store_true")
+    group.add_argument(
+        "-e", "--enable",
+        help="Automatically load nb_conda_kernels on notebook launch",
+        action="store_true")
+    group.add_argument(
+        "-d", "--disable",
+        help="Remove nb_conda_kernels from config on notebook launch",
+        action="store_true")
+    group2 = parser.add_mutually_exclusive_group(required=False)
+    group2.add_argument(
+        "-p", "--prefix",
+        help="Prefix where to load nb_conda_kernels config (default: sys.prefix)",
+        action="store")
+    group2.add_argument(
+        "--path",
+        help="Absolute path to jupyter_notebook_config.json",
+        action="store")
+    parser.add_argument(
+        "-v", "--verbose",
+        help="Show more output",
+        action="store_true"
+    )
+
     exit(install(**parser.parse_args().__dict__))
