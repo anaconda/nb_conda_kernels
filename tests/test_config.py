@@ -148,7 +148,7 @@ def test_remove_kernelspec(tmp_path, kernel_name, expected):
         install.return_value = str(tmp_path)
         with patch("nb_conda_kernels.manager.CondaKernelSpecManager._get_destination_dir") as destination:
             destination.return_value = str(tmp_path)
-            with patch("nb_conda_kernels.manager.CondaKernelSpecManager.remove_kernel_spec") as remove:
+            with patch("shutil.rmtree") as remove:
                 CondaKernelSpecManager(config=config)
                 
                 assert remove.called == expected

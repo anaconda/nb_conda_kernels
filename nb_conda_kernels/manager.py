@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -254,6 +255,23 @@ class CondaKernelSpecManager(KernelSpecManager):
                 spec['resource_dir'] = abspath(kernel_dir)
 
                 all_specs[kernel_name] = spec
+        
+        # Remove non-existing conda environments
+        if self.kernelspec_path is not None:
+            kernels_destination = self._get_destination_dir(
+                "",
+                user=self._kernel_user,
+                prefix=self._kernel_prefix
+            )
+            for folder in glob.glob(join(kernels_destination, "*", "kernel.json")):
+                kernel_dir = dirname(folder)
+                kernel_name = basename(kernel_dir)
+                if kernel_name.startswith("conda-") and kernel_name not in all_specs:
+                    self.log.info("Removing %s", kernel_dir)
+                    if os.path.islink(kernel_dir):
+                        os.remove(kernel_dir)
+                    else:
+                        shutil.rmtree(kernel_dir)
 
         return all_specs
 
@@ -274,20 +292,6 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         self._conda_kernels_cache_expiry = time.time() + CACHE_TIMEOUT
         self._conda_kernels_cache = kspecs
-        
-        # Remove non-existing conda environments
-        # This is done here to be able to use self.remove_kernel_spec() while avoiding
-        # recursive calls thanks to the cache as that method calls find_kernel_specs
-        if self.kernelspec_path is not None:
-            kernels_destination = self._get_destination_dir(
-                "",
-                user=self._kernel_user,
-                prefix=self._kernel_prefix
-            )
-            for folder in glob.glob(join(kernels_destination, "*", "kernel.json")):
-                kernel_dir = basename(dirname(folder))
-                if kernel_dir.startswith("conda-") and kernel_dir not in kspecs:
-                    self.remove_kernel_spec(kernel_dir)
 
         return kspecs
 
@@ -337,3 +341,24 @@ class CondaKernelSpecManager(KernelSpecManager):
             except NoSuchKernel:
                 self.log.warning("Error loading kernelspec %r", name, exc_info=True)
         return res
+
+    def remove_kernel_spec(self, name):
+        """Remove a kernel spec directory by name.
+
+        Returns the path that was deleted.
+        """
+        save_native = self.ensure_native_kernel
+        try:
+            self.ensure_native_kernel = False
+            # Conda environment kernelspec are only virtual, so remove can only be applied
+            # on non-virtual kernels.
+            specs = super(CondaKernelSpecManager, self).find_kernel_specs()
+        finally:
+            self.ensure_native_kernel = save_native
+        spec_dir = specs[name]
+        self.log.debug("Removing %s", spec_dir)
+        if os.path.islink(spec_dir):
+            os.remove(spec_dir)
+        else:
+            shutil.rmtree(spec_dir)
+        return spec_dir
