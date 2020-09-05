@@ -176,8 +176,8 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
 
 ### 2.3.0
 
-- Provide a mechanism for using nb_conda_kernels
-  with `voila`, `papermill`, `nbconvert`
+- Provide a mechanism for using `nb_conda_kernels`
+  with tools such as `voila`, `papermill`, `nbconvert`
 - Preserve kernel metadata properly
 - Testbed improvements
 
