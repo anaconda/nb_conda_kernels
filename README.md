@@ -71,13 +71,14 @@ KernelSpecs, you can set the configuration parameter `kernelspec_path`
 to tell this extension to add dynamically the conda environment to
 the kernel list. To set it up:
 
-1. Create a configuration file for jupyter, like `jupyter_config.json`
+1. Create a configuration file for jupyter named `jupyter_config.json`
 in the folder returned by `jupyter --config-dir`.
 2. Add the following configuration to install all kernel spec for the current user:
 ```json
 {
   "CondaKernelSpecManager": {
     "kernelspec_path": "--user"
+  }
 }
 ```
 3. Execute the command (or open the classical Notebook or JupyterLab UI):
