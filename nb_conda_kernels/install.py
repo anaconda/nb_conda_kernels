@@ -120,7 +120,11 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
                     'is not affected by the target configuration path.')
         search_paths.append(path)
 
-    # Determine the effective configuration, and 
+    # Determine the effective configuration by going through the search path
+    # in reverse order. Moving forward we will be modifying only the JupyterApp
+    # key in the jupyter_config.json file. However for legacy reasons we are
+    # also looking at NotebookApp keys and the jupyter_notebook_config.json file,
+    # and cleaning those out as we can.
     log.debug('Configuration files:')
     fpaths = set()
     is_enabled_all = {}
@@ -134,19 +138,16 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
             dirty = False
             for key in (JA, NBA):
                 spec = cfg.get(key, {}).get(KSMC)
-                if spec:
-                    if path_g in all_paths:
-                        is_enabled_all[key] = spec == CKSM
-                    if path_g == path:
-                        is_enabled_local[key] = spec == CKSM
-                    else:
-                        fpaths.add(join(path_g, fbase + '.json'))
                 if status or path_g != path:
-                    continue
-                if fbase == JNC or key == NBA or is_enabled_entry or disable:
-                    expected = None
-                else:
+                    # No changes in status mode, or if we're not in the target path
+                    expected = spec
+                elif enable and fbase == JC and key == JA and not is_enabled_entry:
+                    # Add the spec if we are enabling, the entry point is not active,
+                    # and we're using the new file (jupyter_config.json) and key (JupyterApp)
                     expected = CKSM
+                else:
+                    # In all other cases, clear the spec out for cleanup
+                    expected = None
                 if spec != expected:
                     if expected is None:
                         cfg[key].pop(KSMC)
@@ -154,7 +155,15 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
                             cfg.pop(key)
                     else:
                         cfg.setdefault(key, {})[KSMC] = expected
+                    spec = expected
                     dirty = True
+                if spec:
+                    if path_g in all_paths:
+                        is_enabled_all[key] = spec == CKSM
+                    if path_g == path:
+                        is_enabled_local[key] = spec == CKSM
+                    else:
+                        fpaths.add(join(path_g, fbase + '.json'))
             if dirty:
                 BaseJSONConfigManager(config_dir=path).set(fbase, cfg)
             if dirty or exists(fpath):
@@ -168,7 +177,7 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     is_enabled_local = bool(is_enabled_local.get(NBA, is_enabled_local.get(JA)))
 
     if is_enabled_all != is_enabled_local or (is_enabled_entry and disable):
-        sev = 'WARNING' if status or path not in all_paths else 'ERROR'
+        sev = 'WARNING' if status else 'ERROR'
         if is_enabled_entry and disable:
             msg = ['{}: the entrypoint mechanism cannot be disabled'.format(sev),
                    'with changes to jupyter_config.json. To disable it,',
