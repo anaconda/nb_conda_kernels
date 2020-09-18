@@ -1,15 +1,17 @@
 from __future__ import print_function
 
+import io
+import locale
 import os
 import sys
 import json
+import tempfile
 import time
 import pytest
 
 from nb_conda_kernels.discovery import CondaKernelProvider
 from nb_conda_kernels.manager import RUNNER_COMMAND
 from jupyter_client.blocking.client import Empty
-
 
 START_TIMEOUT = 10
 CMD_TIMEOUT = 3
@@ -67,14 +69,9 @@ def find_test_keys():
     return keys
 
 
-@pytest.mark.parametrize("key", find_test_keys())
-def test_runner(key):
-    kernel_manager = provider.make_manager(key)
-    if kernel_manager.kernel_spec.argv[:3] == RUNNER_COMMAND:
-        env_path = kernel_manager.kernel_spec.argv[4]
-    else:
-        env_path = sys.prefix
-    env_path = os.path.normcase(os.path.normpath(env_path))
+def call_kernel(kernel_manager, **kw):
+    name = kernel_manager.kernel_name
+
     valid = False
     # For reasons we do not fully understand, the kernels sometimes die immediately
     # and sometimes hang in this loop. Frankly the purpose of this test is not to
@@ -86,11 +83,11 @@ def test_runner(key):
         client = None
         try:
             print('\n--- attempt {}'.format(tries+1))
-            kernel_manager.start_kernel()
+            kernel_manager.start_kernel(**kw)
             client = kernel_manager.client()
             client.start_channels()
             client.wait_for_ready(timeout=START_TIMEOUT)
-            if key.endswith('-r'):
+            if name.endswith('-r'):
                 commands = ['cat(Sys.getenv("CONDA_PREFIX"),fill=TRUE)',
                             'cat(dirname(dirname(dirname(.libPaths()))),fill=TRUE)',
                             'quit(save="no")']
@@ -123,9 +120,50 @@ def test_runner(key):
             break
     else:
         assert False, 'Did not successfully run kernel'
+
+    return valid, outputs
+
+
+@pytest.mark.parametrize("key", find_test_keys())
+def test_runner(key):
+    kernel_manager = provider.make_manager(key)
+    if kernel_manager.kernel_spec.argv[:3] == RUNNER_COMMAND:
+        env_path = kernel_manager.kernel_spec.argv[4]
+    else:
+        env_path = sys.prefix
+    env_path = os.path.normcase(os.path.normpath(env_path))
+
+    valid, outputs = call_kernel(kernel_manager)
+
     assert valid and len(outputs) >= 2
     for o in outputs[-2:]:
         assert os.path.normcase(os.path.normpath(o)) == env_path, (o, env_path)
+
+
+@pytest.mark.parametrize("jupyter_kernel", find_test_keys(), indirect=True)
+def test_jupyter_kernelspecs_runner(tmp_path, jupyter_kernel):
+    if sys.platform.startswith("linux") and jupyter_kernel.kernel_name == "conda-env-t_st_env2-py":
+        pytest.xfail("Folder with unicode raises error on linux.")
+
+    fake_stdout = tmp_path / "stdout.log"
+    # RUNNER_COMMAND is installed in all exported kernelspec
+    assert jupyter_kernel.kernel_spec.argv[:3] == RUNNER_COMMAND
+
+    env_path = jupyter_kernel.kernel_spec.argv[4]
+    env_path = os.path.normcase(os.path.normpath(env_path))
+
+    with fake_stdout.open("wb") as t:  # Catch the echo set in the runner
+        valid, outputs = call_kernel(jupyter_kernel, stdout=t)
+
+    assert valid and len(outputs) >= 2
+    for o in outputs[-2:]:
+        assert os.path.normcase(os.path.normpath(o)) == env_path, (o, env_path)
+
+    # The nb_conda_kernels.runner skip activation if sys.prefix is the active environment
+    # Don't know why but character from the echo command are separated
+    # with a null character on Windows
+    captured_stdout = fake_stdout.read_text().replace("\00", "")
+    assert ("CONDA_PREFIX=" in captured_stdout) == (env_path.lower() != sys.prefix.lower())
 
 
 if __name__ == '__main__':

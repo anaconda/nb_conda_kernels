@@ -240,19 +240,25 @@ class CondaKernelSpecManager(KernelSpecManager):
 
                 if self.kernelspec_path is not None:
                     # Install the kernel spec
-                    destination = self.install_kernel_spec(
-                        kernel_dir,
-                        kernel_name=kernel_name,
-                        user=self._kernel_user,
-                        prefix=self._kernel_prefix
-                    )
-                    # Update the kernel spec
-                    kernel_spec = join(destination, "kernel.json")
-                    tmp_spec = spec.copy()
-                    if env_path == sys.prefix:  # Add the conda runner to the installed kernel spec
-                        tmp_spec['argv'] = RUNNER_COMMAND + [conda_prefix, env_path] + spec['argv']
-                    with open(kernel_spec, "w") as f:
-                        json.dump(tmp_spec, f)
+                    try:
+                        destination = self.install_kernel_spec(
+                            kernel_dir,
+                            kernel_name=kernel_name,
+                            user=self._kernel_user,
+                            prefix=self._kernel_prefix
+                        )
+                        # Update the kernel spec
+                        kernel_spec = join(destination, "kernel.json")
+                        tmp_spec = spec.copy()
+                        if env_path == sys.prefix:  # Add the conda runner to the installed kernel spec
+                            tmp_spec['argv'] = RUNNER_COMMAND + [conda_prefix, env_path] + spec['argv']
+                        with open(kernel_spec, "w") as f:
+                            json.dump(tmp_spec, f)
+                    except OSError as error:
+                        self.log.warning(
+                            u"[nb_conda_kernels] Fail to install kernel '{}'.".format(kernel_dir),
+                            exc_info=error
+                        )
 
                 # resource_dir is not part of the spec file, so it is added at the latest time
                 spec['resource_dir'] = abspath(kernel_dir)
