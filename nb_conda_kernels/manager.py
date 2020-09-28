@@ -39,9 +39,9 @@ class CondaKernelSpecManager(KernelSpecManager):
         - ``--sys-prefix``: Install to Python's sys.prefix
         - ``PREFIX``: Specify an install prefix for the kernelspec. The kernel specs will be
         written in ``PREFIX/share/jupyter/kernels``. Be careful that the PREFIX
-        may not be discoverable by Jupyter; set JUPYTER_DATA_DIR to force it or run 
+        may not be discoverable by Jupyter; set JUPYTER_DATA_DIR to force it or run
         ``jupyter --paths`` to get the list of data directories.
-        
+
         If None, the conda kernel specs will only be available dynamically on notebook editors.
         """)
 
@@ -54,7 +54,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     raise TraitError("CondaKernelSpecManager.kernelspec_path is not a directory.")
             self.log.debug("[nb_conda_kernels] Force conda_only=True as kernelspec_path is not None.")
             self.conda_only = True
-        
+
         return new_value
 
     name_format = Unicode('{0} [conda env:{1}]', config=True,
@@ -139,7 +139,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         envs = conda_info['envs']
         base_prefix = conda_info['conda_prefix']
         envs_prefix = join(base_prefix, 'envs')
-        build_prefix = join(base_prefix, 'conda-bld', '') 
+        build_prefix = join(base_prefix, 'conda-bld', '')
         # Older versions of conda do not seem to include the base prefix
         # in the environment list, but we do want to scan that
         if base_prefix not in envs:
@@ -238,24 +238,33 @@ class CondaKernelSpecManager(KernelSpecManager):
                 })
                 spec['metadata'] = metadata
 
-                if self.kernelspec_path is not None:                    
+                if self.kernelspec_path is not None:
                     # Install the kernel spec
-                    destination = self.install_kernel_spec(
-                        kernel_dir,
-                        kernel_name=kernel_name,
-                        user=self._kernel_user,
-                        prefix=self._kernel_prefix
-                    )
-                    # Update the kernel spec
-                    kernel_spec = join(destination, "kernel.json")
-                    with open(kernel_spec, "w") as f:
-                        json.dump(spec, f)
-                
+                    try:
+                        destination = self.install_kernel_spec(
+                            kernel_dir,
+                            kernel_name=kernel_name,
+                            user=self._kernel_user,
+                            prefix=self._kernel_prefix
+                        )
+                        # Update the kernel spec
+                        kernel_spec = join(destination, "kernel.json")
+                        tmp_spec = spec.copy()
+                        if env_path == sys.prefix:  # Add the conda runner to the installed kernel spec
+                            tmp_spec['argv'] = RUNNER_COMMAND + [conda_prefix, env_path] + spec['argv']
+                        with open(kernel_spec, "w") as f:
+                            json.dump(tmp_spec, f)
+                    except OSError as error:
+                        self.log.warning(
+                            u"[nb_conda_kernels] Fail to install kernel '{}'.".format(kernel_dir),
+                            exc_info=error
+                        )
+
                 # resource_dir is not part of the spec file, so it is added at the latest time
                 spec['resource_dir'] = abspath(kernel_dir)
 
                 all_specs[kernel_name] = spec
-        
+
         # Remove non-existing conda environments
         if self.kernelspec_path is not None:
             kernels_destination = self._get_destination_dir(
