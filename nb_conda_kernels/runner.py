@@ -24,12 +24,12 @@ def exec_in_env(conda_prefix, env_path, *command):
                     '@echo', 'CONDA_PREFIX=%CONDA_PREFIX%', '&&',] + list(command)
             subprocess.Popen(ecomm).wait()
     else:
-        command = ' '.join(quote(c) for c in command)
         if is_current_env:
             os.execvp(command[0], command)
         else:
-            activate = os.path.join(conda_prefix, 'bin', 'activate')
-            ecomm = ". '{}' '{}' && echo CONDA_PREFIX=$CONDA_PREFIX && exec {}".format(activate, env_path, command)
+            command = ' '.join(quote(c) for c in command)
+            conda = os.path.join(conda_prefix, 'bin', 'conda')
+            ecomm = "eval \"$('{}' 'posix.shell' 'activate' '{}')\" && echo CONDA_PREFIX=$CONDA_PREFIX && exec {}".format(conda, env_path, command)
             ecomm = ['sh' if 'bsd' in sys.platform else 'bash', '-c', ecomm]
             os.execvp(ecomm[0], ecomm)
 
