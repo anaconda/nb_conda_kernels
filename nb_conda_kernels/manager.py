@@ -58,7 +58,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         return new_value
 
     name_format = Unicode(
-        '{0} [conda env:{1}]',
+        '{language} [conda env:{environment}]',
         config=True,
         help="""String name format; available field names within the string:
         '{0}' = Language
@@ -67,6 +67,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         '{display_name}' = Kernel displayed name (as defined in the kernel spec)
         '{environment}'  = Environment name (identical to '{1}')
         '{kernel}' = Original kernel name (name of the folder containing the kernel spec)
+        '{language}'  = Language (identical to '{0}')
         """
     )
 
@@ -242,6 +243,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     display_name=spec['display_name'],
                     environment=env_name,
                     kernel=raw_kernel_name,
+                    language=display_prefix,
                 )
                 if env_path == sys.prefix:
                     display_name += ' *'

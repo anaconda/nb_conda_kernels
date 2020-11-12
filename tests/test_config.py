@@ -92,9 +92,10 @@ def test_configuration():
 
 @pytest.mark.parametrize("name_format, expected", [
     ("{0} [conda env:{1}]", "Python [conda env:{env_name}]"),
+    ("{language} [conda env:{environment}]", "Python [conda env:{env_name}]"),
     (
-        "{0} {1} {conda_kernel} {display_name} {environment} {kernel}",
-        "Python {env_name} conda-env-{env_name}-xpython Python 3 (XPython) {env_name} xpython"
+        "{0} {1} {conda_kernel} {display_name} {environment} {kernel} {language}",
+        "Python {env_name} conda-env-{env_name}-xpython Python 3 (XPython) {env_name} xpython Python"
     )
 ])
 def test_kernel_name_format(monkeypatch, tmp_path, name_format, expected):
