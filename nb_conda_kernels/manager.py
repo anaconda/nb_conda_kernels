@@ -57,8 +57,18 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         return new_value
 
-    name_format = Unicode('{0} [conda env:{1}]', config=True,
-                          help="String name format; '{{0}}' = Language, '{{1}}' = Kernel")
+    name_format = Unicode(
+        '{0} [conda env:{1}]',
+        config=True,
+        help="""String name format; available field names within the string:
+        '{0}' = Language
+        '{1}' = Environment name
+        '{conda_kernel}' = Dynamically built kernel name for conda environment
+        '{display_name}' = Kernel displayed name (as defined in the kernel spec)
+        '{environment}'  = Environment name (identical to '{1}')
+        '{kernel}' = Original kernel name (name of the folder containing the kernel spec)
+        """
+    )
 
     def __init__(self, **kwargs):
         super(CondaKernelSpecManager, self).__init__(**kwargs)
@@ -205,7 +215,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                                    spec_path, err)
                     continue
                 kernel_dir = dirname(spec_path).lower()
-                kernel_name = basename(kernel_dir)
+                kernel_name = raw_kernel_name = basename(kernel_dir)
                 if self.kernelspec_path is not None and kernel_name.startswith("conda-"):
                     self.log.debug("[nb_conda_kernels] Skipping kernel spec %s", spec_path)
                     continue  # Ensure to skip dynamically added kernel spec within the environment prefix
@@ -225,7 +235,14 @@ class CondaKernelSpecManager(KernelSpecManager):
                 display_prefix = spec['display_name']
                 if display_prefix.startswith('Python'):
                     display_prefix = 'Python'
-                display_name = self.name_format.format(display_prefix, env_name)
+                display_name = self.name_format.format(
+                    display_prefix,
+                    env_name,
+                    conda_kernel=kernel_name,
+                    display_name=spec['display_name'],
+                    environment=env_name,
+                    kernel=raw_kernel_name,
+                )
                 if env_path == sys.prefix:
                     display_name += ' *'
                 spec['display_name'] = display_name

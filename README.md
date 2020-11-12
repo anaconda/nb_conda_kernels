@@ -110,7 +110,15 @@ Possible values are:
   may not be discoverable by Jupyter; set JUPYTER_DATA_DIR to force it or run 
   `jupyter --paths` to get the list of data directories.
 
-- `name_format`: String name format; `'{0}'` = Language, `'{1}'` = Kernel. Default: `'{0} [conda env:{1}]'`
+- `name_format`: String name format  
+Default: `'{0} [conda env:{1}]'`  
+Available field names within the string:
+  - `{0}` = Language
+  - `{1}` = Environment name
+  - `{conda_kernel}` = Dynamically built kernel name for conda environment
+  - `{display_name}` = Kernel displayed name (as defined in the kernel spec)
+  - `{environment}`  = Environment name (identical to `{1}`)
+  - `{kernel}` = Original kernel name (name of the folder containing the kernel spec)
 
 In order to pass a configuration option in the command line use ```python -m nb_conda_kernels list --CondaKernelSpecManager.env_filter="regex"``` where regex is the regular expression for filtering envs "this|that|and|that" works.
 To set it in jupyter config file, edit the jupyter configuration file (py or json) located in your ```jupyter --config-dir```
