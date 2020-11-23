@@ -90,6 +90,52 @@ def test_configuration():
     assert len(checks) >= 7
 
 
+@pytest.mark.parametrize("name_format, expected", [
+    ("{0} [conda env:{1}]", "Python [conda env:{env_name}]"),
+    ("{language} [conda env:{environment}]", "Python [conda env:{env_name}]"),
+    (
+        "{0} {1} {conda_kernel} {display_name} {environment} {kernel} {language}",
+        "Python {env_name} conda-env-{env_name}-xpython Python 3 (XPython) {env_name} xpython Python"
+    )
+])
+def test_kernel_name_format(monkeypatch, tmp_path, name_format, expected):
+    kernelspec = {
+        "display_name": "Python 3 (XPython)",
+        "argv": [
+            "@XPYTHON_KERNELSPEC_PATH@xpython",
+            "-f",
+            "{connection_file}"
+        ],
+        "language": "python",
+        "metadata": { "debugger": True }
+    }
+    mock_info = {
+        'conda_prefix': '/'
+    }
+    env_name = "dummy_env"
+    def envs(*args):
+        return {
+            env_name: str(tmp_path)
+        }
+
+    kernel_file = tmp_path / 'share' / 'jupyter' / 'kernels' / 'xpython' / 'kernel.json'
+    kernel_file.parent.mkdir(parents=True, exist_ok=True)
+    if sys.version_info >= (3, 0):
+        kernel_file.write_text(json.dumps(kernelspec))
+    else:
+        kernel_file.write_bytes(json.dumps(kernelspec))
+
+    monkeypatch.setattr(CondaKernelSpecManager, "_conda_info", mock_info)
+    monkeypatch.setattr(CondaKernelSpecManager, "_all_envs", envs)
+
+    manager = CondaKernelSpecManager(name_format=name_format)
+    specs = manager._all_specs()
+
+    assert len(specs) == 1
+    for spec in specs.values():
+        assert spec["display_name"] == expected.format(env_name=env_name)
+
+
 @pytest.mark.parametrize("kernelspec_path, user, prefix, expected", [
     (
         "",
