@@ -25,7 +25,7 @@ jobs:
       run: |
           CONDA_ROOT=$(dirname $GITHUB_WORKSPACE)/conda
           echo "::set-output name=value::$CONDA_ROOT"
-          echo "::set-env name=CONDA_ROOT::$CONDA_ROOT"
+          echo "CONDA_ROOT=$CONDA_ROOT" >> $GITHUB_ENV
           echo "CONDA_ROOT: $CONDA_ROOT"
     # Use a smaller cache entry to enable a quicker exit if we
     # have already built the testbed. Any small file will do
@@ -64,7 +64,7 @@ jobs:
       run: |
           CONDA_ROOT=$(dirname $GITHUB_WORKSPACE)/conda
           echo "::set-output name=value::$CONDA_ROOT"
-          echo "::set-env name=CONDA_ROOT::$CONDA_ROOT"
+          echo "CONDA_ROOT=$CONDA_ROOT" >> $GITHUB_ENV
           echo "CONDA_ROOT: $CONDA_ROOT"
     - name: Retrieve the testbed
       uses: actions/cache@v2
