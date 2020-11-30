@@ -184,6 +184,13 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
 
 ## Changelog
 
+### 2.3.1
+
+- Provide more options to set the display name of an environment (see [`name_format`](README.md#Configuration) setting)
+- Improve the runner script by activating the environment only if required
+- Installation script improvements
+- Fix GitHub CI actions
+
 ### 2.3.0
 
 - Provide a mechanism for using `nb_conda_kernels`
