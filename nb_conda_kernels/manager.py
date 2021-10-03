@@ -424,3 +424,9 @@ class CondaKernelSpecManager(KernelSpecManager):
         else:
             shutil.rmtree(spec_dir)
         return spec_dir
+
+    def __del__(self):
+      t = self._conda_info_cache_thread
+      # if there is a thread, wait for it to finish
+      if t:
+        t.join()
