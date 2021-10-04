@@ -11,7 +11,6 @@ import pytest
 
 from nb_conda_kernels.discovery import CondaKernelProvider
 from nb_conda_kernels.manager import RUNNER_COMMAND
-from jupyter_client.blocking.client import Empty
 
 START_TIMEOUT = 10
 CMD_TIMEOUT = 3
