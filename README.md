@@ -184,6 +184,10 @@ To set it in jupyter config file, edit the jupyter configuration file (py or jso
 
 ## Changelog
 
+### 2.3.2
+
+- Added code to clear zombie child processes left behind by the `conda info` subprocess call in manager.py
+
 ### 2.3.1
 
 - Provide more options to set the display name of an environment (see [`name_format`](README.md#Configuration) setting)
