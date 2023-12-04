@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 import glob
+import psutil
 
 import os
 from os.path import join, split, dirname, basename, abspath
@@ -137,6 +138,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                                err)
             self._conda_info_cache = conda_info
             self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
+
+        self.wait_for_child_processes_cleanup()
 
         return self._conda_info_cache
 
@@ -390,3 +393,11 @@ class CondaKernelSpecManager(KernelSpecManager):
         else:
             shutil.rmtree(spec_dir)
         return spec_dir
+
+    def wait_for_child_processes_cleanup(self):
+        p = psutil.Process()
+        for c in p.children():
+            try:
+                c.wait(timeout=0)
+            except psutil.TimeoutExpired:
+                pass
