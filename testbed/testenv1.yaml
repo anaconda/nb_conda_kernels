@@ -3,4 +3,4 @@ dependencies:
   - backports.functools_lru_cache
   - r-irkernel
   - conda-forge::ipykernel
-  - python=2
+  - python=3

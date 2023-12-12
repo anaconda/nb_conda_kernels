@@ -3,6 +3,7 @@ jupyter_client
 r-irkernel
 requests
 flake8
+psutil
 pytest
 pytest-cov
 mock
