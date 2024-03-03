@@ -1,6 +1,5 @@
 name: conda
 dependencies:
-  - python=3.7
   - conda
   - conda-build
   - conda-verify
