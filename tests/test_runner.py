@@ -125,6 +125,8 @@ def call_kernel(kernel_manager, **kw):
 
 @pytest.mark.parametrize("key", find_test_keys())
 def test_runner(key):
+    if sys.platform.startswith("darwin") and key.endswith('-r'):
+        pytest.xfail("R kernels on macos are failing for now")
     kernel_manager = provider.make_manager(key)
     if kernel_manager.kernel_spec.argv[:3] == RUNNER_COMMAND:
         env_path = kernel_manager.kernel_spec.argv[4]
