@@ -1,6 +1,4 @@
 name: test_env1
 dependencies:
-  - backports.functools_lru_cache
   - r-irkernel
-  - conda-forge::ipykernel
-  - python=3
+  - ipykernel
