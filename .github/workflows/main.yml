@@ -83,7 +83,7 @@ jobs:
         mv $CONDA_ROOT/conda-bld .
     - name: Upload the build artifact
       if: github.event_name == 'push'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4
       with:
         # By uploading to the same artifact we can download all of the packages
         # and upload them all to anaconda.org in a single job
