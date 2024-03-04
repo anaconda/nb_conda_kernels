@@ -9,15 +9,20 @@ source:
 
 build:
   number: 0
+  noarch: python
 
 requirements:
   host:
     - python
+    - setuptools
+    - wheel
     - pip
   run:
-    - python
+    - python >=3.6
     - pywin32 # [win]
     - jupyter_client >=4.2
+    - __unix # [not win]
+    - __win # [win]
 
 test:
   source_files:
@@ -31,6 +36,7 @@ test:
     - requests
     - mock
   commands:
+    - pip check
     - python -m nb_conda_kernels list
     - python -m pytest -v --cov=nb_conda_kernels tests
 
