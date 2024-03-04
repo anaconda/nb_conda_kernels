@@ -31,14 +31,14 @@ jobs:
     # have already built the testbed. Any small file will do
     - id: cache-key
       name: Retrieve cache key
-      uses: actions/cache@v2
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
       with:
         path: ./LICENSE
         key: key-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - id: cache
       name: Retrieve or create the conda cache
       if: steps.cache-key.outputs.cache-hit != 'true'
-      uses: actions/cache@v2
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
       with:
         path: ${{ steps.conda-root.outputs.value }}
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
@@ -67,7 +67,7 @@ jobs:
           echo "CONDA_ROOT=$CONDA_ROOT" >> $GITHUB_ENV
           echo "CONDA_ROOT: $CONDA_ROOT"
     - name: Retrieve the testbed
-      uses: actions/cache@v2
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
       with:
         path: ${{ steps.conda-root.outputs.value }}
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
