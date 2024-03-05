@@ -21,10 +21,9 @@ requirements:
     - python >=3.6
     - jupyter_client >=4.2
     - jupyter_core
+    - setuptools
     - traitlets
     - psutil
-    - __unix # [not win]
-    - __win # [win]
 
 test:
   source_files:
