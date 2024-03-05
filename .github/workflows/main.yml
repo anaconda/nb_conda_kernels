@@ -47,46 +47,27 @@ jobs:
       # The argument tells the script we are in caching mode
       run: testbed/build.sh
   build:
-    runs-on: ${{ matrix.os }}
-    needs: testbed
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest,windows-latest]
+    runs-on: ubuntu-latest
     steps:
     - name: Retrieve the source code
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       with:
         fetch-depth: 0
-    - id: conda-root
-      name: Set CONDA_ROOT and artifact suffix
-      run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then sfx=win; else sfx=unx; fi
-          echo "::set-output name=suffix::$sfx"
-          CONDA_ROOT=$(dirname $GITHUB_WORKSPACE)/conda
-          echo "::set-output name=value::$CONDA_ROOT"
-          echo "CONDA_ROOT=$CONDA_ROOT" >> $GITHUB_ENV
-          echo "PACKAGE SUFFIX: $sfx"
-          echo "CONDA_ROOT: $CONDA_ROOT"
-    - name: Retrieve the testbed
-      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
-      with:
-        path: ${{ steps.conda-root.outputs.value }}
-        key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Build the package
       id: build
       run: |
-        source $CONDA_ROOT/etc/profile.d/conda.sh
+        source $CONDA/etc/profile.d/conda.sh
+        conda install conda conda-build --yes
         conda build --no-test conda-recipe
-        mv $CONDA_ROOT/conda-bld .
+        mv $CONDA/conda-bld .
     - name: Upload the build artifact
       uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
       with:
-        name: package-${{ github.sha }}-${{ steps.conda-root.outputs.suffix }}
+        name: package-${{ github.sha }}
         path: conda-bld/*/*.tar.bz2
   tests:
     runs-on: ${{ matrix.os }}
-    needs: build
+    needs: [build,testbed]
     strategy:
       fail-fast: false
       matrix:
@@ -110,7 +91,7 @@ jobs:
     - name: Retrieve the build artfiact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
       with:
-        name: package-${{ github.sha }}-${{ steps.conda-root.outputs.suffix }}
+        name: package-${{ github.sha }}
         path: conda-bld
     - name: Retrieve the testbed
       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
@@ -136,16 +117,11 @@ jobs:
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       with:
         fetch-depth: 0
-    - name: Retrieve the windows artfiact
+    - name: Retrieve the artfiact
       uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
       with:
-        name: package-${{ github.sha }}-win
-        path: conda-bld-win
-    - name: Retrieve the unix artfiact
-      uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
-      with:
-        name: package-${{ github.sha }}-unx
-        path: conda-bld-unx
+        name: package-${{ github.sha }}
+        path: conda-bld
     - name: Upload to anaconda.org
       env:
         ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
@@ -153,7 +129,7 @@ jobs:
         source $CONDA/bin/activate
         conda install -y anaconda-client
         git describe --exact-match --tags HEAD || export LABEL="--label dev"
-        anaconda --verbose --token $ANACONDA_TOKEN upload --user jupycon $LABEL conda-bld-*/*/*.tar.bz2 --force
+        anaconda --verbose --token $ANACONDA_TOKEN upload --user jupycon $LABEL conda-bld/*/*.tar.bz2 --force
     - name: Clean up older artifacts
       uses: glassechidna/artifact-cleaner@master
       with:
