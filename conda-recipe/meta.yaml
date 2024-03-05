@@ -23,8 +23,6 @@ requirements:
     - jupyter_core
     - traitlets
     - psutil
-    - __unix # [not win]
-    - __win # [win]
 
 test:
   source_files:
