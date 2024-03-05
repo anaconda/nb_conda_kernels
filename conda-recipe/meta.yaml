@@ -19,8 +19,10 @@ requirements:
     - pip
   run:
     - python >=3.6
-    - pywin32 # [win]
     - jupyter_client >=4.2
+    - jupyter_core
+    - traitlets
+    - psutil
     - __unix # [not win]
     - __win # [win]
 
