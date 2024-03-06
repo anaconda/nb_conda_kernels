@@ -5,7 +5,6 @@ import os
 import sys
 
 from os.path import join, abspath, exists
-from pkg_resources import iter_entry_points
 
 from traitlets.config.manager import BaseJSONConfigManager
 from jupyter_core.paths import jupyter_config_path
@@ -20,8 +19,6 @@ NBA = "NotebookApp"
 CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 JKSM = "jupyter_client.kernelspec.KernelSpecManager"
 KSMC = "kernel_spec_manager_class"
-JCKP = "jupyter_client.kernel_providers"
-NCKDCKP = "nb_conda_kernels.discovery:CondaKernelProvider"
 JC = "jupyter_config"
 JNC = "jupyter_notebook_config"
 ENDIS = ['disabled', 'enabled']
@@ -80,25 +77,6 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
         log.info("{}ing nb_conda_kernels...".format(ENDIS[enable][:-2].capitalize()))
     log.info("CONDA_PREFIX: {}".format(sys.prefix))
 
-    is_enabled_entry = False
-    # Disable the entry-point based mechanism. Most if this code will need
-    # to be removed, because the kernel discovery mechanism was changed
-    # before jupyter_client 6 was released. For now we're dropping back to
-    # the jupyter_client 5 model until we leverage the new mechanism.
-    has_entrypoints = False # int(jc_version.split('.', 1)[0]) >= 6
-    log.debug('Entry points:')
-    for ep in iter_entry_points(group=JCKP):
-        log.debug('  - {}'.format(ep))
-        if str(ep).split('=', 1)[-1].strip() == NCKDCKP:
-            is_enabled_entry = True
-    if not is_enabled_entry and has_entrypoints:
-        log.error(('NOTE: nb_conda_kernels is missing its entry point '
-                   'for jupyter_client.kernel_providers, which is needed '
-                   'for correct operation this version of Jupyter.'))
-    if is_enabled_entry and not has_entrypoints:
-        log.debug('  NOTE: entry points not used in Jupyter {}'.format(jc_version))
-        is_enabled_entry = False
-
     all_paths = [abspath(p) for p in jupyter_config_path()]
     default_path = join(sys.prefix, 'etc', 'jupyter')
     search_paths = all_paths[::-1]
@@ -141,7 +119,7 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
                 if status or path_g != path:
                     # No changes in status mode, or if we're not in the target path
                     expected = spec
-                elif enable and fbase == JC and key == JA and not is_enabled_entry:
+                elif enable and fbase == JC and key == JA:
                     # Add the spec if we are enabling, the entry point is not active,
                     # and we're using the new file (jupyter_config.json) and key (JupyterApp)
                     expected = CKSM
@@ -176,14 +154,9 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     is_enabled_all = bool(is_enabled_all.get(NBA, is_enabled_all.get(JA)))
     is_enabled_local = bool(is_enabled_local.get(NBA, is_enabled_local.get(JA)))
 
-    if is_enabled_all != is_enabled_local or (is_enabled_entry and disable):
+    if is_enabled_all != is_enabled_local:
         sev = 'WARNING' if status else 'ERROR'
-        if is_enabled_entry and disable:
-            msg = ['{}: the entrypoint mechanism cannot be disabled'.format(sev),
-                   'with changes to jupyter_config.json. To disable it,',
-                   'remove the nb_conda_kernels package.']
-            fpaths = []
-        elif path not in all_paths:
+        if path not in all_paths:
             msg = fpaths = []
         elif status:
             msg = ['{}: the local configuration of nb_conda_kernels'.format(sev),
@@ -202,7 +175,6 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
         if msg:
             (log.warning if status else log.error)('\n'.join(msg))
 
-    is_enabled_all = is_enabled_all or is_enabled_entry
     log.info('Status: {}'.format(ENDIS[is_enabled_all]))
     return 0 if status or is_enabled_all == is_enabled_local else 1
 
