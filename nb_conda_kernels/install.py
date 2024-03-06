@@ -5,7 +5,6 @@ import os
 import sys
 
 from os.path import join, abspath, exists
-from pkg_resources import iter_entry_points
 
 from traitlets.config.manager import BaseJSONConfigManager
 from jupyter_core.paths import jupyter_config_path
@@ -79,25 +78,6 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     else:
         log.info("{}ing nb_conda_kernels...".format(ENDIS[enable][:-2].capitalize()))
     log.info("CONDA_PREFIX: {}".format(sys.prefix))
-
-    is_enabled_entry = False
-    # Disable the entry-point based mechanism. Most if this code will need
-    # to be removed, because the kernel discovery mechanism was changed
-    # before jupyter_client 6 was released. For now we're dropping back to
-    # the jupyter_client 5 model until we leverage the new mechanism.
-    has_entrypoints = False # int(jc_version.split('.', 1)[0]) >= 6
-    log.debug('Entry points:')
-    for ep in iter_entry_points(group=JCKP):
-        log.debug('  - {}'.format(ep))
-        if str(ep).split('=', 1)[-1].strip() == NCKDCKP:
-            is_enabled_entry = True
-    if not is_enabled_entry and has_entrypoints:
-        log.error(('NOTE: nb_conda_kernels is missing its entry point '
-                   'for jupyter_client.kernel_providers, which is needed '
-                   'for correct operation this version of Jupyter.'))
-    if is_enabled_entry and not has_entrypoints:
-        log.debug('  NOTE: entry points not used in Jupyter {}'.format(jc_version))
-        is_enabled_entry = False
 
     all_paths = [abspath(p) for p in jupyter_config_path()]
     default_path = join(sys.prefix, 'etc', 'jupyter')
