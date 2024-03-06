@@ -3,6 +3,7 @@ import json
 import re
 import shutil
 import subprocess
+import threading
 import sys
 import time
 import glob
@@ -77,6 +78,7 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         self._conda_info_cache = None
         self._conda_info_cache_expiry = None
+        self._conda_info_cache_thread = None
 
         self._conda_kernels_cache = None
         self._conda_kernels_cache_expiry = None
@@ -117,29 +119,61 @@ class CondaKernelSpecManager(KernelSpecManager):
             relatively expensive.
         """
 
-        expiry = self._conda_info_cache_expiry
-        if expiry is None or expiry < time.time():
-            self.log.debug("[nb_conda_kernels] refreshing conda info")
-            # This is to make sure that subprocess can find 'conda' even if
-            # it is a Windows batch file---which is the case in non-root
-            # conda environments.
-            shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
-            try:
-                # conda info --json uses the standard JSON escaping
-                # mechanism for non-ASCII characters. So it is always
-                # valid to decode here as 'ascii', since the JSON loads()
-                # method will recover any original Unicode for us.
-                p = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                            shell=shell).decode('ascii')
-                conda_info = json.loads(p)
-            except Exception as err:
-                conda_info = None
-                self.log.error("[nb_conda_kernels] couldn't call conda:\n%s",
-                               err)
-            self._conda_info_cache = conda_info
-            self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
+        def get_conda_info_data():
+          # This is to make sure that subprocess can find 'conda' even if
+          # it is a Windows batch file---which is the case in non-root
+          # conda environments.
+          shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
+          try:
+            # conda info --json uses the standard JSON escaping
+            # mechanism for non-ASCII characters. So it is always
+            # valid to decode here as 'ascii', since the JSON loads()
+            # method will recover any original Unicode for us.
+            out = subprocess.check_output([CONDA_EXE, "info", "--json"],
+                                          shell=shell).decode('ascii')
+            conda_info = json.loads(out)
+            return conda_info, None
+          except Exception as err:
+            return None, err
+          finally:
+             self.wait_for_child_processes_cleanup()
 
-        self.wait_for_child_processes_cleanup()
+        class CondaInfoThread(threading.Thread):
+          def run(self):
+            self.out, self.err = get_conda_info_data()
+
+        expiry = self._conda_info_cache_expiry
+        t = self._conda_info_cache_thread
+
+        # cache is empty
+        if expiry is None:
+          self.log.debug("[nb_conda_kernels] refreshing conda info (blocking call)")
+          conda_info, err = get_conda_info_data()
+          if conda_info is None:
+            self.log.error("[nb_conda_kernels] couldn't call conda:\n%s", err)
+          self._conda_info_cache = conda_info
+          self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
+
+        # subprocess just finished
+        elif t and not t.is_alive():
+          t.join()
+          conda_info = t.out
+          if conda_info is None:
+            self.log.error("[nb_conda_kernels] couldn't call conda:\n%s", t.err)
+          else:
+            self.log.debug("[nb_conda_kernels] collected conda info (async call)")
+          self._conda_info_cache = conda_info
+          self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
+          self._conda_info_cache_thread = None
+
+        # cache expired
+        elif not t and expiry < time.time():
+          self.log.debug("[nb_conda_kernels] refreshing conda info (async call)")
+          t = CondaInfoThread()
+          t.start()
+          self._conda_info_cache_thread = t
+
+        # else, just return cache
 
         return self._conda_info_cache
 
@@ -393,6 +427,12 @@ class CondaKernelSpecManager(KernelSpecManager):
         else:
             shutil.rmtree(spec_dir)
         return spec_dir
+
+    def __del__(self):
+      t = self._conda_info_cache_thread
+      # if there is a thread, wait for it to finish
+      if t:
+        t.join()
 
     def wait_for_child_processes_cleanup(self):
         p = psutil.Process()
