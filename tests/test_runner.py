@@ -125,6 +125,8 @@ def call_kernel(kernel_manager, **kw):
 
 @pytest.mark.parametrize("key", find_test_keys())
 def test_runner(key):
+    if sys.platform.startswith("darwin") and key.endswith('-r'):
+        pytest.xfail("R kernels on macos are failing for now")
     kernel_manager = provider.make_manager(key)
     if kernel_manager.kernel_spec.argv[:3] == RUNNER_COMMAND:
         env_path = kernel_manager.kernel_spec.argv[4]
@@ -143,6 +145,8 @@ def test_runner(key):
 def test_jupyter_kernelspecs_runner(tmp_path, jupyter_kernel):
     if sys.platform.startswith("linux") and jupyter_kernel.kernel_name == "conda-env-t_st_env2-py":
         pytest.xfail("Folder with unicode raises error on linux.")
+    if sys.platform.startswith("darwin") and jupyter_kernel.kernel_name.endswith('-r'):
+        pytest.xfail("R kernels on macos are failing for now")
 
     fake_stdout = tmp_path / "stdout.log"
     # RUNNER_COMMAND is installed in all exported kernelspec

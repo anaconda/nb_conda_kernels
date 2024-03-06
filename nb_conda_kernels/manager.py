@@ -7,6 +7,7 @@ import threading
 import sys
 import time
 import glob
+import psutil
 
 import os
 from os.path import join, split, dirname, basename, abspath
@@ -134,6 +135,8 @@ class CondaKernelSpecManager(KernelSpecManager):
             return conda_info, None
           except Exception as err:
             return None, err
+          finally:
+             self.wait_for_child_processes_cleanup()
 
         class CondaInfoThread(threading.Thread):
           def run(self):
@@ -430,3 +433,11 @@ class CondaKernelSpecManager(KernelSpecManager):
       # if there is a thread, wait for it to finish
       if t:
         t.join()
+
+    def wait_for_child_processes_cleanup(self):
+        p = psutil.Process()
+        for c in p.children():
+            try:
+                c.wait(timeout=0)
+            except psutil.TimeoutExpired:
+                pass

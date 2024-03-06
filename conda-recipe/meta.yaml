@@ -9,30 +9,36 @@ source:
 
 build:
   number: 0
+  noarch: python
 
 requirements:
   host:
     - python
+    - setuptools
+    - wheel
     - pip
   run:
-    - python
-    - pywin32 # [win]
+    - python >=3.6
     - jupyter_client >=4.2
+    - jupyter_core
+    - setuptools
+    - traitlets
+    - psutil
 
 test:
   source_files:
     - setup.cfg
     - tests
   requires:
-    - backports.functools_lru_cache # [py2k]
     - pytest
     - pytest-cov
     - ipykernel
-    - notebook
+    - notebook <7
     - requests
     - mock
   commands:
-    - python -m nb_conda_kernels list # [py3k]
+    - pip check
+    - python -m nb_conda_kernels list
     - python -m pytest -v --cov=nb_conda_kernels tests
 
 about:

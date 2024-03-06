@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest,macos-latest,windows-latest]
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
     - id: conda-root
       name: Set CONDA_ROOT
       run: |
@@ -31,14 +31,14 @@ jobs:
     # have already built the testbed. Any small file will do
     - id: cache-key
       name: Retrieve cache key
-      uses: actions/cache@v2
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
       with:
         path: ./LICENSE
         key: key-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - id: cache
       name: Retrieve or create the conda cache
       if: steps.cache-key.outputs.cache-hit != 'true'
-      uses: actions/cache@v2
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
       with:
         path: ${{ steps.conda-root.outputs.value }}
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
@@ -46,60 +46,79 @@ jobs:
       if: steps.cache-key.outputs.cache-hit != 'true'
       # The argument tells the script we are in caching mode
       run: testbed/build.sh
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Retrieve the source code
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      with:
+        fetch-depth: 0
+    - name: Build the package
+      id: build
+      run: |
+        source $CONDA/etc/profile.d/conda.sh
+        conda install conda conda-build --yes
+        conda build --no-test conda-recipe
+        mv $CONDA/conda-bld .
+    - name: Upload the build artifact
+      uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4
+      with:
+        name: package-${{ github.sha }}
+        path: conda-bld/*/*.tar.bz2
   tests:
     runs-on: ${{ matrix.os }}
-    needs: testbed
+    needs: [build,testbed]
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest,ubuntu-latest,windows-latest]
-        pyver: [2.7,3.6,3.7,3.8]
+        pyver: ["3.8","3.10","3.12"]
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       with:
         fetch-depth: 0
     - id: conda-root
-      name: Set CONDA_ROOT
+      name: Set CONDA_ROOT and artifact suffix
       run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then sfx=win; else sfx=unx; fi
+          echo "::set-output name=suffix::$sfx"
           CONDA_ROOT=$(dirname $GITHUB_WORKSPACE)/conda
           echo "::set-output name=value::$CONDA_ROOT"
           echo "CONDA_ROOT=$CONDA_ROOT" >> $GITHUB_ENV
+          echo "PACKAGE SUFFIX: $sfx"
           echo "CONDA_ROOT: $CONDA_ROOT"
+    - name: Retrieve the build artfiact
+      uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4
+      with:
+        name: package-${{ github.sha }}
+        path: conda-bld
     - name: Retrieve the testbed
-      uses: actions/cache@v2
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4
       with:
         path: ${{ steps.conda-root.outputs.value }}
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
-    - name: Verify or build the testbed
+    - name: Verify the testbed
       run: testbed/build.sh
-    - name: Build and test the package
+    - name: Test the package
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
-        [ "$RUNNER_OS" == "Windows" ] && export PYTHONIOENCODING=UTF-8
-        conda build conda-recipe --python=${{ matrix.pyver }} | tee build.log
+        [ "$RUNNER_OS" = "Windows" ] && export PYTHONIOENCODING=UTF-8
+        export PYTHONUNBUFFERED=1
+        conda build --test conda-bld/noarch/*.tar.bz2 | tee build.log
         # Because Windows refuses to preserve the error code
         if grep ' FAILED ' build.log; then exit -1; fi
-        mv $CONDA_ROOT/conda-bld .
-    - name: Upload the build artifact
-      if: github.event_name == 'push'
-      uses: actions/upload-artifact@v2
-      with:
-        # By uploading to the same artifact we can download all of the packages
-        # and upload them all to anaconda.org in a single job
-        name: package-${{ github.sha }}
-        path: conda-bld/*/*.tar.bz2
   upload:
     needs: tests
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       with:
         fetch-depth: 0
-    - name: Download the build artifacts
-      uses: actions/download-artifact@v2
+    - name: Retrieve the artfiact
+      uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4
       with:
         name: package-${{ github.sha }}
         path: conda-bld
