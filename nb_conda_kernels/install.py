@@ -19,8 +19,6 @@ NBA = "NotebookApp"
 CKSM = "nb_conda_kernels.CondaKernelSpecManager"
 JKSM = "jupyter_client.kernelspec.KernelSpecManager"
 KSMC = "kernel_spec_manager_class"
-JCKP = "jupyter_client.kernel_providers"
-NCKDCKP = "nb_conda_kernels.discovery:CondaKernelProvider"
 JC = "jupyter_config"
 JNC = "jupyter_notebook_config"
 ENDIS = ['disabled', 'enabled']
@@ -121,7 +119,7 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
                 if status or path_g != path:
                     # No changes in status mode, or if we're not in the target path
                     expected = spec
-                elif enable and fbase == JC and key == JA and not is_enabled_entry:
+                elif enable and fbase == JC and key == JA:
                     # Add the spec if we are enabling, the entry point is not active,
                     # and we're using the new file (jupyter_config.json) and key (JupyterApp)
                     expected = CKSM
@@ -156,14 +154,9 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
     is_enabled_all = bool(is_enabled_all.get(NBA, is_enabled_all.get(JA)))
     is_enabled_local = bool(is_enabled_local.get(NBA, is_enabled_local.get(JA)))
 
-    if is_enabled_all != is_enabled_local or (is_enabled_entry and disable):
+    if is_enabled_all != is_enabled_local:
         sev = 'WARNING' if status else 'ERROR'
-        if is_enabled_entry and disable:
-            msg = ['{}: the entrypoint mechanism cannot be disabled'.format(sev),
-                   'with changes to jupyter_config.json. To disable it,',
-                   'remove the nb_conda_kernels package.']
-            fpaths = []
-        elif path not in all_paths:
+        if path not in all_paths:
             msg = fpaths = []
         elif status:
             msg = ['{}: the local configuration of nb_conda_kernels'.format(sev),
@@ -182,7 +175,6 @@ def install(enable=False, disable=False, status=None, prefix=None, path=None, ve
         if msg:
             (log.warning if status else log.error)('\n'.join(msg))
 
-    is_enabled_all = is_enabled_all or is_enabled_entry
     log.info('Status: {}'.format(ENDIS[is_enabled_all]))
     return 0 if status or is_enabled_all == is_enabled_local else 1
 
