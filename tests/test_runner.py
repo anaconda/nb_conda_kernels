@@ -147,8 +147,6 @@ def test_runner(key):
 
 @pytest.mark.parametrize("jupyter_kernel", find_test_keys(), indirect=True)
 def test_jupyter_kernelspecs_runner(tmp_path, jupyter_kernel):
-    if sys.platform.startswith("linux") and jupyter_kernel.kernel_name == "conda-env-t_st_env2-py":
-        pytest.xfail("Folder with unicode raises error on linux.")
     if sys.platform.startswith("darwin") and jupyter_kernel.kernel_name.endswith('-r'):
         pytest.xfail("R kernels on macos are failing for now")
 
