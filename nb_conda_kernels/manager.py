@@ -21,8 +21,16 @@ CONDA_EXE = os.environ.get("CONDA_EXE", "conda")
 
 RUNNER_COMMAND = ['python', '-m', 'nb_conda_kernels.runner']
 
+_canonical_paths = {}
+
 
 def _canonicalize(path):
+    """
+    On case-sensitive filesystems, return the path unchanged.
+    On case-insensitive filesystems, cache the first value of
+    the path that we encounter, and return that for any other
+    case variation.
+    """
     def _inode(p):
         try:
             return os.stat(p).st_ino
@@ -34,7 +42,9 @@ def _canonicalize(path):
     if inode1 != inode2:
         return path
     inode3 = _inode(path.upper())
-    return plower if inode1 == inode3 else path
+    if inode3 != inode2:
+        return path
+    return _canonical_paths.setdefault(plower, path)
 
 
 class CondaKernelSpecManager(KernelSpecManager):
