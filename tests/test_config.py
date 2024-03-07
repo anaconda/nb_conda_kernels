@@ -3,7 +3,6 @@ from __future__ import print_function
 import json
 import os
 import sys
-from sys import prefix
 
 try:
     from unittest.mock import call, patch
@@ -12,7 +11,7 @@ except ImportError:
 
 import pytest
 from traitlets.config import Config, TraitError
-from nb_conda_kernels.manager import RUNNER_COMMAND, CondaKernelSpecManager
+from nb_conda_kernels.manager import RUNNER_COMMAND, CondaKernelSpecManager, _canonicalize
 
 # The testing regime for nb_conda_kernels is unique, in that it needs to
 # see an entire conda installation with multiple environments and both
@@ -36,13 +35,14 @@ def test_configuration():
     if conda_info is None:
         print('ERROR: Could not find conda find conda.')
         exit(-1)
-    print(u'Current prefix: {}'.format(prefix))
+    print(u'Current prefix: {}'.format(sys.prefix))
     print(u'Root prefix: {}'.format(conda_info['root_prefix']))
     print(u'Conda version: {}'.format(conda_info['conda_version']))
     print(u'Environments:')
     for env in conda_info['envs']:
         print(u'  - {}'.format(env))
     checks = {}
+    prefix = _canonicalize(sys.prefix)
     print('Kernels included in get_all_specs')
     print('---------------------------------')
     for key, value in spec_manager.get_all_specs().items():
@@ -55,7 +55,7 @@ def test_configuration():
         if key.startswith('conda-'):
             if long_env == prefix:
                 checks['env_current'] = True
-            if key.startswith('conda-root-'):
+            if key.startswith('conda-base-'):
                 checks['root_py'] = True
             if key.startswith('conda-env-'):
                 if len(key.split('-')) >= 5:
@@ -68,12 +68,9 @@ def test_configuration():
                 long_env.encode('ascii')
             except UnicodeEncodeError:
                 checks['env_unicode'] = True
-        elif key.lower().startswith('python'):
-            checks['default_py'] = True
     print('Scenarios required for proper testing')
     print('-------------------------------------')
-    print('  - Python kernel in test environment: {}'.format(bool(checks.get('default_py'))))
-    print('  - ... included in the conda kernel list: {}'.format(bool(checks.get('env_current'))))
+    print('  - Python kernel in test environment: {}'.format(bool(checks.get('env_current'))))
     print('  - Python kernel in root environment: {}'.format(bool(checks.get('root_py'))))
     print('  - Python kernel in other environment: {}'.format(bool(checks.get('env_py'))))
     print('  - R kernel in non-test environment: {}'.format(bool(checks.get('env_r'))))
@@ -87,7 +84,7 @@ def test_configuration():
     # on Windows works fine. So it is likely related to the way AppVeyor captures output
     if sys.platform.startswith('win'):
         checks.setdefault('env_unicode', False)
-    assert len(checks) >= 7
+    assert len(checks) >= 6
 
 
 @pytest.mark.parametrize("name_format, expected", [

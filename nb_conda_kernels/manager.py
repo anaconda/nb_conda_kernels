@@ -21,17 +21,46 @@ CONDA_EXE = os.environ.get("CONDA_EXE", "conda")
 
 RUNNER_COMMAND = ['python', '-m', 'nb_conda_kernels.runner']
 
+_canonical_paths = {}
+
+
+def _canonicalize(path):
+    """
+    On case-sensitive filesystems, return the path unchanged.
+    On case-insensitive filesystems, cache the first value of
+    the path that we encounter, and return that for any other
+    case variation.
+    """
+    def _inode(p):
+        try:
+            return os.stat(p).st_ino
+        except FileNotFoundError:
+            return -1
+    inode1 = _inode(path)
+    plower = path.lower()
+    inode2 = _inode(plower)
+    if inode1 != inode2:
+        return path
+    inode3 = _inode(path.upper())
+    if inode3 != inode2:
+        return path
+    return _canonical_paths.setdefault(plower, path)
+
 
 class CondaKernelSpecManager(KernelSpecManager):
     """ A custom KernelSpecManager able to search for conda environments and
         create kernelspecs for them.
     """
+    base_name = Unicode("base", config=True,
+                        help="The name to give the base/root environment. "
+                        "The default is 'base', mirroring conda's naming convention. "
+                        "Historically, 'root' was used as well.")
     conda_only = Bool(False, config=True,
-                      help="Include only the kernels not visible from Jupyter normally (True if kernelspec_path is not None)")
-
+                      help="Include only the kernels not visible from Jupyter normally. If False, any "
+                      "duplication will be resolved in favor of nb_conda_kernels. This is assumed to "
+                      "be true if kernelspec_path is supplied as well.")
     env_filter = Unicode(None, config=True, allow_none=True,
-                         help="Do not list environment names that match this regex")
-
+                         help="Exclude kernels from environments that match this regex.")
     kernelspec_path = Unicode(None, config=True, allow_none=True,
         help="""Path to install conda kernel specs to.
 
@@ -179,13 +208,12 @@ class CondaKernelSpecManager(KernelSpecManager):
 
     def _all_envs(self):
         """ Find all of the environments we should be checking. We skip
-            environments in the conda-bld directory as well as environments
-            that match our env_filter regex. Returns a dict with canonical
-            environment names as keys, and full paths as values.
+            environments in the conda-bld directory. Returns a dict with
+            canonical environment names as keys, and full paths as values.
         """
         conda_info = self._conda_info
-        envs = conda_info['envs']
-        base_prefix = conda_info['conda_prefix']
+        envs = list(map(_canonicalize, conda_info['envs']))
+        base_prefix = _canonicalize(conda_info['conda_prefix'])
         envs_prefix = join(base_prefix, 'envs')
         build_prefix = join(base_prefix, 'conda-bld', '')
         # Older versions of conda do not seem to include the base prefix
@@ -197,11 +225,10 @@ class CondaKernelSpecManager(KernelSpecManager):
             envs_dirs = [join(base_prefix, 'envs')]
         all_envs = {}
         for env_path in envs:
-            if self.env_filter is not None:
-                if self._env_filter_regex.search(env_path):
-                    continue
-            if env_path == base_prefix:
-                env_name = 'root'
+            if self.env_filter and self._env_filter_regex.search(env_path):
+                continue
+            elif env_path == base_prefix:
+                env_name = self.base_name
             elif env_path.startswith(build_prefix):
                 # Skip the conda-bld directory entirely
                 continue
@@ -252,7 +279,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     self.log.error("nb_conda_kernels | error loading %s:\n%s",
                                    spec_path, err)
                     continue
-                kernel_dir = dirname(spec_path).lower()
+                kernel_dir = dirname(spec_path)
                 kernel_name = raw_kernel_name = basename(kernel_dir)
                 if self.kernelspec_path is not None and kernel_name.startswith("conda-"):
                     self.log.debug("nb_conda_kernels | Skipping kernel spec %s", spec_path)
@@ -265,7 +292,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     kernel_name = 'py'
                 elif kernel_name == 'ir':
                     kernel_name = 'r'
-                kernel_prefix = '' if env_name == 'root' else 'env-'
+                kernel_prefix = '' if env_name == self.base_name else 'env-'
                 kernel_name = u'conda-{}{}-{}'.format(kernel_prefix, env_name, kernel_name)
                 # Replace invalid characters with dashes
                 kernel_name = self.clean_kernel_name(kernel_name)
@@ -370,14 +397,16 @@ class CondaKernelSpecManager(KernelSpecManager):
             kspecs = {}
         else:
             kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
-
-        # add conda envs kernelspecs
-        if self.whitelist:
-            kspecs.update({name: spec.resource_dir
-                           for name, spec in self._conda_kspecs.items() if name in self.whitelist})
-        else:
-            kspecs.update({name: spec.resource_dir
-                           for name, spec in self._conda_kspecs.items()})
+            kspecs = {k: _canonicalize(v) for k, v in kspecs.items()}
+        spec_rev = {v: k for k, v in kspecs.items()}
+        for name, spec in self._conda_kspecs.items():
+            kspecs[name] = spec.resource_dir
+            dup = spec_rev.get(kspecs[name])
+            if dup:
+                del kspecs[dup]
+        allow = getattr(self, 'allowed_kernelspecs', None) or getattr(self, 'whitelist', None)
+        if allow:
+            kspecs = {k: v for k, v in kspecs.items() if k in allow}
         return kspecs
 
     def get_kernel_spec(self, kernel_name):
@@ -429,7 +458,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         return spec_dir
 
     def __del__(self):
-      t = self._conda_info_cache_thread
+      t = getattr(self, '_conda_info_cache_thread', None)
       # if there is a thread, wait for it to finish
       if t:
         t.join()
