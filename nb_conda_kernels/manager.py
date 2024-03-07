@@ -54,7 +54,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             if new_value not in ("", "--user", "--sys-prefix"):
                 if not os.path.isdir(self.kernelspec_path):
                     raise TraitError("CondaKernelSpecManager.kernelspec_path is not a directory.")
-            self.log.debug("[nb_conda_kernels] Force conda_only=True as kernelspec_path is not None.")
+            self.log.debug("nb_conda_kernels | Force conda_only=True as kernelspec_path is not None.")
             self.conda_only = True
 
         return new_value
@@ -92,7 +92,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             self._kernel_prefix = sys.prefix if self.kernelspec_path == "--sys-prefix" else self.kernelspec_path
 
         self.log.info(
-            "[nb_conda_kernels] enabled, %s kernels found", len(self._conda_kspecs)
+            "nb_conda_kernels | enabled, %s kernels found.", len(self._conda_kspecs)
         )
 
     @staticmethod
@@ -147,10 +147,10 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         # cache is empty
         if expiry is None:
-          self.log.debug("[nb_conda_kernels] refreshing conda info (blocking call)")
+          self.log.debug("nb_conda_kernels | refreshing conda info (blocking call)")
           conda_info, err = get_conda_info_data()
           if conda_info is None:
-            self.log.error("[nb_conda_kernels] couldn't call conda:\n%s", err)
+            self.log.error("nb_conda_kernels | couldn't call conda:\n%s", err)
           self._conda_info_cache = conda_info
           self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
 
@@ -159,16 +159,16 @@ class CondaKernelSpecManager(KernelSpecManager):
           t.join()
           conda_info = t.out
           if conda_info is None:
-            self.log.error("[nb_conda_kernels] couldn't call conda:\n%s", t.err)
+            self.log.error("nb_conda_kernels | couldn't call conda:\n%s", t.err)
           else:
-            self.log.debug("[nb_conda_kernels] collected conda info (async call)")
+            self.log.debug("nb_conda_kernels | collected conda info (async call)")
           self._conda_info_cache = conda_info
           self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
           self._conda_info_cache_thread = None
 
         # cache expired
         elif not t and expiry < time.time():
-          self.log.debug("[nb_conda_kernels] refreshing conda info (async call)")
+          self.log.debug("nb_conda_kernels | refreshing conda info (async call)")
           t = CondaInfoThread()
           t.start()
           self._conda_info_cache_thread = t
@@ -249,13 +249,13 @@ class CondaKernelSpecManager(KernelSpecManager):
                         data = fp.read()
                     spec = json.loads(data.decode('utf-8'))
                 except Exception as err:
-                    self.log.error("[nb_conda_kernels] error loading %s:\n%s",
+                    self.log.error("nb_conda_kernels | error loading %s:\n%s",
                                    spec_path, err)
                     continue
                 kernel_dir = dirname(spec_path).lower()
                 kernel_name = raw_kernel_name = basename(kernel_dir)
                 if self.kernelspec_path is not None and kernel_name.startswith("conda-"):
-                    self.log.debug("[nb_conda_kernels] Skipping kernel spec %s", spec_path)
+                    self.log.debug("nb_conda_kernels | Skipping kernel spec %s", spec_path)
                     continue  # Ensure to skip dynamically added kernel spec within the environment prefix
                 # We're doing a few of these adjustments here to ensure that
                 # the naming convention is as close as possible to the previous
@@ -312,7 +312,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                             json.dump(tmp_spec, f)
                     except OSError as error:
                         self.log.warning(
-                            u"[nb_conda_kernels] Fail to install kernel '{}'.".format(kernel_dir),
+                            u"nb_conda_kernels | Fail to install kernel '{}'.".format(kernel_dir),
                             exc_info=error
                         )
 

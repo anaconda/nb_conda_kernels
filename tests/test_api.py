@@ -1,5 +1,10 @@
 from subprocess import check_output, CalledProcessError
-from notebook.services.kernelspecs.tests import test_kernelspecs_api
+
+try:
+    from notebook.services.kernelspecs.tests import test_kernelspecs_api
+except Exception:
+    import pytest
+    pytest.skip('Requires notebook<7', allow_module_level=True)
 
 try:
     from unittest.mock import patch
