@@ -64,7 +64,7 @@ jobs:
       uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4
       with:
         name: package-${{ github.sha }}
-        path: conda-bld/*/*.tar.bz2
+        path: conda-bld
   tests:
     runs-on: ${{ matrix.os }}
     needs: [build,testbed]
@@ -105,9 +105,14 @@ jobs:
         source $CONDA_ROOT/etc/profile.d/conda.sh
         [ "$RUNNER_OS" = "Windows" ] && export PYTHONIOENCODING=UTF-8
         export PYTHONUNBUFFERED=1
-        conda build --test conda-bld/noarch/*.tar.bz2 | tee build.log
+        export NBVER=6
+        [ 3.12 = ${{ matrix.pyver }} ] && export NBVER=7
+        conda create -n testbase -c ./conda-bld nb_conda_kernels python=${{ matrix.pyver }} notebook=$NBVER pytest pytest-cov mock requests
+        conda activate testbase
+        python -m nb_conda_kernels list
+        python -m pytest -v --cov=nb_conda_kernels tests 2>&1 | tee build.log
         # Because Windows refuses to preserve the error code
-        if grep ' FAILED ' build.log; then exit -1; fi
+        if grep -E '^(FAILED|ERROR) ' build.log; then exit -1; fi
   upload:
     needs: tests
     runs-on: ubuntu-latest

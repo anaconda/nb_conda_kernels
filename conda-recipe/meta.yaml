@@ -21,7 +21,6 @@ requirements:
     - python >=3.6
     - jupyter_client >=4.2
     - jupyter_core
-    - traitlets
     - psutil
   run_constrained:
     - notebook >=5.3.0
