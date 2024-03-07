@@ -41,12 +41,16 @@ class CondaKernelSpecManager(KernelSpecManager):
     """ A custom KernelSpecManager able to search for conda environments and
         create kernelspecs for them.
     """
+    base_name = Unicode("base", config=True,
+                        help="The name to give the base/root environment. "
+                        "The default is 'base', mirroring conda's naming convention. "
+                        "Historically, 'root' was used as well.")
     conda_only = Bool(False, config=True,
-                      help="Include only the kernels not visible from Jupyter normally (True if kernelspec_path is not None)")
-
+                      help="Include only the kernels not visible from Jupyter normally. If False, any "
+                      "duplication will be resolved in favor of nb_conda_kernels. This is assumed to "
+                      "be true if kernelspec_path is supplied as well.")
     env_filter = Unicode(None, config=True, allow_none=True,
-                         help="Do not list environment names that match this regex")
-
+                         help="Exclude kernels from environments that match this regex.")
     kernelspec_path = Unicode(None, config=True, allow_none=True,
         help="""Path to install conda kernel specs to.
 
@@ -214,7 +218,7 @@ class CondaKernelSpecManager(KernelSpecManager):
             if self.env_filter and self._env_filter_regex.search(env_path):
                 continue
             elif env_path == base_prefix:
-                env_name = 'root'
+                env_name = self.base_name
             elif env_path.startswith(build_prefix):
                 # Skip the conda-bld directory entirely
                 continue
@@ -279,7 +283,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     kernel_name = 'py'
                 elif kernel_name == 'ir':
                     kernel_name = 'r'
-                kernel_prefix = '' if env_name == 'root' else 'env-'
+                kernel_prefix = '' if env_name == self.base_name else 'env-'
                 kernel_name = u'conda-{}{}-{}'.format(kernel_prefix, env_name, kernel_name)
                 # Replace invalid characters with dashes
                 kernel_name = self.clean_kernel_name(kernel_name)
@@ -385,10 +389,12 @@ class CondaKernelSpecManager(KernelSpecManager):
         else:
             kspecs = super(CondaKernelSpecManager, self).find_kernel_specs()
             kspecs = {k: _canonicalize(v) for k, v in kspecs.items()}
-        spec_set = set(kspecs.values())
-        kspecs.update({name: spec.resource_dir
-                       for name, spec in self._conda_kspecs.items()
-                       if spec.resource_dir not in spec_set})
+        spec_rev = {v: k for k, v in kspecs.items()}
+        for name, spec in self._conda_kspecs.items():
+            kspecs[name] = spec.resource_dir
+            dup = spec_rev.get(kspecs[name])
+            if dup:
+                del kspecs[dup]
         allow = getattr(self, 'allowed_kernelspecs', None) or getattr(self, 'whitelist', None)
         if allow:
             kspecs = {k: v for k, v in kspecs.items() if k in allow}
