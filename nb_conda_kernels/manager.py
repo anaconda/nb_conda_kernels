@@ -154,12 +154,8 @@ class CondaKernelSpecManager(KernelSpecManager):
           # conda environments.
           shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
           try:
-            # conda info --json uses the standard JSON escaping
-            # mechanism for non-ASCII characters. So it is always
-            # valid to decode here as 'ascii', since the JSON loads()
-            # method will recover any original Unicode for us.
-            out = subprocess.check_output([CONDA_EXE, "info", "--json"],
-                                          shell=shell).decode('ascii')
+            # Let json do the decoding for non-ASCII characters
+            out = subprocess.check_output([CONDA_EXE, "info", "--json"], shell=shell)
             conda_info = json.loads(out)
             return conda_info, None
           except Exception as err:
