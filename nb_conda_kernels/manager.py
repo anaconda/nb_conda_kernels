@@ -202,8 +202,8 @@ class CondaKernelSpecManager(KernelSpecManager):
             canonical environment names as keys, and full paths as values.
         """
         conda_info = self._conda_info
-        envs = conda_info['envs']
-        base_prefix = conda_info['conda_prefix']
+        envs = list(map(_canonicalize, conda_info['envs']))
+        base_prefix = _canonicalize(conda_info['conda_prefix'])
         envs_prefix = join(base_prefix, 'envs')
         build_prefix = join(base_prefix, 'conda-bld', '')
         # Older versions of conda do not seem to include the base prefix
@@ -269,7 +269,6 @@ class CondaKernelSpecManager(KernelSpecManager):
                     self.log.error("nb_conda_kernels | error loading %s:\n%s",
                                    spec_path, err)
                     continue
-                spec_path = _canonicalize(spec_path)
                 kernel_dir = dirname(spec_path)
                 kernel_name = raw_kernel_name = basename(kernel_dir)
                 if self.kernelspec_path is not None and kernel_name.startswith("conda-"):

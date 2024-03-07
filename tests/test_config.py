@@ -3,7 +3,6 @@ from __future__ import print_function
 import json
 import os
 import sys
-from sys import prefix
 
 try:
     from unittest.mock import call, patch
@@ -12,7 +11,7 @@ except ImportError:
 
 import pytest
 from traitlets.config import Config, TraitError
-from nb_conda_kernels.manager import RUNNER_COMMAND, CondaKernelSpecManager
+from nb_conda_kernels.manager import RUNNER_COMMAND, CondaKernelSpecManager, _canonicalize
 
 # The testing regime for nb_conda_kernels is unique, in that it needs to
 # see an entire conda installation with multiple environments and both
@@ -36,13 +35,14 @@ def test_configuration():
     if conda_info is None:
         print('ERROR: Could not find conda find conda.')
         exit(-1)
-    print(u'Current prefix: {}'.format(prefix))
+    print(u'Current prefix: {}'.format(sys.prefix))
     print(u'Root prefix: {}'.format(conda_info['root_prefix']))
     print(u'Conda version: {}'.format(conda_info['conda_version']))
     print(u'Environments:')
     for env in conda_info['envs']:
         print(u'  - {}'.format(env))
     checks = {}
+    prefix = _canonicalize(sys.prefix)
     print('Kernels included in get_all_specs')
     print('---------------------------------')
     for key, value in spec_manager.get_all_specs().items():
