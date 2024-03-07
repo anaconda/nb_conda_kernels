@@ -458,7 +458,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         return spec_dir
 
     def __del__(self):
-      t = self._conda_info_cache_thread
+      t = getattr(self, '_conda_info_cache_thread', None)
       # if there is a thread, wait for it to finish
       if t:
         t.join()
