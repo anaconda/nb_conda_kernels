@@ -288,7 +288,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                     kernel_name = 'py'
                 elif kernel_name == 'ir':
                     kernel_name = 'r'
-                kernel_prefix = '' if env_name == self.base_name else 'env-'
+                is_base = env_name == self.base_name
+                kernel_prefix = '' if is_base else 'env-'
                 kernel_name = u'conda-{}{}-{}'.format(kernel_prefix, env_name, kernel_name)
                 # Replace invalid characters with dashes
                 kernel_name = self.clean_kernel_name(kernel_name)
@@ -305,7 +306,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                     kernel=raw_kernel_name,
                     language=display_prefix,
                 )
-                if env_path == sys.prefix:
+                is_current = env_path == sys.prefix
+                if is_current:
                     display_name += ' *'
                 spec['display_name'] = display_name
                 if env_path != sys.prefix:
@@ -313,7 +315,11 @@ class CondaKernelSpecManager(KernelSpecManager):
                 metadata = spec.get('metadata', {})
                 metadata.update({
                     'conda_env_name': env_name,
-                    'conda_env_path': env_path
+                    'conda_env_path': env_path,
+                    'conda_language': display_prefix,
+                    'conda_raw_kernel_name': raw_kernel_name,
+                    'conda_is_base_environment': is_base,
+                    'conda_is_currently_running': is_current
                 })
                 spec['metadata'] = metadata
 
