@@ -319,7 +319,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                     'conda_env_path': env_path,
                 })
                 if self.enable_debugger is not None:
-                    metadata.update({"enable_debugger": self.enable_debugger})
+                    metadata.update({"debugger": self.enable_debugger})
                 spec['metadata'] = metadata
 
                 if self.kernelspec_path is not None:
