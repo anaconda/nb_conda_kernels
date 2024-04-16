@@ -313,7 +313,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                 metadata = spec.get('metadata', {})
                 metadata.update({
                     'conda_env_name': env_name,
-                    'conda_env_path': env_path
+                    'conda_env_path': env_path,
+                    'debugger': True
                 })
                 spec['metadata'] = metadata
 
