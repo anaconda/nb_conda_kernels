@@ -121,6 +121,12 @@ Available field names within the string:
   - `{kernel}` = Original kernel name (name of the folder containing the kernel spec)
   - `{language}`  = Language (identical to `{0}`)
 
+- `enable_debugger`: Override kernelspec debugger metadata
+Default: None
+Possible values are:
+  - True: Override environment kernelspec metadata and set the debugger flag to `true`
+  - False: Override environment kernelspec metadata and set the debugger flag to `false`
+
 In order to pass a configuration option in the command line use ```python -m nb_conda_kernels list --CondaKernelSpecManager.env_filter="regex"``` where regex is the regular expression for filtering envs "this|that|and|that" works.
 To set it in jupyter config file, edit the jupyter configuration file (py or json) located in your ```jupyter --config-dir```
 - for `jupyter_config.py` - add a line "c.CondaKernelSpecManager.env_filter = 'regex'"
