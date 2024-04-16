@@ -75,6 +75,8 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         If None, the conda kernel specs will only be available dynamically on notebook editors.
         """)
+    enable_debugger = Bool(False, config=True,
+                           help="Set debugger=True in kernelspec metadata. The default is False.")
 
     @validate("kernelspec_path")
     def _validate_kernelspec_path(self, proposal):
@@ -314,7 +316,7 @@ class CondaKernelSpecManager(KernelSpecManager):
                 metadata.update({
                     'conda_env_name': env_name,
                     'conda_env_path': env_path,
-                    'debugger': True
+                    'debugger': self.enable_debugger
                 })
                 spec['metadata'] = metadata
 
