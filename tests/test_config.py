@@ -241,5 +241,48 @@ def test_kernel_metadata(monkeypatch, tmp_path, kernelspec):
             assert metadata[key] == value
 
 
+@pytest.mark.parametrize("kernelspec", [
+    {
+        "display_name": "xpython",
+        "argv": [
+            "@XPYTHON_KERNELSPEC_PATH@xpython",
+            "-f",
+            "{connection_file}"
+        ],
+        "language": "python",
+        "metadata": { "debugger": True }
+    }
+])
+def test_kernel_metadata_debugger_override(monkeypatch, tmp_path, kernelspec):
+
+    mock_info = {
+        'conda_prefix': '/'
+    }
+
+    def envs(*args):
+        return {
+            'env_name': str(tmp_path)
+        }
+
+    kernel_file = tmp_path / 'share' / 'jupyter' / 'kernels' / 'my_kernel' / 'kernel.json'
+    kernel_file.parent.mkdir(parents=True, exist_ok=True)
+    if sys.version_info >= (3, 0):
+        kernel_file.write_text(json.dumps(kernelspec))
+    else:
+        kernel_file.write_bytes(json.dumps(kernelspec))
+
+    monkeypatch.setattr(CondaKernelSpecManager, "_conda_info", mock_info)
+    monkeypatch.setattr(CondaKernelSpecManager, "_all_envs", envs)
+
+    manager = CondaKernelSpecManager()
+    specs = manager._all_specs()
+    assert specs['conda-env-env_name-my_kernel']['metadata']['debugger'] is True
+
+    manager = CondaKernelSpecManager(enable_debugger=False)
+    specs = manager._all_specs()
+    assert specs['conda-env-env_name-my_kernel']['metadata']['debugger'] is False
+
+
+
 if __name__ == '__main__':
     test_configuration()

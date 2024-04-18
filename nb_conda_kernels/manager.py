@@ -75,6 +75,9 @@ class CondaKernelSpecManager(KernelSpecManager):
 
         If None, the conda kernel specs will only be available dynamically on notebook editors.
         """)
+    enable_debugger = Bool(None, config=True, allow_none=True,
+                           help="Optional: Override debugger setting in kernelspec metadata. "
+                           "If this parameter is unset it will default to the source kernel metadata.")
 
     @validate("kernelspec_path")
     def _validate_kernelspec_path(self, proposal):
@@ -321,6 +324,8 @@ class CondaKernelSpecManager(KernelSpecManager):
                     'conda_is_base_environment': is_base,
                     'conda_is_currently_running': is_current
                 })
+                if self.enable_debugger is not None:
+                    metadata.update({"debugger": self.enable_debugger})
                 spec['metadata'] = metadata
 
                 if self.kernelspec_path is not None:
