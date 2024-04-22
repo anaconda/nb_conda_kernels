@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest,macos-latest,windows-latest]
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
     - id: conda-root
       name: Set CONDA_ROOT
       run: |
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
       with:
         fetch-depth: 0
     - name: Build the package
@@ -75,7 +75,7 @@ jobs:
         pyver: ["3.8","3.10","3.12"]
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
       with:
         fetch-depth: 0
     - id: conda-root
@@ -119,7 +119,7 @@ jobs:
     if: github.event_name == 'push'
     steps:
     - name: Retrieve the source code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
       with:
         fetch-depth: 0
     - name: Retrieve the artfiact
