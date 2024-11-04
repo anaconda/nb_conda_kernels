@@ -63,7 +63,7 @@ jobs:
       run: |
         source $CONDA/etc/profile.d/conda.sh
         conda install conda conda-build --yes
-        conda build --no-test conda-recipe
+        conda build conda-recipe
         mv $CONDA/conda-bld .
     - name: Upload the build artifact
       uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
