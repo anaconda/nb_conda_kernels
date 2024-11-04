@@ -27,6 +27,7 @@ def print(x):
     sys.stdout.flush()
 
 
+@pytest.mark.testbed
 def test_configuration():
     print('\nConda configuration')
     print('-------------------')
@@ -169,6 +170,7 @@ def test_kernelspec_path(tmp_path, kernelspec_path, user, prefix, expected):
                 assert call_[1]["prefix"] ==prefix
 
 
+@pytest.mark.testbed
 @pytest.mark.parametrize("kernelspec_path", ["", None])
 def test_install_kernelspec(tmp_path, kernelspec_path):
     config = Config({"CondaKernelSpecManager": {"kernelspec_path": kernelspec_path}})

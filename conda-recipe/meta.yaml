@@ -39,7 +39,8 @@ test:
   commands:
     - pip check
     - python -m nb_conda_kernels list
-    - python -m pytest -v --cov=nb_conda_kernels tests
+    # Skips any tests that assume the existence of the testbed
+    - python -m pytest -v -m "not testbed" --cov=nb_conda_kernels tests
 
 about:
   home: https://github.com/Anaconda-Platform/nb_conda_kernels
