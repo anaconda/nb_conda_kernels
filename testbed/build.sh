@@ -34,6 +34,7 @@ source $CONDA_ROOT/etc/profile.d/conda.sh
 conda activate base
 
 if [ ! -f $CONDA_ROOT/.created ]; then
+    conda config --prepend channels conda-forge --system
     pip install -e .
     python -m nb_conda_kernels.install --enable
 

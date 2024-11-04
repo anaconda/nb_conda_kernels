@@ -24,9 +24,8 @@ jobs:
       name: Set CONDA_ROOT
       run: |
           CONDA_ROOT=$(dirname $GITHUB_WORKSPACE)/conda
-          echo "::set-output name=value::$CONDA_ROOT"
+          echo "value=$CONDA_ROOT" >> $GITHUB_OUTPUT
           echo "CONDA_ROOT=$CONDA_ROOT" >> $GITHUB_ENV
-          echo "CONDA_ROOT: $CONDA_ROOT"
     # Use a smaller cache entry to enable a quicker exit if we
     # have already built the testbed. Any small file will do
     - id: cache-key
@@ -42,6 +41,12 @@ jobs:
       with:
         path: ${{ steps.conda-root.outputs.value }}
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      if: steps.cache-key.outputs.cache-hit != 'true'
+      with:
+        auto-activate-base: true
+        activate-environment: ""
     - name: Verify or build the testbed
       if: steps.cache-key.outputs.cache-hit != 'true'
       # The argument tells the script we are in caching mode
