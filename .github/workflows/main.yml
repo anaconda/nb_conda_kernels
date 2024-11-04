@@ -42,7 +42,7 @@ jobs:
         path: ${{ steps.conda-root.outputs.value }}
         key: testbed-${{ matrix.os }}-${{ hashFiles('testbed') }}
     - name: Install Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@d2e6a045a86077fb6cad6f5adf368e9076ddaa8d # v3
       if: steps.cache-key.outputs.cache-hit != 'true'
       with:
         auto-activate-base: true
