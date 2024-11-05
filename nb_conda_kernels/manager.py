@@ -10,18 +10,37 @@ import glob
 import psutil
 
 import os
-from os.path import join, split, dirname, basename, abspath
+from os.path import join, split, dirname, basename, abspath, exists
 from traitlets import Bool, Unicode, TraitError, validate
 
 from jupyter_client.kernelspec import KernelSpecManager, KernelSpec, NoSuchKernel
 
 CACHE_TIMEOUT = 60
 
-CONDA_EXE = os.environ.get("CONDA_EXE", "conda")
-
 RUNNER_COMMAND = ['python', '-m', 'nb_conda_kernels.runner']
 
 _canonical_paths = {}
+
+CONDA_EXE = None
+
+
+def _conda_exe():
+    global CONDA_EXE
+    if CONDA_EXE is not None:
+        return CONDA_EXE
+    for evar in ("CONDA_EXE", "MAMBA_EXE"):
+        CONDA_EXE = os.environ.get(evar)
+        if CONDA_EXE and exists(CONDA_EXE):
+            return CONDA_EXE
+    paths = os.environ.get("PATH").split(os.pathsep)
+    ext = ".exe" if sys.platform.startswith('win') else ""
+    for pname in ("conda", "mamba", "micromamba"):
+        for pdir in paths:
+            CONDA_EXE = join(pdir, pname + ext)
+            if exists(CONDA_EXE):
+                return CONDA_EXE
+    CONDA_EXE = ""
+    return CONDA_EXE
 
 
 def _canonicalize(path):
@@ -123,9 +142,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         if not self._kernel_user:
             self._kernel_prefix = sys.prefix if self.kernelspec_path == "--sys-prefix" else self.kernelspec_path
 
-        self.log.info(
-            "nb_conda_kernels | enabled, %s kernels found.", len(self._conda_kspecs)
-        )
+        self.log.info("nb_conda_kernels | %d kernels found.", len(self._conda_kspecs))
 
     @staticmethod
     def clean_kernel_name(kname):
@@ -152,57 +169,85 @@ class CondaKernelSpecManager(KernelSpecManager):
         """
 
         def get_conda_info_data():
-          # This is to make sure that subprocess can find 'conda' even if
-          # it is a Windows batch file---which is the case in non-root
-          # conda environments.
-          shell = CONDA_EXE == 'conda' and sys.platform.startswith('win')
-          try:
-            # Let json do the decoding for non-ASCII characters
-            out = subprocess.check_output([CONDA_EXE, "info", "--json"], shell=shell)
-            conda_info = json.loads(out)
-            return conda_info, None
-          except Exception as err:
-            return None, err
-          finally:
-             self.wait_for_child_processes_cleanup()
+            global CONDA_EXE
+            first_log = CONDA_EXE is None
+            conda_exe = _conda_exe()
+
+            if not first_log:
+                msg = None
+            elif conda_exe:
+                msg = "enabled: " + conda_exe
+            else:
+                msg = "could not find conda or mamba"
+            if not conda_exe:
+                return None, msg
+
+            try:
+               # Let json do the decoding for non-ASCII characters
+               out = subprocess.check_output([conda_exe, "info", "--json"])
+               conda_info = json.loads(out)
+               if 'envs' not in conda_info:
+                   # Micromamba does not include the envs list by default
+                   out = subprocess.check_output([conda_exe, "env", "list", "--json"])
+                   conda_info.update(json.loads(out))
+            except Exception as err:
+                msg = "error reading conda info: " + str(err)
+                return None, msg
+
+            finally:
+               self.wait_for_child_processes_cleanup()
+
+            # We moved the post-processing here so we can handle the conda/micromamba
+            # differences in one place
+            envs = list(map(_canonicalize, conda_info.get('envs') or ()))
+            base_prefix = _canonicalize(conda_info.get('conda_prefix') or conda_info.get('base environment'))
+            if base_prefix not in envs:
+                # Older versions of conda do not include base_prefix in the env list
+                envs.insert(0, base_prefix)
+
+            return (base_prefix, envs), msg
 
         class CondaInfoThread(threading.Thread):
-          def run(self):
-            self.out, self.err = get_conda_info_data()
+            def run(self):
+              self.out, self.err = get_conda_info_data()
 
         expiry = self._conda_info_cache_expiry
         t = self._conda_info_cache_thread
 
         # cache is empty
+        msg, level = None, "debug"
         if expiry is None:
-          self.log.debug("nb_conda_kernels | refreshing conda info (blocking call)")
-          conda_info, err = get_conda_info_data()
-          if conda_info is None:
-            self.log.error("nb_conda_kernels | couldn't call conda:\n%s", err)
-          self._conda_info_cache = conda_info
-          self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
+            conda_info, msg = get_conda_info_data()
+            if msg:
+                level = "info" if conda_info else "error"
+            else:
+                msg = "refreshing conda info (blocking call)"
+            self._conda_info_cache = conda_info
+            self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
 
         # subprocess just finished
         elif t and not t.is_alive():
-          t.join()
-          conda_info = t.out
-          if conda_info is None:
-            self.log.error("nb_conda_kernels | couldn't call conda:\n%s", t.err)
-          else:
-            self.log.debug("nb_conda_kernels | collected conda info (async call)")
-          self._conda_info_cache = conda_info
-          self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
-          self._conda_info_cache_thread = None
+            t.join()
+            conda_info, msg = t.out
+            if msg:
+                level = "info" if conda_info else "error"
+            else:
+                msg = "collected conda info (async call)"
+            self._conda_info_cache = conda_info
+            self._conda_info_cache_expiry = time.time() + CACHE_TIMEOUT
+            self._conda_info_cache_thread = None
 
         # cache expired
         elif not t and expiry < time.time():
-          self.log.debug("nb_conda_kernels | refreshing conda info (async call)")
-          t = CondaInfoThread()
-          t.start()
-          self._conda_info_cache_thread = t
+            msg = "refreshing conda info (async call)"
+            t = CondaInfoThread()
+            t.start()
+            self._conda_info_cache_thread = t
+
+        if msg:
+            getattr(self.log, level)("nb_conda_kernels | %s", msg)
 
         # else, just return cache
-
         return self._conda_info_cache
 
     def _all_envs(self):
@@ -210,18 +255,11 @@ class CondaKernelSpecManager(KernelSpecManager):
             environments in the conda-bld directory. Returns a dict with
             canonical environment names as keys, and full paths as values.
         """
-        conda_info = self._conda_info
-        envs = list(map(_canonicalize, conda_info['envs']))
-        base_prefix = _canonicalize(conda_info['conda_prefix'])
+        base_prefix, envs = self._conda_info
+        if not envs:
+            return {}
         envs_prefix = join(base_prefix, 'envs')
         build_prefix = join(base_prefix, 'conda-bld', '')
-        # Older versions of conda do not seem to include the base prefix
-        # in the environment list, but we do want to scan that
-        if base_prefix not in envs:
-            envs.insert(0, base_prefix)
-        envs_dirs = conda_info['envs_dirs']
-        if not envs_dirs:
-            envs_dirs = [join(base_prefix, 'envs')]
         all_envs = {}
         for env_path in envs:
             if self.env_filter and self._env_filter_regex.search(env_path):
@@ -264,7 +302,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         all_specs = {}
         # We need to be able to find conda-run in the base conda environment
         # even if this package is not running there
-        conda_prefix = self._conda_info['conda_prefix']
+        conda_prefix, _ = self._conda_info
         all_envs = self._all_envs()
         for env_name, env_path in all_envs.items():
             kspec_base = join(env_path, 'share', 'jupyter', 'kernels')

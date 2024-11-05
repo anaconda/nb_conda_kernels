@@ -1,6 +1,11 @@
 name: conda
+channels:
+  - defaults
+  - conda-forge
 dependencies:
   - conda
+  - mamba
+  - micromamba
   - conda-build
   - conda-verify
   - notebook
