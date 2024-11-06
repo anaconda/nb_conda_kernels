@@ -109,7 +109,8 @@ def test_kernel_name_format(monkeypatch, tmp_path, name_format, expected):
         "metadata": { "debugger": True }
     }
     mock_info = {
-        'conda_prefix': '/'
+        'conda_prefix': '/',
+        'conda_exe': '/conda.exe'
     }
     env_name = "dummy_env"
     def envs(*args):
@@ -215,7 +216,8 @@ def test_remove_kernelspec(tmp_path, kernel_name, expected):
 def test_kernel_metadata(monkeypatch, tmp_path, kernelspec):
 
     mock_info = {
-        'conda_prefix': '/'
+        'conda_prefix': '/',
+        'conda_exe': '/conda.exe'
     }
 
     def envs(*args):
@@ -259,6 +261,7 @@ def test_kernel_metadata(monkeypatch, tmp_path, kernelspec):
 def test_kernel_metadata_debugger_override(monkeypatch, tmp_path, kernelspec):
 
     mock_info = {
+        'conda_exe': '/conda.exe',
         'conda_prefix': '/'
     }
 
