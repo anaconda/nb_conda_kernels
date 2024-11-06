@@ -77,7 +77,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest,ubuntu-latest,windows-latest]
-        pyver: ["3.8","3.10","3.12"]
+        pyver: ["3.9","3.12"]
+        solver: ["conda", "mamba", "micromamba"]
     steps:
     - name: Retrieve the source code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -114,6 +115,11 @@ jobs:
         [ 3.12 = ${{ matrix.pyver }} ] && export NBVER=7
         conda create -n testbase -c ./conda-bld nb_conda_kernels python=${{ matrix.pyver }} notebook=$NBVER pytest pytest-cov mock requests
         conda activate testbase
+        solver=${{ matrix.solver }}
+        [ $solver = conda ] || export CONDA_EXE=$(echo $CONDA_EXE | sed -E "s@^(.*/)conda(.*)@\\1${solver}\\2@")
+        [ $solver = mamba ] && export NBCK_NO_ACTIVATE_SCRIPT=yes
+        [ $solver = micromamba ] && export MAMBA_EXE=$CONDA_EXE
+        [ $solver = micromamba ] && export MAMBA_ROOT_PREFIX=$CONDA_ROOT
         python -m nb_conda_kernels list
         python -m pytest -v --cov=nb_conda_kernels tests 2>&1 | tee build.log
         # Because Windows refuses to preserve the error code
