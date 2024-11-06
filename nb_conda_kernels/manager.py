@@ -201,11 +201,17 @@ class CondaKernelSpecManager(KernelSpecManager):
             # differences in one place
             envs = list(map(_canonicalize, conda_info.get('envs') or ()))
             base_prefix = _canonicalize(conda_info.get('conda_prefix') or conda_info.get('base environment'))
+            version = conda_info.get('conda_version') or conda_info.get('micromamba version')
             if base_prefix not in envs:
                 # Older versions of conda do not include base_prefix in the env list
                 envs.insert(0, base_prefix)
 
-            return (base_prefix, envs), msg
+            return {
+                "conda_exe": conda_exe,
+                "conda_version": version,
+                "conda_prefix": base_prefix,
+                "envs": envs,
+            }, msg
 
         class CondaInfoThread(threading.Thread):
             def run(self):
@@ -228,7 +234,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         # subprocess just finished
         elif t and not t.is_alive():
             t.join()
-            conda_info, msg = t.out
+            conda_info, msg = t.out, t.err
             if msg:
                 level = "info" if conda_info else "error"
             else:
@@ -255,9 +261,9 @@ class CondaKernelSpecManager(KernelSpecManager):
             environments in the conda-bld directory. Returns a dict with
             canonical environment names as keys, and full paths as values.
         """
-        base_prefix, envs = self._conda_info
-        if not envs:
-            return {}
+        conda_info = self._conda_info
+        envs = conda_info['envs']
+        base_prefix = conda_info['conda_prefix']
         envs_prefix = join(base_prefix, 'envs')
         build_prefix = join(base_prefix, 'conda-bld', '')
         all_envs = {}
@@ -302,7 +308,7 @@ class CondaKernelSpecManager(KernelSpecManager):
         all_specs = {}
         # We need to be able to find conda-run in the base conda environment
         # even if this package is not running there
-        conda_prefix, _ = self._conda_info
+        conda_prefix = self._conda_info['conda_prefix']
         all_envs = self._all_envs()
         for env_name, env_path in all_envs.items():
             kspec_base = join(env_path, 'share', 'jupyter', 'kernels')

@@ -37,8 +37,9 @@ def test_configuration():
         print('ERROR: Could not find conda find conda.')
         exit(-1)
     print(u'Current prefix: {}'.format(sys.prefix))
-    print(u'Root prefix: {}'.format(conda_info['root_prefix']))
-    print(u'Conda version: {}'.format(conda_info['conda_version']))
+    print(u'Conda prefix: {}'.format(conda_info['conda_prefix']))
+    conda_exe = os.path.basename(conda_info['conda_exe']).replace('.exe', '')
+    print(u'Conda version: {} {}'.format(conda_exe, conda_info['conda_version']))
     print(u'Environments:')
     for env in conda_info['envs']:
         print(u'  - {}'.format(env))

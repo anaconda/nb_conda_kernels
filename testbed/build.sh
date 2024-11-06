@@ -32,6 +32,7 @@ fi
 full_deactivate
 source $CONDA_ROOT/etc/profile.d/conda.sh
 conda activate base
+conda list
 
 if [ ! -f $CONDA_ROOT/.created ]; then
     conda config --prepend channels conda-forge --system

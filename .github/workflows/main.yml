@@ -109,14 +109,19 @@ jobs:
     - name: Test the package
       run: |
         source $CONDA_ROOT/etc/profile.d/conda.sh
-        solver=${{ matrix.solver }}
-        export CONDA_EXE=$(echo $CONDA_EXE | sed -E "s@/conda(.exe)?@/${solver}\1@")
         [ "$RUNNER_OS" = "Windows" ] && export PYTHONIOENCODING=UTF-8
         export PYTHONUNBUFFERED=1
         export NBVER=6
         [ 3.12 = ${{ matrix.pyver }} ] && export NBVER=7
         conda create -n testbase -c ./conda-bld nb_conda_kernels python=${{ matrix.pyver }} notebook=$NBVER pytest pytest-cov mock requests
         conda activate testbase
+        solver=${{ matrix.solver }}
+        export CONDA_EXE=$(echo $CONDA_EXE | sed -E "s@^(.*/)conda(.*)@\\1${solver}\\2@")
+        [ $solver = micromamba ] && export MAMBA_EXE=$CONDA_EXE
+        [ $solver = micromamba ] && export MAMBA_ROOT_PREFIX=$CONDA_ROOT
+        $CONDA_EXE info
+
+        $CONDA_EXE env list
         python -m nb_conda_kernels list
         python -m pytest -v --cov=nb_conda_kernels tests 2>&1 | tee build.log
         # Because Windows refuses to preserve the error code
