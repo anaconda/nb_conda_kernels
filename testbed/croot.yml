@@ -1,8 +1,10 @@
 name: conda
+channels:
+  - conda-forge
 dependencies:
-  - conda
-  - conda-build
-  - conda-verify
+  - conda >24.9
+  - mamba
+  - micromamba
   - notebook
   - jupyter_client
   - ipykernel
