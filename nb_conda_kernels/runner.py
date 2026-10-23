@@ -26,7 +26,7 @@ def exec_in_env(conda_prefix, env_path, *command):
     else:
         quoted_command = [quote(c) for c in command]
         if is_current_env:
-            os.execvp(quoted_command[0], quoted_command)
+            os.execvp(command[0], list(command))
         else:
             activate = os.path.join(conda_prefix, 'bin', 'activate')
             ecomm = ". '{}' '{}' && echo CONDA_PREFIX=$CONDA_PREFIX && exec {}".format(activate, env_path, ' '.join(quoted_command))
